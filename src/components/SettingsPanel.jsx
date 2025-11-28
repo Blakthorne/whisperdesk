@@ -17,13 +17,6 @@ const LANGUAGES = [
   { value: 'hi', label: 'Hindi' },
 ]
 
-const OUTPUT_FORMATS = [
-  { value: 'txt', label: 'Plain Text (.txt)' },
-  { value: 'srt', label: 'SRT Subtitles (.srt)' },
-  { value: 'vtt', label: 'VTT Subtitles (.vtt)' },
-  { value: 'json', label: 'JSON with Timestamps (.json)' },
-]
-
 const QUALITY_STARS = ['★☆☆☆☆', '★★☆☆☆', '★★★☆☆', '★★★★☆', '★★★★★']
 
 function SettingsPanel({ settings, onChange, disabled }) {
@@ -191,23 +184,6 @@ function SettingsPanel({ settings, onChange, disabled }) {
           {LANGUAGES.map(lang => (
             <option key={lang.value} value={lang.value}>
               {lang.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="setting-group">
-        <label htmlFor="format-select">Output Format</label>
-        <select
-          id="format-select"
-          value={settings.outputFormat}
-          onChange={(e) => handleChange('outputFormat', e.target.value)}
-          disabled={disabled}
-          aria-label="Select output format"
-        >
-          {OUTPUT_FORMATS.map(format => (
-            <option key={format.value} value={format.value}>
-              {format.label}
             </option>
           ))}
         </select>

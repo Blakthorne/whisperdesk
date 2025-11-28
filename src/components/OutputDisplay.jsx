@@ -1,9 +1,36 @@
+import { useState, useEffect, useRef } from 'react'
 import './OutputDisplay.css'
 
+const OUTPUT_FORMATS = [
+  { value: 'vtt', label: 'VTT Subtitles', ext: '.vtt' },
+  { value: 'srt', label: 'SRT Subtitles', ext: '.srt' },
+  { value: 'txt', label: 'Plain Text', ext: '.txt' },
+]
+
 function OutputDisplay({ text, onSave, onCopy, copySuccess }) {
+  const [showSaveMenu, setShowSaveMenu] = useState(false)
+  const saveMenuRef = useRef(null)
   const hasText = text && text.length > 0
   const wordCount = hasText ? text.trim().split(/\s+/).length : 0
   const charCount = hasText ? text.length : 0
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (saveMenuRef.current && !saveMenuRef.current.contains(e.target)) {
+        setShowSaveMenu(false)
+      }
+    }
+    if (showSaveMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showSaveMenu])
+
+  const handleSaveFormat = (format) => {
+    setShowSaveMenu(false)
+    onSave(format)
+  }
 
   return (
     <div className="output-container">
@@ -26,14 +53,30 @@ function OutputDisplay({ text, onSave, onCopy, copySuccess }) {
             >
               {copySuccess ? '✓ Copied!' : '📋 Copy'}
             </button>
-            <button 
-              className="btn-icon" 
-              onClick={onSave} 
-              title="Save to file"
-              aria-label="Save transcription to file"
-            >
-              💾 Save
-            </button>
+            <div className="save-dropdown" ref={saveMenuRef}>
+              <button 
+                className="btn-icon" 
+                onClick={() => setShowSaveMenu(!showSaveMenu)}
+                title="Save to file"
+                aria-label="Save transcription to file"
+                aria-expanded={showSaveMenu}
+              >
+                💾 Save
+              </button>
+              {showSaveMenu && (
+                <div className="save-menu">
+                  {OUTPUT_FORMATS.map(format => (
+                    <button
+                      key={format.value}
+                      className="save-menu-item"
+                      onClick={() => handleSaveFormat(format.value)}
+                    >
+                      {format.label} <span className="format-ext">{format.ext}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

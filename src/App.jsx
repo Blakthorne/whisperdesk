@@ -41,8 +41,7 @@ function App() {
   const [selectedFile, setSelectedFile] = useState(null)
   const [settings, setSettings] = useState({
     model: 'base',
-    language: 'auto',
-    outputFormat: 'txt'
+    language: 'auto'
   })
   const [isTranscribing, setIsTranscribing] = useState(false)
   const [progress, setProgress] = useState({ percent: 0, status: '' })
@@ -153,7 +152,7 @@ function App() {
         filePath: selectedFile.path,
         model: settings.model,
         language: settings.language,
-        outputFormat: settings.outputFormat
+        outputFormat: 'vtt'
       })
       
       setTranscription(result.text)
@@ -165,7 +164,6 @@ function App() {
         fileName: selectedFile.name,
         model: settings.model,
         language: settings.language,
-        format: settings.outputFormat,
         date: new Date().toISOString(),
         duration: Math.round((Date.now() - startTime) / 1000),
         preview: result.text.substring(0, 100) + (result.text.length > 100 ? '...' : '')
@@ -189,16 +187,46 @@ function App() {
     setTranscriptionStartTime(null)
   }
 
-  const handleSave = async () => {
+  const handleSave = async (format = 'vtt') => {
     if (!transcription) return
     
     const fileName = selectedFile?.name?.replace(/\.[^/.]+$/, '') || 'transcription'
-    const extension = settings.outputFormat
+    
+    // Convert VTT to other formats if needed
+    let content = transcription
+    if (format === 'txt') {
+      // Strip VTT timestamps and convert to plain text
+      content = transcription
+        .split('\n')
+        .filter(line => !line.startsWith('WEBVTT') && !line.match(/^\d{2}:\d{2}/))
+        .join('\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim()
+    } else if (format === 'srt') {
+      // Convert VTT to SRT format
+      const lines = transcription.split('\n').filter(l => l.trim())
+      const srtLines = []
+      let index = 1
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i]
+        if (line.includes('-->')) {
+          srtLines.push(String(index++))
+          // Convert VTT timestamp (00:00:00.000) to SRT (00:00:00,000)
+          srtLines.push(line.replace(/\./g, ','))
+        } else if (!line.startsWith('WEBVTT')) {
+          srtLines.push(line)
+          if (lines[i + 1]?.includes('-->') || i === lines.length - 1) {
+            srtLines.push('')
+          }
+        }
+      }
+      content = srtLines.join('\n')
+    }
     
     const result = await window.electronAPI?.saveFile({
-      defaultName: `${fileName}.${extension}`,
-      content: transcription,
-      format: extension
+      defaultName: `${fileName}.${format}`,
+      content,
+      format
     })
     
     if (result?.success) {
