@@ -2,12 +2,54 @@ const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron')
 const path = require('path')
 const fs = require('fs')
 const { spawn, execSync } = require('child_process')
+const { autoUpdater } = require('electron-updater')
 
 let mainWindow
 let pythonProcess = null
 let cachedPythonPath = null
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged
+
+// Configure auto-updater
+autoUpdater.autoDownload = false
+autoUpdater.autoInstallOnAppQuit = true
+
+// Auto-updater events
+function setupAutoUpdater() {
+  autoUpdater.on('checking-for-update', () => {
+    mainWindow?.webContents.send('updater:checking')
+  })
+
+  autoUpdater.on('update-available', (info) => {
+    mainWindow?.webContents.send('updater:available', {
+      version: info.version,
+      releaseDate: info.releaseDate,
+      releaseNotes: info.releaseNotes
+    })
+  })
+
+  autoUpdater.on('update-not-available', () => {
+    mainWindow?.webContents.send('updater:not-available')
+  })
+
+  autoUpdater.on('download-progress', (progress) => {
+    mainWindow?.webContents.send('updater:progress', {
+      percent: progress.percent,
+      transferred: progress.transferred,
+      total: progress.total
+    })
+  })
+
+  autoUpdater.on('update-downloaded', (info) => {
+    mainWindow?.webContents.send('updater:downloaded', {
+      version: info.version
+    })
+  })
+
+  autoUpdater.on('error', (err) => {
+    mainWindow?.webContents.send('updater:error', err.message)
+  })
+}
 
 // Find Python executable
 const findPython = () => {
@@ -167,6 +209,21 @@ function createMenu() {
       role: 'help',
       submenu: [
         {
+          label: 'Check for Updates...',
+          click: () => {
+            if (isDev) {
+              dialog.showMessageBox(mainWindow, {
+                type: 'info',
+                title: 'Updates',
+                message: 'Updates are not available in development mode'
+              })
+            } else {
+              autoUpdater.checkForUpdates()
+            }
+          }
+        },
+        { type: 'separator' },
+        {
           label: 'About WhisperDesk',
           click: () => {
             dialog.showMessageBox(mainWindow, {
@@ -226,6 +283,14 @@ function createWindow() {
 app.whenReady().then(() => {
   createMenu()
   createWindow()
+  setupAutoUpdater()
+
+  // Check for updates on startup (only in production)
+  if (!isDev) {
+    setTimeout(() => {
+      autoUpdater.checkForUpdates().catch(() => {})
+    }, 3000)
+  }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -630,4 +695,30 @@ ipcMain.handle('app:checkPython', async () => {
       error: 'Python or Whisper not found. Please install Python 3.9+ and run: pip install openai-whisper'
     }
   }
+})
+
+// Auto-updater IPC handlers
+ipcMain.handle('updater:check', async () => {
+  if (isDev) {
+    return { error: 'Updates not available in development mode' }
+  }
+  try {
+    const result = await autoUpdater.checkForUpdates()
+    return { success: true }
+  } catch (err) {
+    return { error: err.message }
+  }
+})
+
+ipcMain.handle('updater:download', async () => {
+  try {
+    await autoUpdater.downloadUpdate()
+    return { success: true }
+  } catch (err) {
+    return { error: err.message }
+  }
+})
+
+ipcMain.handle('updater:install', () => {
+  autoUpdater.quitAndInstall(false, true)
 })

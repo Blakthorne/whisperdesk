@@ -30,6 +30,7 @@
   ],
   "license": "MIT",
   "dependencies": {
+    "electron-updater": "^6.6.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
@@ -112,6 +113,11 @@
           "path": "/Applications"
         }
       ]
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "pedrovsiqueira",
+      "repo": "whisperdesk"
     }
   }
 }

@@ -31,6 +31,35 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getMemoryUsage: () => ipcRenderer.invoke('app:getMemoryUsage'),
   checkPython: () => ipcRenderer.invoke('app:checkPython'),
   
+  // Auto-updater
+  checkForUpdates: () => ipcRenderer.invoke('updater:check'),
+  downloadUpdate: () => ipcRenderer.invoke('updater:download'),
+  installUpdate: () => ipcRenderer.invoke('updater:install'),
+  onUpdateChecking: (callback) => {
+    ipcRenderer.on('updater:checking', callback)
+    return () => ipcRenderer.removeListener('updater:checking', callback)
+  },
+  onUpdateAvailable: (callback) => {
+    ipcRenderer.on('updater:available', (event, data) => callback(data))
+    return () => ipcRenderer.removeListener('updater:available', callback)
+  },
+  onUpdateNotAvailable: (callback) => {
+    ipcRenderer.on('updater:not-available', callback)
+    return () => ipcRenderer.removeListener('updater:not-available', callback)
+  },
+  onUpdateProgress: (callback) => {
+    ipcRenderer.on('updater:progress', (event, data) => callback(data))
+    return () => ipcRenderer.removeListener('updater:progress', callback)
+  },
+  onUpdateDownloaded: (callback) => {
+    ipcRenderer.on('updater:downloaded', (event, data) => callback(data))
+    return () => ipcRenderer.removeListener('updater:downloaded', callback)
+  },
+  onUpdateError: (callback) => {
+    ipcRenderer.on('updater:error', (event, message) => callback(message))
+    return () => ipcRenderer.removeListener('updater:error', callback)
+  },
+  
   // Menu event listeners
   onMenuOpenFile: (callback) => {
     ipcRenderer.on('menu:openFile', callback)

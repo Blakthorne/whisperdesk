@@ -4,6 +4,7 @@ import SettingsPanel from './components/SettingsPanel'
 import ProgressBar from './components/ProgressBar'
 import OutputDisplay from './components/OutputDisplay'
 import TranscriptionHistory from './components/TranscriptionHistory'
+import UpdateNotification from './components/UpdateNotification'
 import './App.css'
 
 // Load history from localStorage
@@ -353,6 +354,8 @@ function App() {
           )}
         </div>
       </main>
+      
+      <UpdateNotification />
     </div>
   )
 }
