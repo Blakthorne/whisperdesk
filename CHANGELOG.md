@@ -5,50 +5,11 @@ All notable changes to WhisperDesk will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-- feat: Include package-lock.json in release commits (`9f67d43`)
-- chore: release v1.0.1 (`86c946c`)
-
-## [1.3.0] - 2025-11-28
+## [1.0.3] - 2025-11-29
 
 ### ✨ Features
 
-- Enhance FFmpeg detection and update PATH handling in transcription process (`1031fe8`)
-
-### 🔨 Chores
-
-- release v1.3.0 (`b6ef804`)
-
-## [1.2.0] - 2025-11-28
-
-### ✨ Features
-
-- Add changelog generation and update release process (`fae312e`)
-- Implement auto-updater with notification UI and update handling (`c726254`)
-- Add release script for version bumping and tagging (`d272ccf`)
-
-### 🔨 Chores
-
-- release v1.2.0 (`3c34f49`)
-
-## [1.1.0] - 2025-11-28
-
-### ✨ Features
-
-- Add GitHub Actions workflow for building and releasing macOS artifacts (`e9a92d2`)
-- Bump version to 1.0.2 in package.json (`e9f85b3`)
-- Update version to 1.0.1 and add version bumping script (`9beba57`)
-
-### 📝 Other Changes
-
-- Fix GitHub Actions: add icon.svg and fix permissions (`e28e835`)
-- Release v1.1.0 (`94190ee`)
-
-## [1.0.1] - 2025-11-28
-
-### ✨ Features
-
+- Include package-lock.json in release commits (`9f67d43`)
 - Enhance FFmpeg detection and update PATH handling in transcription process (`1031fe8`)
 - Add changelog generation and update release process (`fae312e`)
 - Implement auto-updater with notification UI and update handling (`c726254`)
@@ -66,7 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🔨 Chores
 
-- release v1.0.1 (`09c57d8`)
+- release v1.0.2 (`9c06a30`)
+- release v1.0.1 (`86c946c`)
 - release v1.3.0 (`b6ef804`)
 - release v1.2.0 (`3c34f49`)
 
