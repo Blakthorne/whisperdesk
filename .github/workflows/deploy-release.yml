@@ -75,14 +75,17 @@ jobs:
       - name: Deployment notification
         if: success()
         uses: actions/github-script@v7
+        env:
+          VERSION: ${{ inputs.version }}
         with:
           script: |
+            const version = process.env.VERSION;
             github.rest.repos.createDeployment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              ref: 'v${{ inputs.version }}',
+              ref: `v${version}`,
               environment: 'production',
-              description: 'WhisperDesk v${{ inputs.version }} deployed',
+              description: `WhisperDesk v${version} deployed`,
               auto_merge: false,
               required_contexts: []
             }).then(deployment => {
@@ -91,7 +94,7 @@ jobs:
                 repo: context.repo.repo,
                 deployment_id: deployment.data.id,
                 state: 'success',
-                environment_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/releases/tag/v${inputs.version}`,
+                environment_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/releases/tag/v${version}`,
                 description: 'Build completed and uploaded to GitHub Release'
               });
             });
