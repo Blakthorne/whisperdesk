@@ -54,6 +54,9 @@ export const OUTPUT_FORMATS: readonly OutputFormatOption[] = [
   { value: 'vtt', label: 'VTT Subtitles', ext: '.vtt' },
   { value: 'srt', label: 'SRT Subtitles', ext: '.srt' },
   { value: 'txt', label: 'Plain Text', ext: '.txt' },
+  { value: 'docx', label: 'Word', ext: '.docx' },
+  { value: 'pdf', label: 'PDF', ext: '.pdf' },
+  { value: 'md', label: 'Markdown', ext: '.md' },
 ] as const;
 
 export const QUALITY_STARS: readonly string[] = [
@@ -72,6 +75,7 @@ export function getQualityStars(quality: QualityLevel): string {
 export const APP_CONFIG = {
   MAX_HISTORY_ITEMS: 20,
   COPY_SUCCESS_DURATION: 2000,
+  SAVE_SUCCESS_MESSAGE_DURATION: 3000,
   PROGRESS_INDETERMINATE_MIN: 15,
   PROGRESS_INDETERMINATE_MAX: 85,
 } as const;

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type {
   SelectedFile,
   TranscriptionSettings,
@@ -6,6 +6,7 @@ import type {
   HistoryItem,
   OutputFormat,
 } from '../../../types';
+import { APP_CONFIG } from '../../../config';
 
 interface UseTranscriptionOptions {
   onHistoryAdd?: (item: HistoryItem) => void;
@@ -52,6 +53,8 @@ export function useTranscription(options: UseTranscriptionOptions = {}): UseTran
   const [error, setError] = useState<string | null>(null);
   const [modelDownloaded, setModelDownloaded] = useState<boolean>(true);
 
+  const saveMessageTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
     const unsubscribe = window.electronAPI?.onTranscriptionProgress(
       (data: TranscriptionProgress) => {
@@ -60,6 +63,14 @@ export function useTranscription(options: UseTranscriptionOptions = {}): UseTran
     );
     return () => {
       unsubscribe?.();
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (saveMessageTimeoutRef.current) {
+        clearTimeout(saveMessageTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -148,7 +159,8 @@ export function useTranscription(options: UseTranscriptionOptions = {}): UseTran
 
       const fileName = selectedFile?.name?.replace(/\.[^/.]+$/, '') || 'transcription';
 
-      let content = transcription;
+      let content: string = transcription;
+
       if (format === 'txt') {
         content = transcription
           .split('\n')
@@ -176,6 +188,8 @@ export function useTranscription(options: UseTranscriptionOptions = {}): UseTran
         content = srtLines.join('\n');
       }
 
+      // For docx, pdf, md formats, the main process will handle the conversion
+
       const result = await window.electronAPI?.saveFile({
         defaultName: `${fileName}.${format}`,
         content,
@@ -184,6 +198,13 @@ export function useTranscription(options: UseTranscriptionOptions = {}): UseTran
 
       if (result?.success && result.filePath) {
         setProgress({ percent: 100, status: `Saved to ${result.filePath}` });
+        if (saveMessageTimeoutRef.current) {
+          clearTimeout(saveMessageTimeoutRef.current);
+        }
+        saveMessageTimeoutRef.current = setTimeout(() => {
+          setProgress({ percent: 0, status: '' });
+          saveMessageTimeoutRef.current = null;
+        }, APP_CONFIG.SAVE_SUCCESS_MESSAGE_DURATION);
       } else if (result?.error) {
         setError(`Failed to save: ${result.error}`);
       }
