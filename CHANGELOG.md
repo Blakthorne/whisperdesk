@@ -1,3 +1,9 @@
+## [1.1.5](https://github.com/pedrovsiqueira/whisperdesk/compare/v1.1.4...v1.1.5) (2025-12-02)
+
+### 🐛 Bug Fixes
+
+- improve wording in README for drag and drop feature ([db592c2](https://github.com/pedrovsiqueira/whisperdesk/commit/db592c221346c123e2166b77dbd3cf9b6b390724))
+
 ## [1.1.4](https://github.com/pedrovsiqueira/whisperdesk/compare/v1.1.3...v1.1.4) (2025-12-02)
 
 ### 🐛 Bug Fixes
