@@ -1,3 +1,9 @@
+## [1.1.4](https://github.com/pedrovsiqueira/whisperdesk/compare/v1.1.3...v1.1.4) (2025-12-02)
+
+### 🐛 Bug Fixes
+
+- enhance CI workflows with caching and environment variables ([#24](https://github.com/pedrovsiqueira/whisperdesk/issues/24)) ([5b11369](https://github.com/pedrovsiqueira/whisperdesk/commit/5b113691c9e292e9e3049b02882d04f683e0816d))
+
 ## [1.1.3](https://github.com/pedrovsiqueira/whisperdesk/compare/v1.1.2...v1.1.3) (2025-12-02)
 
 ### 🐛 Bug Fixes
