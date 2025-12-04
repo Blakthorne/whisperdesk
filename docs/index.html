@@ -218,7 +218,7 @@
 
         (async () => {
             try {
-                const res = await fetch('https://api.github.com/repos/pedrovsiqueira/whisperdesk/releases/latest');
+                const res = await fetch('https://api.github.com/repos/PVAS-Development/whisperdesk/releases/latest');
                 const data = await res.json();
                 const version = data.tag_name || 'v1.0.0';
                 document.getElementById('version-badge').textContent = version;
