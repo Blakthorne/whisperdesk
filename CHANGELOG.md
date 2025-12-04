@@ -1,3 +1,16 @@
+## [1.2.0](https://github.com/PVAS-Development/whisperdesk/compare/v1.1.6...v1.2.0) (2025-12-04)
+
+### ✨ Features
+
+- add initial HTML structure, styles, and assets for WhisperDesk documentation ([ad12525](https://github.com/PVAS-Development/whisperdesk/commit/ad1252525498ec725ec1db7218a568fc66ba8fbc))
+- add new landing page and update design ([cb907fb](https://github.com/PVAS-Development/whisperdesk/commit/cb907fbd7837ad98e5336e32afe6d78cdc4d67c4))
+- refactor IPC handler registration and improve window handling in transcription service ([c9afb51](https://github.com/PVAS-Development/whisperdesk/commit/c9afb51dc7e9490cf3dcd651d630fda1fb9446b1))
+- update design elements and styles for improved UI consistency and new features ([5ab4e19](https://github.com/PVAS-Development/whisperdesk/commit/5ab4e19ce99ad607fe6f2beaf68ef286319f9732))
+- update GitHub API URL for fetching latest release version ([ef22202](https://github.com/PVAS-Development/whisperdesk/commit/ef22202cf38fe5dc0bde2ff63f504dccb550c8ea))
+- update icon and screenshot assets, enhance AppHeader with new logo ([fde6c33](https://github.com/PVAS-Development/whisperdesk/commit/fde6c33b0718469ba56d5e0696e3cb372b76efb0))
+- update repository URLs to reflect new ownership ([757bfa7](https://github.com/PVAS-Development/whisperdesk/commit/757bfa72e2bfcb9814072ac39099eb4c2fb6eea5))
+- update styles for improved UI consistency and transitions across components ([6090387](https://github.com/PVAS-Development/whisperdesk/commit/6090387c8075ebcce79cf9dc920b3d259848de64))
+
 ## [1.1.6](https://github.com/pedrovsiqueira/whisperdesk/compare/v1.1.5...v1.1.6) (2025-12-02)
 
 ### 🐛 Bug Fixes
