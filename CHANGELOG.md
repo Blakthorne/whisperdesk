@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/PVAS-Development/whisperdesk/compare/v1.4.0...v1.4.1) (2025-12-05)
+
+### 🐛 Bug Fixes
+
+- remove stdoutSnippet from transcription error handling ([0e41522](https://github.com/PVAS-Development/whisperdesk/commit/0e415227e7e89f914fc5b0ee4786aedd2ac661b6))
+- update whisper service with improved file handling and cleanup logic during transcription ([8a11a86](https://github.com/PVAS-Development/whisperdesk/commit/8a11a86ea14bb0ebe53b5374adfa5206e95ea94d))
+
 ## [1.4.0](https://github.com/PVAS-Development/whisperdesk/compare/v1.3.0...v1.4.0) (2025-12-04)
 
 ### ✨ Features
