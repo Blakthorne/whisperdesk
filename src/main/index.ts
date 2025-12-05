@@ -5,6 +5,8 @@ import { registerIpcHandlers } from './ipc';
 import { initAnalytics, trackEvent, AnalyticsEvents } from './services/analytics';
 import packageJson from '../../package.json';
 
+initAnalytics();
+
 let mainWindow: BrowserWindow | null = null;
 let ipcHandlersRegistered = false;
 
@@ -207,7 +209,6 @@ const createWindow = () => {
 };
 
 app.on('ready', () => {
-  initAnalytics();
   createWindow();
 });
 
