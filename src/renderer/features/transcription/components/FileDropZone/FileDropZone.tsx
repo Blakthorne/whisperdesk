@@ -82,7 +82,7 @@ function FileDropZone({
             title="Remove file"
             aria-label="Remove selected file"
           >
-            <X size={16} />
+            <X size={16} aria-hidden="true" />
           </button>
           <span className="file-icon">📁</span>
           <div className="file-details">

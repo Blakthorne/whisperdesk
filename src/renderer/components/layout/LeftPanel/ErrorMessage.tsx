@@ -11,7 +11,7 @@ export function ErrorMessage(): React.JSX.Element | null {
 
   return (
     <div className="error-message" role="alert" aria-live="assertive">
-      <AlertTriangle size={16} /> {error}
+      <AlertTriangle size={16} aria-hidden="true" /> {error}
     </div>
   );
 }

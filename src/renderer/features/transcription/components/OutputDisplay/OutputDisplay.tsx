@@ -291,7 +291,7 @@ function OutputDisplay({
         ) : (
           <div className="output-placeholder" role="status" aria-live="polite">
             <span className="placeholder-icon">
-              <FileText size={48} strokeWidth={1.5} />
+              <FileText size={48} strokeWidth={1.5} aria-hidden="true" />
             </span>
             <span>Transcription will appear here</span>
             <span className="placeholder-hint">Select a file and click Transcribe to start</span>

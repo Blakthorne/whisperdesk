@@ -336,15 +336,14 @@ export async function checkFFmpeg(): Promise<boolean> {
   ];
 
   for (const p of ffmpegPaths) {
-    if (p === 'ffmpeg') {
-      try {
-        const result = spawnSync('ffmpeg', ['-version'], { timeout: 5000 });
-        if (result.status === 0) return true;
-      } catch {
+    try {
+      if (path.isAbsolute(p) && !fs.existsSync(p)) {
         continue;
       }
-    } else if (fs.existsSync(p)) {
-      return true;
+      const result = spawnSync(p, ['-version'], { timeout: 5000 });
+      if (result.status === 0) return true;
+    } catch {
+      continue;
     }
   }
   return false;

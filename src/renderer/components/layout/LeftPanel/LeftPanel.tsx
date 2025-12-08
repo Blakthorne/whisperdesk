@@ -37,7 +37,12 @@ function LeftPanel(): React.JSX.Element {
 
   return (
     <div className="left-panel">
-      {!isFFmpegAvailable && <SystemWarning onRefresh={checkStatus} />}
+      {isFFmpegAvailable === null && (
+        <div className="system-check-loading" role="status" aria-live="polite">
+          Checking system requirements...
+        </div>
+      )}
+      {isFFmpegAvailable === false && <SystemWarning onRefresh={checkStatus} />}
 
       <FileDropZone
         onFileSelect={handleFileSelect}

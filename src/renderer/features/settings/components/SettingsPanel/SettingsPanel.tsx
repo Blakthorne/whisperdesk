@@ -158,11 +158,12 @@ function SettingsPanel({
           aria-live="polite"
           aria-label={`GPU acceleration: ${gpuInfo.available ? 'enabled' : 'disabled'}. Using ${gpuInfo.name}`}
         >
-          <span
-            className="gpu-icon"
-            aria-label={gpuInfo.available ? 'GPU enabled' : 'GPU disabled'}
-          >
-            {gpuInfo.available ? <Zap size={16} /> : <Cpu size={16} />}
+          <span className="gpu-icon" aria-hidden="true">
+            {gpuInfo.available ? (
+              <Zap size={16} aria-hidden="true" />
+            ) : (
+              <Cpu size={16} aria-hidden="true" />
+            )}
           </span>
           <span className="gpu-text">{gpuInfo.name}</span>
         </div>
@@ -222,7 +223,7 @@ function SettingsPanel({
                     disabled={disabled}
                     aria-label={`Download ${selectedModel.name} model, size ${selectedModel.size}`}
                   >
-                    <Download size={14} /> Download {selectedModel.size}
+                    <Download size={14} aria-hidden="true" /> Download {selectedModel.size}
                   </button>
                 )}
               </div>
@@ -230,9 +231,9 @@ function SettingsPanel({
 
             {selectedModel.downloaded && (
               <div className="model-ready-container">
-                <span className="model-ready">
-                  <Check size={14} /> Ready to use
-                </span>
+                <div className="model-ready">
+                  <Check size={14} aria-hidden="true" /> Ready to use
+                </div>
                 <button
                   className="btn-delete-model"
                   onClick={() => handleDeleteModel(selectedModel.name)}
@@ -240,7 +241,7 @@ function SettingsPanel({
                   title="Delete model"
                   aria-label={`Delete ${selectedModel.name} model`}
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={16} aria-hidden="true" />
                 </button>
               </div>
             )}

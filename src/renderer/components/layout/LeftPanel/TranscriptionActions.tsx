@@ -16,7 +16,7 @@ export function TranscriptionActions(): React.JSX.Element {
           aria-label="Start transcription"
           title={!modelDownloaded ? 'Please download the selected model first' : ''}
         >
-          <Zap size={18} /> Transcribe
+          <Zap size={18} aria-hidden="true" /> Transcribe
         </button>
       ) : (
         <button
