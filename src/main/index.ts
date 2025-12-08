@@ -14,8 +14,6 @@ let ipcHandlersRegistered = false;
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 const appVersion = packageJson.version;
 
-// Delay update check to allow the UI to fully render before checking for updates.
-// This helps prevent update dialogs or notifications from appearing before the main window is ready.
 const UPDATE_CHECK_DELAY_MS = 3000;
 
 function createMenu() {

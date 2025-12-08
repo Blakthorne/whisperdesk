@@ -22,8 +22,6 @@ export function convertHtmlToText(html: string): string {
     ALLOWED_ATTR: ['href'],
   });
 
-  // After sanitizing HTML for security (preventing XSS), convert it to formatted text for safe display in release notes.
-  // This ensures that any potentially dangerous HTML is neutralized, and the output is readable as plain text or markdown-like formatting.
   return clean
     .replace(/<h[1-6]>/gi, '\n')
     .replace(/<\/h[1-6]>/gi, '\n')
