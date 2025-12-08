@@ -1,3 +1,15 @@
+## [1.6.0](https://github.com/PVAS-Development/whisperdesk/compare/v1.5.0...v1.6.0) (2025-12-08)
+
+### ✨ Features
+
+- add confirmation dialog for clearing all transcription history ([d46e80d](https://github.com/PVAS-Development/whisperdesk/commit/d46e80d1d46f13520d46487b9300dca0402194b9))
+- add donation section with PayPal and Buy Me a Coffee links ([43de640](https://github.com/PVAS-Development/whisperdesk/commit/43de640324d6b9e81acc43aa061df01846115118))
+- implement auto-update functionality with notifications ([5dd231c](https://github.com/PVAS-Development/whisperdesk/commit/5dd231c6caaabaf60cf304f4a49780265c017f92))
+
+### 🐛 Bug Fixes
+
+- enhance auto-update and donation features with new tests and improved file size formatting ([3961325](https://github.com/PVAS-Development/whisperdesk/commit/396132566c50400f9e044d0f38f6710d6be93942))
+
 ## [1.5.0](https://github.com/PVAS-Development/whisperdesk/compare/v1.4.2...v1.5.0) (2025-12-08)
 
 ### ✨ Features
