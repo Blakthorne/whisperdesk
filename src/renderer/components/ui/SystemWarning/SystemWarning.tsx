@@ -125,7 +125,11 @@ function SystemWarning({ onRefresh }: SystemWarningProps): React.JSX.Element {
 
         <div className="alternative-option">
           <span>Or download manually from</span>
-          <button onClick={handleDownloadLink} className="link-button">
+          <button
+            onClick={handleDownloadLink}
+            className="link-button"
+            aria-label="Open FFmpeg download page"
+          >
             ffmpeg.org
           </button>
         </div>
