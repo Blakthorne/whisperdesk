@@ -20,6 +20,7 @@ export function convertHtmlToText(html: string): string {
       'code',
     ],
     ALLOWED_ATTR: ['href'],
+    ALLOWED_URI_REGEXP: /^https?:/i,
   });
 
   return clean

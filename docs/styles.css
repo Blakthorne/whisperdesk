@@ -796,7 +796,12 @@ img {
 .heart-icon {
   color: #ef4444;
   fill: #ef4444;
-  animation: pulse 2s infinite;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .heart-icon {
+    animation: pulse 2s infinite;
+  }
 }
 
 @keyframes pulse {

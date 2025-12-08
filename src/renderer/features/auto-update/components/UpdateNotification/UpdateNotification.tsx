@@ -1,5 +1,5 @@
 import { useAutoUpdate } from '../../hooks/useAutoUpdate';
-import { convertHtmlToText } from '../../../../utils';
+import { convertHtmlToText, formatFileSize } from '../../../../utils';
 import { X, AlertTriangle, Sparkles, Download, CheckCircle } from 'lucide-react';
 import './UpdateNotification.css';
 
@@ -23,32 +23,12 @@ export function UpdateNotification() {
     return null;
   }
 
-  const formatBytes = (bytes: number): string => {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
-  };
-
   const formatSpeed = (bytesPerSecond: number): string => {
-    return `${formatBytes(bytesPerSecond)}/s`;
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      dismissUpdate();
-    }
+    return `${formatFileSize(bytesPerSecond)}/s`;
   };
 
   return (
-    <div
-      className="update-notification"
-      onClick={dismissUpdate}
-      role="button"
-      tabIndex={0}
-      onKeyDown={handleKeyDown}
-    >
+    <div className="update-notification" onClick={dismissUpdate}>
       <div className="update-notification-content" onClick={(e) => e.stopPropagation()}>
         <button onClick={dismissUpdate} className="btn-close" aria-label="Close">
           <X size={20} />
@@ -125,8 +105,8 @@ export function UpdateNotification() {
                 </div>
                 <p className="progress-details">
                   {updateStatus.progress.percent.toFixed(1)}% •{' '}
-                  {formatBytes(updateStatus.progress.transferred)} /{' '}
-                  {formatBytes(updateStatus.progress.total)} •{' '}
+                  {formatFileSize(updateStatus.progress.transferred)} /{' '}
+                  {formatFileSize(updateStatus.progress.total)} •{' '}
                   {formatSpeed(updateStatus.progress.bytesPerSecond)}
                 </p>
               </>

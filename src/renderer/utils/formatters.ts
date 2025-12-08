@@ -29,7 +29,9 @@ export function formatDate(dateString: string): string {
 }
 
 export function formatFileSize(bytes: number | undefined): string {
-  if (!bytes) return '';
-  const mb = bytes / (1024 * 1024);
-  return mb > 1 ? `${mb.toFixed(1)} MB` : `${(bytes / 1024).toFixed(1)} KB`;
+  if (!bytes || bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 }
