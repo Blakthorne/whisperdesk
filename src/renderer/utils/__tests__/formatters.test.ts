@@ -62,20 +62,34 @@ describe('formatters', () => {
   });
 
   describe('formatFileSize', () => {
-    it('should return empty string for undefined', () => {
-      expect(formatFileSize(undefined)).toBe('');
+    it('should return "0 B" for undefined or 0', () => {
+      expect(formatFileSize(undefined)).toBe('0 B');
+      expect(formatFileSize(0)).toBe('0 B');
     });
 
-    it('should format bytes as KB when less than 1 MB', () => {
-      expect(formatFileSize(512)).toBe('0.5 KB');
-      expect(formatFileSize(1024)).toBe('1.0 KB');
-      expect(formatFileSize(512000)).toBe('500.0 KB');
+    it('should format bytes as B when less than 1 KB', () => {
+      expect(formatFileSize(512)).toBe('512 B');
+      expect(formatFileSize(1023)).toBe('1023 B');
     });
 
-    it('should format bytes as MB when 1 MB or greater', () => {
-      expect(formatFileSize(1048577)).toBe('1.0 MB');
-      expect(formatFileSize(10485760)).toBe('10.0 MB');
+    it('should format bytes as KB when 1 KB to 1 MB', () => {
+      expect(formatFileSize(1024)).toBe('1 KB');
+      expect(formatFileSize(512000)).toBe('500 KB');
+    });
+
+    it('should format bytes as MB when 1 MB to 1 GB', () => {
+      expect(formatFileSize(1048576)).toBe('1 MB');
+      expect(formatFileSize(10485760)).toBe('10 MB');
       expect(formatFileSize(1572864)).toBe('1.5 MB');
+    });
+
+    it('should format bytes as GB when 1 GB or greater', () => {
+      expect(formatFileSize(1073741824)).toBe('1 GB');
+      expect(formatFileSize(5368709120)).toBe('5 GB');
+    });
+
+    it('should handle very large numbers with bounds checking', () => {
+      expect(formatFileSize(1099511627776)).toBe('1024 GB');
     });
   });
 });

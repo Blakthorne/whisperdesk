@@ -33,12 +33,17 @@ const mockElectronAPI: ElectronAPI = {
     heapTotal: 200 * 1024 * 1024,
   }),
   trackEvent: vi.fn().mockResolvedValue(undefined),
+  openExternal: vi.fn().mockResolvedValue(undefined),
   onMenuOpenFile: vi.fn().mockReturnValue(() => {}),
   onMenuSaveFile: vi.fn().mockReturnValue(() => {}),
   onMenuCopyTranscription: vi.fn().mockReturnValue(() => {}),
   onMenuStartTranscription: vi.fn().mockReturnValue(() => {}),
   onMenuCancelTranscription: vi.fn().mockReturnValue(() => {}),
   onMenuToggleHistory: vi.fn().mockReturnValue(() => {}),
+  checkForUpdates: vi.fn().mockResolvedValue({ success: true }),
+  downloadUpdate: vi.fn().mockResolvedValue({ success: true }),
+  installUpdate: vi.fn(),
+  onUpdateStatus: vi.fn().mockReturnValue(() => {}),
 };
 
 Object.defineProperty(window, 'electronAPI', {

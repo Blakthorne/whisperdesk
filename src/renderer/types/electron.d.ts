@@ -11,6 +11,7 @@ import type {
   AppInfo,
   MemoryUsage,
   Unsubscribe,
+  UpdateStatus,
 } from './index';
 
 export interface ModelsListResponse {
@@ -49,12 +50,17 @@ export interface ElectronAPI {
     eventName: string,
     properties?: Record<string, string | number | boolean>
   ) => Promise<void>;
+  openExternal: (url: string) => Promise<void>;
   onMenuOpenFile: (callback: () => void) => Unsubscribe;
   onMenuSaveFile: (callback: () => void) => Unsubscribe;
   onMenuCopyTranscription: (callback: () => void) => Unsubscribe;
   onMenuStartTranscription: (callback: () => void) => Unsubscribe;
   onMenuCancelTranscription: (callback: () => void) => Unsubscribe;
   onMenuToggleHistory: (callback: () => void) => Unsubscribe;
+  checkForUpdates: () => Promise<{ success: boolean; error?: string }>;
+  downloadUpdate: () => Promise<{ success: boolean; error?: string }>;
+  installUpdate: () => void;
+  onUpdateStatus: (callback: (data: UpdateStatus) => void) => Unsubscribe;
 }
 
 declare global {

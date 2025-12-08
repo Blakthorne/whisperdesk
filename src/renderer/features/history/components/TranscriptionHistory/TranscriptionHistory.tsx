@@ -27,6 +27,19 @@ function TranscriptionHistory({
     }
   };
 
+  const handleDelete = (event: React.MouseEvent, itemId: number, fileName: string): void => {
+    event.stopPropagation();
+    if (window.confirm(`Are you sure you want to delete the transcription for "${fileName}"?`)) {
+      onDelete(itemId);
+    }
+  };
+
+  const handleClearAll = (): void => {
+    if (window.confirm('Are you sure you want to clear all transcription history?')) {
+      onClear();
+    }
+  };
+
   return (
     <div className="history-container">
       <div className="history-header">
@@ -35,7 +48,7 @@ function TranscriptionHistory({
         </h3>
         <div className="history-actions">
           {history.length > 0 && (
-            <button className="btn-icon danger" onClick={onClear}>
+            <button className="btn-icon danger" onClick={handleClearAll}>
               <Trash2 size={16} aria-hidden="true" /> Clear All
             </button>
           )}
@@ -71,10 +84,7 @@ function TranscriptionHistory({
                     <span className="history-date">{formatDate(item.date)}</span>
                     <button
                       className="history-item-delete"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        onDelete(item.id);
-                      }}
+                      onClick={(event) => handleDelete(event, item.id, item.fileName)}
                       title="Delete transcription"
                       aria-label={`Delete ${item.fileName}`}
                     >

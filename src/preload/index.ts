@@ -4,6 +4,7 @@ import type {
   SaveFileOptions,
   ModelDownloadProgress,
   TranscriptionProgress,
+  UpdateStatus,
 } from '../shared/types';
 
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -35,6 +36,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   trackEvent: (eventName: string, properties?: Record<string, string | number | boolean>) =>
     ipcRenderer.invoke('analytics:track', eventName, properties),
 
+  openExternal: (url: string) => ipcRenderer.invoke('shell:openExternal', url),
+
   onMenuOpenFile: (callback: () => void) => {
     ipcRenderer.on('menu:openFile', () => callback());
     return () => ipcRenderer.removeAllListeners('menu:openFile');
@@ -58,5 +61,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onMenuToggleHistory: (callback: () => void) => {
     ipcRenderer.on('menu:toggleHistory', () => callback());
     return () => ipcRenderer.removeAllListeners('menu:toggleHistory');
+  },
+
+  checkForUpdates: () => ipcRenderer.invoke('update:check'),
+  downloadUpdate: () => ipcRenderer.invoke('update:download'),
+  installUpdate: () => ipcRenderer.invoke('update:install'),
+  onUpdateStatus: (callback: (data: UpdateStatus) => void) => {
+    ipcRenderer.on('update:status', (_event, data) => callback(data));
+    return () => ipcRenderer.removeAllListeners('update:status');
   },
 });
