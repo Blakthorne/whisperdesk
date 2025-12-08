@@ -81,6 +81,8 @@ function SystemWarning({ onRefresh }: SystemWarningProps): React.JSX.Element {
       if (!isMounted.current) return;
 
       await onRefresh();
+    } catch (error) {
+      console.error('Failed to refresh FFmpeg status:', error);
     } finally {
       if (isMounted.current) {
         setIsChecking(false);
