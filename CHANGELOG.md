@@ -1,3 +1,11 @@
+## [1.6.1](https://github.com/PVAS-Development/whisperdesk/compare/v1.6.0...v1.6.1) (2025-12-08)
+
+### 🐛 Bug Fixes
+
+- add aria-label to FFmpeg download button for accessibility ([9740975](https://github.com/PVAS-Development/whisperdesk/commit/9740975935dc8ecad9443592032c7c3b56293b50))
+- add error handling for FFmpeg status refresh ([6ba719e](https://github.com/PVAS-Development/whisperdesk/commit/6ba719e0614c574ffa840026b2f25090b77aa5be))
+- enhance FFmpeg installation guidance and improve donation section functionality ([b45e51c](https://github.com/PVAS-Development/whisperdesk/commit/b45e51cb2ae114958e33b95542475d1a7d3fdb5a))
+
 ## [1.6.0](https://github.com/PVAS-Development/whisperdesk/compare/v1.5.0...v1.6.0) (2025-12-08)
 
 ### ✨ Features
