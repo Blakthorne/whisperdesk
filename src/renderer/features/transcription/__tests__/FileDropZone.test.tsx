@@ -157,13 +157,15 @@ describe('FileDropZone', () => {
 
   it('should handle file drop with valid media file', async () => {
     const onFileSelect = vi.fn();
+    overrideElectronAPI({
+      getPathForFile: vi.fn().mockReturnValue('/path/to/audio.mp3'),
+    });
 
     render(<FileDropZone onFileSelect={onFileSelect} selectedFile={null} disabled={false} />);
 
     const dropzone = screen.getByRole('button');
 
     const file = new File(['audio content'], 'audio.mp3', { type: 'audio/mp3' });
-    Object.defineProperty(file, 'path', { value: '/path/to/audio.mp3' });
 
     const dataTransfer = {
       files: [file],
@@ -179,6 +181,25 @@ describe('FileDropZone', () => {
         name: 'audio.mp3',
       });
     });
+  });
+
+  it('should not call onFileSelect when getPathForFile returns falsy value', () => {
+    const onFileSelect = vi.fn();
+    overrideElectronAPI({
+      getPathForFile: vi.fn().mockReturnValue(undefined),
+    });
+
+    render(<FileDropZone onFileSelect={onFileSelect} selectedFile={null} disabled={false} />);
+
+    const dropzone = screen.getByRole('button');
+
+    const file = new File(['audio content'], 'audio.mp3', { type: 'audio/mp3' });
+
+    fireEvent.drop(dropzone, {
+      dataTransfer: { files: [file] },
+    });
+
+    expect(onFileSelect).not.toHaveBeenCalled();
   });
 
   it('should not handle file drop when disabled', () => {

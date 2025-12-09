@@ -35,6 +35,7 @@ export interface ElectronAPI {
   openFile: () => Promise<string | null>;
   saveFile: (options: SaveFileOptions) => Promise<SaveFileResult>;
   getFileInfo: (filePath: string) => Promise<SelectedFile | null>;
+  getPathForFile: (file: File) => string;
   listModels: () => Promise<ModelsListResponse>;
   deleteModel: (modelName: string) => Promise<{ success: boolean; error?: string }>;
   getGpuStatus: () => Promise<GpuInfo>;

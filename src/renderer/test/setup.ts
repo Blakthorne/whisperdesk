@@ -8,6 +8,7 @@ const mockElectronAPI: ElectronAPI = {
   openFile: vi.fn().mockResolvedValue(null),
   saveFile: vi.fn().mockResolvedValue({ success: false, error: 'Not implemented' }),
   getFileInfo: vi.fn().mockResolvedValue(null),
+  getPathForFile: vi.fn().mockReturnValue('/path/to/file'),
   listModels: vi.fn().mockResolvedValue({ models: [] }),
   deleteModel: vi.fn().mockResolvedValue({ success: true }),
   checkFFmpeg: vi.fn().mockResolvedValue(true),
