@@ -36,8 +36,10 @@ function FileDropZone({
 
       const file = e.dataTransfer.files[0];
       if (file && isValidMediaFile(file.name)) {
-        const fileWithPath = file as File & { path: string };
-        onFileSelect({ path: fileWithPath.path, name: file.name });
+        const filePath = window.electronAPI?.getPathForFile(file);
+        if (filePath) {
+          onFileSelect({ path: filePath, name: file.name });
+        }
       }
     },
     [disabled, onFileSelect]

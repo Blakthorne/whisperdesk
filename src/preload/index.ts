@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, webUtils } from 'electron';
 import type {
   TranscriptionOptions,
   SaveFileOptions,
@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveFile: (options: SaveFileOptions) => ipcRenderer.invoke('dialog:saveFile', options),
 
   getFileInfo: (filePath: string) => ipcRenderer.invoke('file:getInfo', filePath),
+  getPathForFile: (file: File) => webUtils.getPathForFile(file),
 
   listModels: () => ipcRenderer.invoke('models:list'),
   getGpuStatus: () => ipcRenderer.invoke('models:gpuStatus'),
