@@ -1,6 +1,6 @@
 # 🎙️ WhisperDesk
 
-[![CI](https://github.com/PVAS-Development/whisperdesk/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/PVAS-Development/whisperdesk/actions/workflows/ci.yml)
+[![Downloads](https://img.shields.io/github/downloads/PVAS-Development/whisperdesk/total.svg)](https://github.com/PVAS-Development/whisperdesk/releases)
 [![Release Version](https://img.shields.io/github/v/release/PVAS-Development/whisperdesk?label=release&logo=github)](https://github.com/PVAS-Development/whisperdesk/releases)
 [![Lint](https://img.shields.io/badge/lint-passing-brightgreen.svg?logo=eslint&logoColor=white)](https://github.com/PVAS-Development/whisperdesk/actions/workflows/ci.yml)
 [![Stars](https://img.shields.io/github/stars/PVAS-Development/whisperdesk?style=social)](https://github.com/PVAS-Development/whisperdesk/stargazers)
