@@ -357,6 +357,15 @@ Contributions are welcome! Please see our [Contributing Guide](CONTRIBUTING.md) 
 
 For more details, please read our [Privacy Policy](https://whisperdesk.org/privacy.html).
 
+## ☕ Support the Project
+
+WhisperDesk is free and open-source software. If you find it useful, please consider supporting its development:
+
+- [**Donate via PayPal**](https://www.paypal.com/donate/?hosted_button_id=HTJXGMEGMWWD6)
+- [**Buy me a coffee**](https://www.buymeacoffee.com/pedrovsiqueira)
+
+Your support helps cover the costs of Apple Developer Program fees and keeps the project alive!
+
 ## 📄 License
 
 MIT License - see [LICENSE](LICENSE) for details.
