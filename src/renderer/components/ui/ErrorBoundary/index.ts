@@ -1,4 +1,2 @@
 export { ErrorBoundary } from './ErrorBoundary';
 export type { ErrorBoundaryProps } from './ErrorBoundary';
-export { ProgressBar } from './ProgressBar';
-export { SystemWarning } from './SystemWarning';
