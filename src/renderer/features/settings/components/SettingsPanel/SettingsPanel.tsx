@@ -12,6 +12,7 @@ import type {
 } from '../../../../types';
 import { LANGUAGES, QUALITY_STARS } from '../../../../config';
 import { DEFAULT_MODELS } from '../../services/modelService';
+import { logger } from '../../../../services';
 
 export interface SettingsPanelProps {
   settings: TranscriptionSettings;
@@ -47,7 +48,7 @@ function SettingsPanel({
         setGpuInfo(gpu);
       }
     } catch (err) {
-      console.error('Failed to load model info:', err);
+      logger.error('Failed to load model info:', err);
       setModels(DEFAULT_MODELS);
     } finally {
       setLoading(false);
@@ -108,7 +109,7 @@ function SettingsPanel({
       await window.electronAPI?.downloadModel(modelName);
       await loadModelInfo();
     } catch (err) {
-      console.error('Failed to download model:', err);
+      logger.error('Failed to download model:', err);
     } finally {
       setDownloading(null);
     }
@@ -127,7 +128,7 @@ function SettingsPanel({
       }
       await loadModelInfo();
     } catch (err) {
-      console.error('Failed to delete model:', err);
+      logger.error('Failed to delete model:', err);
       window.alert(
         `Failed to delete model: ${err && typeof err === 'object' && 'message' in err ? err.message : String(err)}`
       );

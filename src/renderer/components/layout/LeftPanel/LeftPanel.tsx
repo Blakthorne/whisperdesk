@@ -7,7 +7,7 @@ import { TranscriptionProgress } from './TranscriptionProgress';
 import { ErrorMessage } from './ErrorMessage';
 import { DonationSection } from './DonationSection';
 import { SystemWarning } from '../../ui';
-import { checkFFmpeg } from '../../../services/electronAPI';
+import { checkFFmpeg, logger } from '../../../services';
 
 function LeftPanel(): React.JSX.Element {
   const {
@@ -28,7 +28,7 @@ function LeftPanel(): React.JSX.Element {
       setIsFFmpegAvailable(available);
       return available;
     } catch (error) {
-      console.error('Failed to check FFmpeg status:', error);
+      logger.error('Failed to check FFmpeg status:', error);
       setIsFFmpegAvailable(false);
       return false;
     }

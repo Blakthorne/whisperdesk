@@ -68,3 +68,13 @@ vi.stubGlobal('localStorage', {
     });
   }),
 });
+
+vi.mock('../services/logger', () => ({
+  logger: {
+    debug: vi.fn((...args: unknown[]) => console.debug(...args)),
+    info: vi.fn((...args: unknown[]) => console.info(...args)),
+    warn: vi.fn((...args: unknown[]) => console.warn(...args)),
+    error: vi.fn((...args: unknown[]) => console.error(...args)),
+    isEnabled: vi.fn(() => true),
+  },
+}));
