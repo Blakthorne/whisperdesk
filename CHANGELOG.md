@@ -1,3 +1,26 @@
+## [1.7.0](https://github.com/PVAS-Development/whisperdesk/compare/v1.6.2...v1.7.0) (2025-12-18)
+
+### ✨ Features
+
+- add .nvmrc file and update package.json with node engine requirements ([f12d01a](https://github.com/PVAS-Development/whisperdesk/commit/f12d01a69363a2cfd09473b7abf9b0e1e846ad6b))
+- add debug logs modal and integrate logging functionality across components ([6bcb9fa](https://github.com/PVAS-Development/whisperdesk/commit/6bcb9fa2e67d6b135fd228e6c52c2fafaef29423))
+- add ErrorMessage, TranscriptionActions, and TranscriptionProgress components ([4e20511](https://github.com/PVAS-Development/whisperdesk/commit/4e20511c95466bff066ac2f31508565aff235842))
+- add Privacy Policy & Terms page and update README for privacy details ([883b214](https://github.com/PVAS-Development/whisperdesk/commit/883b21463ecfe6bd7c13ef4e0e2204dd141de50c))
+- add support section with donation links to README ([093d79f](https://github.com/PVAS-Development/whisperdesk/commit/093d79f9806c595d2e8b20b49eb244bceb4f028f))
+- add TypeScript build artifacts to .gitignore for improved project structure ([3d616dc](https://github.com/PVAS-Development/whisperdesk/commit/3d616dc51c5f048f1a447740ce505159e736f12f))
+- enhance electronAPI tests with additional functionality checks and event tracking ([9dde448](https://github.com/PVAS-Development/whisperdesk/commit/9dde448e68e3836483e1b6a06a5024e05cf4589e))
+- implement ErrorBoundary component with error handling UI and styles ([4cc92bb](https://github.com/PVAS-Development/whisperdesk/commit/4cc92bb2be9519794a291b98ca6b3adbdd975972))
+- implement sanitizePath utility and update logging in various components ([840dd0e](https://github.com/PVAS-Development/whisperdesk/commit/840dd0e6ca637dace58c0a2c11dde4edd3264980))
+- implement useFFmpegStatus hook ([2eeba4c](https://github.com/PVAS-Development/whisperdesk/commit/2eeba4cd16d852edcd2e864448ffdd78de78a1c5))
+- integrate FFmpeg availability checks into transcription components ([82b0616](https://github.com/PVAS-Development/whisperdesk/commit/82b06168f47e1adc7e1e5bd2011abdbae56d972e))
+- refactor SystemWarning and SettingsPanel to use updated service methods ([8b6f31d](https://github.com/PVAS-Development/whisperdesk/commit/8b6f31d368225026497d674d7532b62c9ecc0cb5))
+- refactor transcription and menu handling to use centralized electronAPI services ([9f517c1](https://github.com/PVAS-Development/whisperdesk/commit/9f517c15c492e9a609f7f8fd68fb48629d5964ec))
+
+### 🐛 Bug Fixes
+
+- update CI badge in README to reflect current branch ([fe649eb](https://github.com/PVAS-Development/whisperdesk/commit/fe649eba9f473ab887de3e73a98340ed4e98ae2e))
+- update DMG background color for improved visibility ([bdc2232](https://github.com/PVAS-Development/whisperdesk/commit/bdc22324ee87f4ca8cabce29c4484add6591eba7))
+
 ## [1.6.2](https://github.com/PVAS-Development/whisperdesk/compare/v1.6.1...v1.6.2) (2025-12-09)
 
 ### 🐛 Bug Fixes
