@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { SystemWarning } from '../SystemWarning';
 import { overrideElectronAPI } from '../../../../test/utils';
 
@@ -65,10 +65,17 @@ describe('SystemWarning', () => {
     render(<SystemWarning onRefresh={mockOnRefresh} />);
 
     const refreshButton = screen.getByRole('button', { name: /I have installed FFmpeg/i });
-    fireEvent.click(refreshButton);
+
+    await act(async () => {
+      fireEvent.click(refreshButton);
+    });
 
     expect(mockOnRefresh).toHaveBeenCalled();
     expect(screen.getByText(/Verifying Installation.../i)).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(refreshButton).not.toBeDisabled();
+    });
   });
 
   it('copies command to clipboard', async () => {
@@ -160,7 +167,10 @@ describe('SystemWarning', () => {
     render(<SystemWarning onRefresh={mockOnRefresh} />);
 
     const refreshButton = screen.getByRole('button', { name: /I have installed FFmpeg/i });
-    fireEvent.click(refreshButton);
+
+    await act(async () => {
+      fireEvent.click(refreshButton);
+    });
 
     await waitFor(() => {
       expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -224,11 +234,16 @@ describe('SystemWarning', () => {
     render(<SystemWarning onRefresh={mockOnRefresh} />);
 
     const refreshButton = screen.getByRole('button', { name: /I have installed FFmpeg/i });
-    fireEvent.click(refreshButton);
+
+    await act(async () => {
+      fireEvent.click(refreshButton);
+    });
 
     expect(mockOnRefresh).toHaveBeenCalledTimes(1);
 
-    await vi.advanceTimersByTimeAsync(1000);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1000);
+    });
 
     expect(mockOnRefresh).toHaveBeenCalledTimes(2);
 
@@ -236,12 +251,16 @@ describe('SystemWarning', () => {
   });
 
   it('handles onRefresh error', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     mockOnRefresh.mockRejectedValue(new Error('Refresh failed'));
 
     render(<SystemWarning onRefresh={mockOnRefresh} />);
 
     const refreshButton = screen.getByRole('button', { name: /I have installed FFmpeg/i });
-    fireEvent.click(refreshButton);
+
+    await act(async () => {
+      fireEvent.click(refreshButton);
+    });
 
     await waitFor(() => {
       expect(mockOnRefresh).toHaveBeenCalled();
@@ -250,5 +269,7 @@ describe('SystemWarning', () => {
     await waitFor(() => {
       expect(refreshButton).not.toBeDisabled();
     });
+
+    consoleErrorSpy.mockRestore();
   });
 });
