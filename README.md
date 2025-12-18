@@ -348,11 +348,14 @@ Contributions are welcome! Please see our [Contributing Guide](CONTRIBUTING.md) 
 - Code style and commit conventions
 - Submitting pull requests
 
-## 🔒 Security
+## 🔒 Privacy & Security
 
-- All audio/video processing happens **locally** on your device
-- No data is sent to external servers
-- The app is **code-signed and notarized** by Apple
+- **Local Processing**: All audio/video processing happens **locally** on your device. Your files never leave your computer.
+- **No Cloud Uploads**: We do not upload your media files or transcriptions to any server.
+- **Anonymous Analytics**: We collect minimal, anonymous usage data (e.g., app launches, feature usage) to improve the app. No personal data or file content is collected.
+- **Code Signing**: The app is **code-signed and notarized** by Apple for your safety.
+
+For more details, please read our [Privacy Policy](https://whisperdesk.org/privacy.html).
 
 ## 📄 License
 
