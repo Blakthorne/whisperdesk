@@ -1,3 +1,9 @@
+## [1.7.1](https://github.com/PVAS-Development/whisperdesk/compare/v1.7.0...v1.7.1) (2025-12-19)
+
+### 🐛 Bug Fixes
+
+- ensure progress percentage does not exceed 100 in transcribe function ([23ef4ff](https://github.com/PVAS-Development/whisperdesk/commit/23ef4ff3c4d47c84e608a9c42c180319c91fc277))
+
 ## [1.7.0](https://github.com/PVAS-Development/whisperdesk/compare/v1.6.2...v1.7.0) (2025-12-18)
 
 ### ✨ Features
