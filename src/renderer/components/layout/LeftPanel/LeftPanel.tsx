@@ -1,10 +1,9 @@
 import React from 'react';
-import { FileDropZone } from '../../../features/transcription';
+import { FileDropZone, FileQueue } from '../../../features/transcription';
 import { SettingsPanel } from '../../../features/settings';
 import { useAppTranscription } from '../../../contexts';
 import { useFFmpegStatus } from '../../../hooks';
 import { TranscriptionActions } from './TranscriptionActions';
-import { TranscriptionProgress } from './TranscriptionProgress';
 import { ErrorMessage } from './ErrorMessage';
 import { DonationSection } from './DonationSection';
 import { SystemWarning } from '../../ui';
@@ -18,6 +17,13 @@ function LeftPanel(): React.JSX.Element {
     setSettings,
     setModelDownloaded,
     handleFileSelect,
+    queue,
+    isBatchMode,
+    selectedQueueItemId,
+    handleFilesSelect,
+    removeFromQueue,
+    clearCompletedFromQueue,
+    selectQueueItem,
   } = useAppTranscription();
 
   const { isFFmpegAvailable, isChecking, recheckStatus } = useFFmpegStatus();
@@ -33,10 +39,23 @@ function LeftPanel(): React.JSX.Element {
 
       <FileDropZone
         onFileSelect={handleFileSelect}
-        selectedFile={selectedFile}
+        onFilesSelect={handleFilesSelect}
+        selectedFile={isBatchMode ? null : selectedFile}
+        queueCount={queue.length}
         disabled={isTranscribing}
         onClear={() => setSelectedFile(null)}
       />
+
+      {isBatchMode && (
+        <FileQueue
+          queue={queue}
+          onRemove={removeFromQueue}
+          onClearCompleted={clearCompletedFromQueue}
+          onSelectItem={selectQueueItem}
+          selectedItemId={selectedQueueItemId}
+          disabled={isTranscribing}
+        />
+      )}
 
       <SettingsPanel
         settings={settings}
@@ -46,8 +65,6 @@ function LeftPanel(): React.JSX.Element {
       />
 
       <TranscriptionActions isFFmpegAvailable={isFFmpegAvailable} />
-
-      <TranscriptionProgress />
 
       <ErrorMessage />
 

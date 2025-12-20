@@ -84,6 +84,19 @@ export interface TranscriptionResult {
   error?: string;
 }
 
+export type QueueItemStatus = 'pending' | 'processing' | 'completed' | 'error' | 'cancelled';
+
+export interface QueueItem {
+  id: string;
+  file: SelectedFile;
+  status: QueueItemStatus;
+  progress: TranscriptionProgress;
+  result?: TranscriptionResult;
+  error?: string;
+  startTime?: number;
+  endTime?: number;
+}
+
 export interface HistoryItem {
   id: number;
   fileName: string;

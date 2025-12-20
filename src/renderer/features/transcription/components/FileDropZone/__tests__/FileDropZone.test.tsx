@@ -159,6 +159,11 @@ describe('FileDropZone', () => {
     const onFileSelect = vi.fn();
     overrideElectronAPI({
       getPathForFile: vi.fn().mockReturnValue('/path/to/audio.mp3'),
+      getFileInfo: vi.fn().mockResolvedValue({
+        path: '/path/to/audio.mp3',
+        name: 'audio.mp3',
+        size: 1024,
+      }),
     });
 
     render(<FileDropZone onFileSelect={onFileSelect} selectedFile={null} disabled={false} />);
@@ -179,6 +184,7 @@ describe('FileDropZone', () => {
       expect(onFileSelect).toHaveBeenCalledWith({
         path: '/path/to/audio.mp3',
         name: 'audio.mp3',
+        size: 1024,
       });
     });
   });
@@ -267,6 +273,11 @@ describe('FileDropZone', () => {
     const onFileSelect = vi.fn();
     overrideElectronAPI({
       openFile: vi.fn().mockResolvedValue('/path/to/test.wav'),
+      getFileInfo: vi.fn().mockResolvedValue({
+        path: '/path/to/test.wav',
+        name: 'test.wav',
+        size: 2048,
+      }),
     });
 
     render(<FileDropZone onFileSelect={onFileSelect} selectedFile={null} disabled={false} />);
@@ -278,6 +289,7 @@ describe('FileDropZone', () => {
       expect(onFileSelect).toHaveBeenCalledWith({
         path: '/path/to/test.wav',
         name: 'test.wav',
+        size: 2048,
       });
     });
   });
@@ -334,5 +346,169 @@ describe('FileDropZone', () => {
     });
 
     expect(onFileSelect).not.toHaveBeenCalled();
+  });
+
+  describe('batch mode', () => {
+    it('should open multiple files dialog when onFilesSelect is provided', async () => {
+      const onFileSelect = vi.fn();
+      const onFilesSelect = vi.fn();
+      overrideElectronAPI({
+        openMultipleFiles: vi
+          .fn()
+          .mockResolvedValue(['/path/to/audio1.mp3', '/path/to/audio2.wav']),
+        getFileInfo: vi
+          .fn()
+          .mockImplementation((path: string) =>
+            Promise.resolve({ path, name: path.split('/').pop(), size: 1024 })
+          ),
+      });
+
+      render(
+        <FileDropZone
+          onFileSelect={onFileSelect}
+          onFilesSelect={onFilesSelect}
+          selectedFile={null}
+          disabled={false}
+        />
+      );
+
+      const dropzone = screen.getByRole('button');
+      fireEvent.click(dropzone);
+
+      await waitFor(() => {
+        expect(window.electronAPI?.openMultipleFiles).toHaveBeenCalled();
+      });
+
+      await waitFor(() => {
+        expect(onFilesSelect).toHaveBeenCalled();
+      });
+    });
+
+    it('should not call onFilesSelect when dialog returns empty array', async () => {
+      const onFileSelect = vi.fn();
+      const onFilesSelect = vi.fn();
+      overrideElectronAPI({
+        openMultipleFiles: vi.fn().mockResolvedValue([]),
+      });
+
+      render(
+        <FileDropZone
+          onFileSelect={onFileSelect}
+          onFilesSelect={onFilesSelect}
+          selectedFile={null}
+          disabled={false}
+        />
+      );
+
+      const dropzone = screen.getByRole('button');
+      fireEvent.click(dropzone);
+
+      await waitFor(() => {
+        expect(window.electronAPI?.openMultipleFiles).toHaveBeenCalled();
+      });
+
+      expect(onFilesSelect).not.toHaveBeenCalled();
+    });
+
+    it('should filter out invalid media files in batch mode', async () => {
+      const onFileSelect = vi.fn();
+      const onFilesSelect = vi.fn();
+      overrideElectronAPI({
+        openMultipleFiles: vi.fn().mockResolvedValue(['/path/to/doc.pdf', '/path/to/audio.mp3']),
+        getFileInfo: vi
+          .fn()
+          .mockImplementation((path: string) =>
+            Promise.resolve({ path, name: path.split('/').pop(), size: 1024 })
+          ),
+      });
+
+      render(
+        <FileDropZone
+          onFileSelect={onFileSelect}
+          onFilesSelect={onFilesSelect}
+          selectedFile={null}
+          disabled={false}
+        />
+      );
+
+      const dropzone = screen.getByRole('button');
+      fireEvent.click(dropzone);
+
+      await waitFor(() => {
+        expect(onFilesSelect).toHaveBeenCalledWith([
+          expect.objectContaining({ name: 'audio.mp3' }),
+        ]);
+      });
+    });
+
+    it('should not call onFilesSelect if all files are invalid', async () => {
+      const onFileSelect = vi.fn();
+      const onFilesSelect = vi.fn();
+      overrideElectronAPI({
+        openMultipleFiles: vi.fn().mockResolvedValue(['/path/to/doc.pdf', '/path/to/file.exe']),
+        getFileInfo: vi
+          .fn()
+          .mockImplementation((path: string) =>
+            Promise.resolve({ path, name: path.split('/').pop(), size: 1024 })
+          ),
+      });
+
+      render(
+        <FileDropZone
+          onFileSelect={onFileSelect}
+          onFilesSelect={onFilesSelect}
+          selectedFile={null}
+          disabled={false}
+        />
+      );
+
+      const dropzone = screen.getByRole('button');
+      fireEvent.click(dropzone);
+
+      await waitFor(() => {
+        expect(window.electronAPI?.openMultipleFiles).toHaveBeenCalled();
+      });
+
+      expect(onFilesSelect).not.toHaveBeenCalled();
+    });
+
+    it('should call onFilesSelect on drop in batch mode', async () => {
+      const onFileSelect = vi.fn();
+      const onFilesSelect = vi.fn();
+      overrideElectronAPI({
+        getPathForFile: vi.fn().mockReturnValue('/path/to/audio.mp3'),
+        getFileInfo: vi.fn().mockResolvedValue({
+          path: '/path/to/audio.mp3',
+          name: 'audio.mp3',
+          size: 1024,
+        }),
+      });
+
+      render(
+        <FileDropZone
+          onFileSelect={onFileSelect}
+          onFilesSelect={onFilesSelect}
+          selectedFile={null}
+          disabled={false}
+        />
+      );
+
+      const dropzone = screen.getByRole('button');
+      const file = new File(['audio content'], 'audio.mp3', { type: 'audio/mp3' });
+
+      const dataTransfer = {
+        files: [file],
+        items: [{ kind: 'file', type: file.type, getAsFile: () => file }],
+        types: ['Files'],
+      };
+
+      fireEvent.drop(dropzone, { dataTransfer });
+
+      await waitFor(() => {
+        expect(onFilesSelect).toHaveBeenCalled();
+      });
+
+      expect(onFileSelect).not.toHaveBeenCalled();
+    });
   });
 });

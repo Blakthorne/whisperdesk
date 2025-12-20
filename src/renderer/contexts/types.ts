@@ -2,8 +2,8 @@ import type {
   HistoryItem,
   SelectedFile,
   TranscriptionSettings,
-  TranscriptionProgress,
   OutputFormat,
+  QueueItem,
 } from '../types';
 import type { Theme } from '../hooks';
 
@@ -27,12 +27,13 @@ export interface TranscriptionStateContextValue {
   selectedFile: SelectedFile | null;
   settings: TranscriptionSettings;
   isTranscribing: boolean;
-  progress: TranscriptionProgress;
-  transcriptionStartTime: number | null;
   transcription: string;
   error: string | null;
   modelDownloaded: boolean;
   copySuccess: boolean;
+  queue: QueueItem[];
+  isBatchMode: boolean;
+  selectedQueueItemId: string | null;
 }
 
 export interface TranscriptionActionsContextValue {
@@ -44,6 +45,12 @@ export interface TranscriptionActionsContextValue {
   handleCancel: () => Promise<void>;
   handleSave: (format?: OutputFormat) => Promise<void>;
   handleCopy: () => Promise<void>;
+  handleFilesSelect: (files: SelectedFile[]) => void;
+  handleBatchTranscribe: () => Promise<void>;
+  handleBatchCancel: () => Promise<void>;
+  removeFromQueue: (id: string) => void;
+  clearCompletedFromQueue: () => void;
+  selectQueueItem: (id: string) => void;
 }
 
 export interface TranscriptionContextValue

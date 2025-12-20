@@ -1,8 +1,8 @@
-import React, { useCallback, useMemo, type ReactNode } from 'react';
-import { useTranscription } from '../features/transcription';
+import React, { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useTranscription, useBatchQueue } from '../features/transcription';
 import { useHistory } from '../features/history';
 import { useTheme, useCopyToClipboard, useElectronMenu } from '../hooks';
-import type { HistoryItem } from '../types';
+import type { HistoryItem, SelectedFile } from '../types';
 import {
   ThemeContext,
   HistoryContext,
@@ -39,8 +39,6 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
     selectedFile,
     settings,
     isTranscribing,
-    progress,
-    transcriptionStartTime,
     transcription,
     error,
     modelDownloaded,
@@ -58,6 +56,28 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
     onHistoryAdd: addHistoryItem,
   });
 
+  const [selectedQueueItemId, setSelectedQueueItemId] = useState<string | null>(null);
+
+  const {
+    queue,
+    isProcessing: isBatchProcessing,
+    addFiles,
+    removeFile,
+    clearCompleted,
+    startProcessing,
+    cancelProcessing,
+    getCompletedTranscription,
+  } = useBatchQueue({
+    settings,
+    onHistoryAdd: addHistoryItem,
+    onFirstComplete: (id, text) => {
+      setSelectedQueueItemId(id);
+      setTranscription(text);
+    },
+  });
+
+  const isBatchMode = queue.length > 0;
+
   const selectHistoryItem = useCallback(
     (item: HistoryItem): void => {
       setTranscription(item.fullText);
@@ -71,14 +91,55 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
     await handleCopy(copyToClipboard);
   }, [handleCopy, copyToClipboard]);
 
+  const handleFilesSelect = useCallback(
+    (files: SelectedFile[]): void => {
+      addFiles(files);
+    },
+    [addFiles]
+  );
+
+  const handleBatchTranscribe = useCallback(async (): Promise<void> => {
+    await startProcessing();
+  }, [startProcessing]);
+
+  const handleBatchCancel = useCallback(async (): Promise<void> => {
+    await cancelProcessing();
+  }, [cancelProcessing]);
+
+  const removeFromQueue = useCallback(
+    (id: string): void => {
+      removeFile(id);
+      if (selectedQueueItemId === id) {
+        setSelectedQueueItemId(null);
+      }
+    },
+    [removeFile, selectedQueueItemId]
+  );
+
+  const clearCompletedFromQueue = useCallback((): void => {
+    clearCompleted();
+    setSelectedQueueItemId(null);
+  }, [clearCompleted]);
+
+  const selectQueueItem = useCallback(
+    (id: string): void => {
+      setSelectedQueueItemId(id);
+      const transcriptionText = getCompletedTranscription(id);
+      if (transcriptionText) {
+        setTranscription(transcriptionText);
+      }
+    },
+    [getCompletedTranscription, setTranscription]
+  );
+
   useElectronMenu({
     onOpenFile: () => {
-      if (!isTranscribing) {
+      if (!isTranscribing && !isBatchProcessing) {
         handleFileSelectFromMenu();
       }
     },
     onSaveFile: () => {
-      if (transcription && !isTranscribing) {
+      if (transcription && !isTranscribing && !isBatchProcessing) {
         handleSave();
       }
     },
@@ -88,12 +149,16 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
       }
     },
     onStartTranscription: () => {
-      if (selectedFile && !isTranscribing) {
+      if (isBatchMode && queue.some((item) => item.status === 'pending') && !isBatchProcessing) {
+        handleBatchTranscribe();
+      } else if (selectedFile && !isTranscribing) {
         handleTranscribe();
       }
     },
     onCancelTranscription: () => {
-      if (isTranscribing) {
+      if (isBatchProcessing) {
+        handleBatchCancel();
+      } else if (isTranscribing) {
         handleCancel();
       }
     },
@@ -130,24 +195,27 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
     () => ({
       selectedFile,
       settings,
-      isTranscribing,
-      progress,
-      transcriptionStartTime,
+      isTranscribing: isTranscribing || isBatchProcessing,
       transcription,
       error,
       modelDownloaded,
       copySuccess,
+      queue,
+      isBatchMode,
+      selectedQueueItemId,
     }),
     [
       selectedFile,
       settings,
       isTranscribing,
-      progress,
-      transcriptionStartTime,
+      isBatchProcessing,
       transcription,
       error,
       modelDownloaded,
       copySuccess,
+      queue,
+      isBatchMode,
+      selectedQueueItemId,
     ]
   );
 
@@ -161,6 +229,12 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
       handleCancel,
       handleSave,
       handleCopy: onCopy,
+      handleFilesSelect,
+      handleBatchTranscribe,
+      handleBatchCancel,
+      removeFromQueue,
+      clearCompletedFromQueue,
+      selectQueueItem,
     }),
     [
       setSelectedFile,
@@ -171,6 +245,12 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
       handleCancel,
       handleSave,
       onCopy,
+      handleFilesSelect,
+      handleBatchTranscribe,
+      handleBatchCancel,
+      removeFromQueue,
+      clearCompletedFromQueue,
+      selectQueueItem,
     ]
   );
 

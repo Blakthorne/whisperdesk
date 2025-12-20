@@ -43,6 +43,7 @@ interface UseTranscriptionReturn {
   handleSave: (format?: OutputFormat) => Promise<void>;
   handleCopy: (copyToClipboard: (text: string) => Promise<boolean>) => Promise<boolean>;
   clearError: () => void;
+  resetProgress: () => void;
 }
 
 export function useTranscription(options: UseTranscriptionOptions = {}): UseTranscriptionReturn {
@@ -301,6 +302,12 @@ export function useTranscription(options: UseTranscriptionOptions = {}): UseTran
     setError(null);
   }, []);
 
+  const resetProgress = useCallback((): void => {
+    clearProgressMessageTimeout();
+    setProgress({ percent: 0, status: '' });
+    setTranscriptionStartTime(null);
+  }, [clearProgressMessageTimeout]);
+
   return {
     selectedFile,
     settings,
@@ -322,5 +329,6 @@ export function useTranscription(options: UseTranscriptionOptions = {}): UseTran
     handleSave,
     handleCopy,
     clearError,
+    resetProgress,
   };
 }
