@@ -252,8 +252,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 10px 16px;
-  background: var(--background-primary);
-  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
 }
 
 .sermon-actions-left {
@@ -274,63 +274,9 @@
   gap: 8px;
 }
 
-/* Action Buttons */
-.sermon-action-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 36px;
-  padding: 0 16px;
-  font-size: 13px;
-  font-weight: 500;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-}
-
-.sermon-action-btn.copy-btn {
-  background: var(--background-secondary);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-}
-
-.sermon-action-btn.copy-btn:hover:not(:disabled) {
-  background: var(--hover-bg);
-  border-color: var(--accent-color);
-}
-
-.sermon-action-btn.save-edits-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--background-secondary);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-}
-
-.sermon-action-btn.save-edits-btn:hover:not(:disabled) {
-  background: var(--hover-bg);
-  border-color: var(--accent-color);
-}
-
-.sermon-action-btn.save-edits-btn svg {
-  flex-shrink: 0;
-}
-
-.sermon-action-btn.export-btn {
-  background: var(--accent-color);
-  color: white;
-  border: 1px solid var(--accent-color);
-}
-
-.sermon-action-btn.export-btn:hover:not(:disabled) {
-  filter: brightness(1.1);
-}
-
-.sermon-action-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+/* Action Buttons - now using Button component, minimal overrides */
+.sermon-actions-right .btn {
+  /* Consistent sizing for sermon action buttons */
 }
 
 /* Save Dropdown */
@@ -345,14 +291,14 @@
   min-width: 180px;
   margin-top: 6px;
   padding: 6px;
-  background-color: #ffffff;
-  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.1));
-  border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
   opacity: 0;
   visibility: hidden;
   transform: translateY(-8px);
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
   z-index: 100;
 }
 
@@ -371,25 +317,15 @@
   background: transparent;
   color: var(--text-primary);
   font-size: 13px;
+  font-weight: 500;
   text-align: left;
   cursor: pointer;
-  border-radius: 6px;
-  transition: background 0.15s ease;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
 }
 
 .sermon-save-menu button:hover {
-  background: var(--hover-bg);
-}
-
-/* Dark theme adjustments for dropdown */
-[data-theme='dark'] .sermon-save-menu {
-  background-color: #1a1a1e;
-  border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-}
-
-[data-theme='dark'] .sermon-save-menu button:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--surface-hover);
 }
 
 /* Inline tags styling in editor content */
@@ -397,6 +333,98 @@
   font-size: 0.9em;
   color: var(--text-secondary);
   margin: 0.5em 0 1em 0;
+}
+
+/* ============================================
+   DOCUMENT STATE INDICATOR
+   Professional save state feedback following 
+   NN/g and Material Design best practices
+   ============================================ */
+
+.document-state-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+}
+
+.document-state-indicator .state-text {
+  white-space: nowrap;
+}
+
+/* Unsaved state - attention-getting but not alarming */
+.document-state-indicator.state-unsaved {
+  background: var(--warning-light);
+  color: var(--warning-dark);
+}
+
+.document-state-indicator.state-unsaved .state-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--warning);
+  border-radius: 50%;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(0.85);
+  }
+}
+
+/* Saving state - progress indicator */
+.document-state-indicator.state-saving {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.document-state-indicator .state-spinner {
+  animation: spin 1s linear infinite;
+}
+
+/* Saved state - subtle confirmation */
+.document-state-indicator.state-saved {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.document-state-indicator .state-check {
+  /* Check icon - no animation needed */
+}
+
+/* Save button state variations */
+.save-edits-btn.save-state-unsaved {
+  /* Primary variant when there are unsaved changes - handled by variant prop */
+}
+
+.save-edits-btn.save-state-saving {
+  cursor: wait;
+}
+
+.save-edits-btn.save-state-saved {
+  /* Secondary variant when saved - handled by variant prop */
+}
+
+.save-edits-btn .save-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Responsive adjustments for actions header */
@@ -411,5 +439,14 @@
     height: 32px;
     padding: 0 12px;
     font-size: 12px;
+  }
+
+  .document-state-indicator {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+
+  .document-state-indicator .state-text {
+    /* On small screens, consider hiding text */
   }
 }

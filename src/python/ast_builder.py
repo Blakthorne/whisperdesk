@@ -99,6 +99,7 @@ class ASTBuilder:
         quote_boundaries: List[QuoteBoundary],
         title: Optional[str] = None,
         bible_passage: Optional[str] = None,
+        speaker: Optional[str] = None,
         tags: Optional[List[str]] = None,
     ) -> ASTBuilderResult:
         """
@@ -109,6 +110,7 @@ class ASTBuilder:
             quote_boundaries: List of QuoteBoundary objects from bible_quote_processor
             title: Document title (from metadata)
             bible_passage: Main Bible passage (from metadata)
+            speaker: Speaker/Author (from metadata)
             tags: Extracted tags
         
         Returns:
@@ -140,7 +142,8 @@ class ASTBuilder:
         root = create_document_root(
             children=paragraph_nodes,
             title=title,
-            bible_passage=bible_passage
+            bible_passage=bible_passage,
+            speaker=speaker
         )
         self._end_stage('create_document')
         
@@ -404,6 +407,7 @@ def build_ast(
     quote_boundaries: List[QuoteBoundary],
     title: Optional[str] = None,
     bible_passage: Optional[str] = None,
+    speaker: Optional[str] = None,
     tags: Optional[List[str]] = None,
     config: Optional[ASTBuilderConfig] = None
 ) -> ASTBuilderResult:
@@ -415,6 +419,7 @@ def build_ast(
         quote_boundaries: List of QuoteBoundary objects
         title: Document title
         bible_passage: Main Bible passage
+        speaker: Speaker/Author (from metadata)
         tags: Extracted tags
         config: Optional builder configuration
     
@@ -427,6 +432,7 @@ def build_ast(
         quote_boundaries=quote_boundaries,
         title=title,
         bible_passage=bible_passage,
+        speaker=speaker,
         tags=tags
     )
 

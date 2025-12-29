@@ -21,6 +21,8 @@ function RightPanel(): React.JSX.Element {
     documentHtml,
     setDocumentHtml,
     saveEdits,
+    documentSaveState,
+    lastSavedAt,
   } = useAppTranscription();
 
   if (showHistory) {
@@ -49,6 +51,8 @@ function RightPanel(): React.JSX.Element {
           copySuccess={copySuccess}
           onHtmlChange={setDocumentHtml}
           onSaveEdits={saveEdits}
+          saveState={documentSaveState}
+          lastSaved={lastSavedAt}
         />
       </div>
     );

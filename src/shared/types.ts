@@ -54,6 +54,8 @@ export interface SermonDocument {
   title?: string;
   /** Main Bible passage from audio metadata comment field */
   biblePassage?: string;
+  /** Speaker/Author extracted from audio metadata authors field */
+  speaker?: string;
   /** Extracted scripture references */
   references: string[];
   /** Extracted keyword tags */

@@ -7,7 +7,11 @@ import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
 import type { SermonDocument, OutputFormat } from '../../../../types';
 import { SermonToolbar } from './SermonToolbar';
+import { Button } from '../../../../components/ui/Button';
 import './SermonEditor.css';
+
+/** Document save state for UI indicators */
+export type DocumentSaveState = 'saved' | 'unsaved' | 'saving';
 
 export interface SermonEditorProps {
   /** Sermon document data from pipeline processing */
@@ -24,6 +28,10 @@ export interface SermonEditorProps {
   onHtmlChange?: (html: string) => void;
   /** Callback when user clicks Save Edits button */
   onSaveEdits?: () => void;
+  /** Current save state of the document */
+  saveState?: DocumentSaveState;
+  /** Timestamp of last successful save */
+  lastSaved?: Date | null;
 }
 
 /**
@@ -38,6 +46,8 @@ function SermonEditor({
   copySuccess,
   onHtmlChange,
   onSaveEdits,
+  saveState = 'saved',
+  lastSaved,
 }: SermonEditorProps): React.JSX.Element {
   // Convert sermon document to HTML if no initialHtml provided
   const defaultContent = useMemo(() => {
@@ -74,6 +84,11 @@ function SermonEditor({
     if (document.tags.length > 0) {
       const tagsHtml = document.tags.map((tag) => escapeHtml(tag)).join(', ');
       html += `<p><strong>Tags:</strong> ${tagsHtml}</p>`;
+    }
+
+    // Speaker section (below Tags) - from audio metadata authors field
+    if (document.speaker) {
+      html += `<p><strong>Speaker:</strong> ${escapeHtml(document.speaker)}</p>`;
     }
 
     // Separator
@@ -160,59 +175,179 @@ function SermonEditor({
     return editor?.getText() || '';
   }, [editor]);
 
+  // Format relative time for last saved
+  const formatLastSaved = (date: Date | null | undefined): string => {
+    if (!date) return '';
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffSecs = Math.floor(diffMs / 1000);
+    const diffMins = Math.floor(diffSecs / 60);
+    const diffHours = Math.floor(diffMins / 60);
+
+    if (diffSecs < 10) return 'just now';
+    if (diffSecs < 60) return `${diffSecs}s ago`;
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return date.toLocaleDateString();
+  };
+
+  // Determine button text and icon based on save state
+  const getSaveButtonContent = (): { text: string; icon: React.ReactNode } => {
+    if (saveState === 'saving') {
+      return {
+        text: 'Saving...',
+        icon: (
+          <svg
+            className="save-spinner"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+          </svg>
+        ),
+      };
+    }
+    if (saveState === 'saved') {
+      return {
+        text: 'Saved',
+        icon: (
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        ),
+      };
+    }
+    // unsaved state
+    return {
+      text: 'Save Edits',
+      icon: (
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+          <polyline points="17 21 17 13 7 13 7 21"></polyline>
+          <polyline points="7 3 7 8 15 8"></polyline>
+        </svg>
+      ),
+    };
+  };
+
+  const { text: saveButtonText, icon: saveButtonIcon } = getSaveButtonContent();
+
   return (
     <div className="sermon-editor-container">
       {/* Action buttons header */}
       <div className="sermon-actions-header">
         <div className="sermon-actions-left">
           <span className="sermon-word-count">{wordCount.toLocaleString()} words</span>
+          {/* Document State Indicator */}
+          {onSaveEdits && (
+            <div className={`document-state-indicator state-${saveState}`}>
+              {saveState === 'unsaved' && (
+                <>
+                  <span className="state-dot" aria-hidden="true" />
+                  <span className="state-text">Unsaved changes</span>
+                </>
+              )}
+              {saveState === 'saving' && (
+                <>
+                  <svg
+                    className="state-spinner"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                  </svg>
+                  <span className="state-text">Saving...</span>
+                </>
+              )}
+              {saveState === 'saved' && lastSaved && (
+                <>
+                  <svg
+                    className="state-check"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  <span className="state-text">Saved {formatLastSaved(lastSaved)}</span>
+                </>
+              )}
+            </div>
+          )}
         </div>
         <div className="sermon-actions-right">
           {onSaveEdits && (
-            <button
+            <Button
+              variant={saveState === 'unsaved' ? 'primary' : 'secondary'}
+              size="sm"
               onClick={onSaveEdits}
-              disabled={!hasContent}
-              className="sermon-action-btn save-edits-btn"
-              title="Save Edits to History"
-              type="button"
+              disabled={!hasContent || saveState === 'saving' || saveState === 'saved'}
+              className={`save-edits-btn save-state-${saveState}`}
+              title={
+                saveState === 'saved'
+                  ? 'All changes saved'
+                  : saveState === 'saving'
+                    ? 'Saving changes...'
+                    : 'Save Edits to History'
+              }
+              icon={saveButtonIcon}
             >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                <polyline points="7 3 7 8 15 8"></polyline>
-              </svg>
-              Save Edits
-            </button>
+              {saveButtonText}
+            </Button>
           )}
 
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={onCopy}
             disabled={!hasContent}
-            className="sermon-action-btn copy-btn"
+            className={copySuccess ? 'copied' : ''}
             title="Copy to Clipboard"
-            type="button"
           >
             {copySuccess ? '✓ Copied!' : 'Copy'}
-          </button>
+          </Button>
 
           <div className="sermon-save-dropdown">
-            <button
-              disabled={!hasContent}
-              className="sermon-action-btn export-btn"
-              title="Save Document"
-              type="button"
-            >
+            <Button variant="primary" size="sm" disabled={!hasContent} title="Save Document">
               Save As...
-            </button>
+            </Button>
             <div className="sermon-save-menu">
               <button onClick={() => onSave('txt')} type="button">
                 Plain Text (.txt)

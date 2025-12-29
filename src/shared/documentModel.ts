@@ -246,6 +246,8 @@ export interface DocumentRootNode extends BaseNode {
   title?: string;
   /** Main Bible passage (from audio metadata) */
   biblePassage?: string;
+  /** Speaker/Author (from audio metadata authors field) */
+  speaker?: string;
   /** Top-level children (paragraphs, quote blocks, headings, etc.) */
   children: DocumentNode[];
 }

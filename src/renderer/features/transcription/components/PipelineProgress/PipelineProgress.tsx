@@ -74,22 +74,27 @@ export function PipelineProgress({
 
   const currentStage = progress?.currentStage;
 
-  // Calculate overall progress based on stages
+  // Calculate overall progress based on weighted stages
+  // Stage weights: Transcribe=60%, Metadata=5%, Bible Quotes=25%, Paragraphs=5%, Tags=5%
   const overallProgress = useMemo(() => {
     if (isComplete) return 100;
     if (!progress) return 0;
 
-    // Each stage contributes equally to overall progress
-    const stageWeight = 100 / STAGES.length;
-    const currentStageIndex = STAGES.findIndex((s) => s.id === currentStage?.id);
+    const stageWeights: Record<number, { start: number; end: number }> = {
+      1: { start: 0, end: 60 },
+      2: { start: 60, end: 65 },
+      3: { start: 65, end: 90 },
+      4: { start: 90, end: 95 },
+      5: { start: 95, end: 100 },
+    };
 
-    if (currentStageIndex < 0) return 0;
+    const stageId = currentStage?.id;
+    if (!stageId || !stageWeights[stageId]) return 0;
 
-    // Completed stages + portion of current stage
-    const completedProgress = currentStageIndex * stageWeight;
-    const currentStageProgress = (progress.stageProgress / 100) * stageWeight;
+    const weight = stageWeights[stageId];
+    const stageContribution = (progress.stageProgress / 100) * (weight.end - weight.start);
 
-    return Math.min(100, Math.round(completedProgress + currentStageProgress));
+    return Math.min(100, Math.round(weight.start + stageContribution));
   }, [progress, currentStage, isComplete]);
 
   // Determine if we should show pulsing animation

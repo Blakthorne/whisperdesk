@@ -40,6 +40,9 @@ export interface DocumentContextValue {
   /** Main Bible passage */
   biblePassage: string | undefined;
 
+  /** Speaker/Author (from audio metadata) */
+  speaker: string | undefined;
+
   /** Total word count */
   wordCount: number;
 
@@ -95,6 +98,7 @@ const defaultContextValue: DocumentContextValue = {
   isLegacy: false,
   title: undefined,
   biblePassage: undefined,
+  speaker: undefined,
   wordCount: 0,
   statistics: null,
   quotes: [],
@@ -158,6 +162,7 @@ export function DocumentProvider({
       isLegacy: manager.getIsLegacy(),
       title: manager.getTitle(),
       biblePassage: manager.getBiblePassage(),
+      speaker: manager.getSpeaker(),
       wordCount: manager.getWordCount(),
       statistics: manager.getStatistics(),
       quotes: manager.getAllQuotes(),

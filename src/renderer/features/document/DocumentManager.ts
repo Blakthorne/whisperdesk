@@ -177,6 +177,13 @@ export class DocumentManager {
     return this.state.root.biblePassage;
   }
 
+  /**
+   * Get speaker/author.
+   */
+  getSpeaker(): string | undefined {
+    return this.state.root.speaker;
+  }
+
   // ============================================================================
   // NODE LOOKUPS (O(1) via index)
   // ============================================================================

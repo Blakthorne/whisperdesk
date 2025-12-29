@@ -132,13 +132,51 @@ export function useBatchQueue(options: UseBatchQueueOptions): UseBatchQueueRetur
       }
 
       progressUnsubscribeRef.current = onTranscriptionProgress((progress) => {
-        setQueue((prev) => prev.map((q) => (q.id === item.id ? { ...q, progress } : q)));
+        // Only update queue progress from transcription events when NOT in sermon mode
+        // In sermon mode, we use the pipeline's overall progress instead
+        if (!usePythonTranscription) {
+          setQueue((prev) => prev.map((q) => (q.id === item.id ? { ...q, progress } : q)));
+        }
       });
 
       // Subscribe to pipeline progress for sermon processing
       if (usePythonTranscription) {
         pipelineProgressUnsubscribeRef.current = onPipelineProgress((progress) => {
           setPipelineProgress(progress);
+          
+          // Calculate overall progress using weighted stages (matching PipelineProgress component)
+          // Stage weights: Transcribe=60%, Metadata=5%, Bible Quotes=25%, Paragraphs=5%, Tags=5%
+          const stageWeights: Record<number, { start: number; end: number }> = {
+            1: { start: 0, end: 60 },
+            2: { start: 60, end: 65 },
+            3: { start: 65, end: 90 },
+            4: { start: 90, end: 95 },
+            5: { start: 95, end: 100 },
+          };
+          
+          const stageId = progress.currentStage?.id;
+          let calculatedOverallProgress = 0;
+          if (stageId && stageWeights[stageId]) {
+            const weight = stageWeights[stageId];
+            const stageContribution = (progress.stageProgress / 100) * (weight.end - weight.start);
+            calculatedOverallProgress = Math.min(100, Math.round(weight.start + stageContribution));
+          }
+          
+          // Update the queue item's progress to reflect overall pipeline progress
+          // This ensures the FileQueue progress bar matches the PipelineProgress display
+          setQueue((prev) =>
+            prev.map((q) =>
+              q.id === item.id
+                ? {
+                    ...q,
+                    progress: {
+                      percent: calculatedOverallProgress,
+                      status: progress.message,
+                    },
+                  }
+                : q
+            )
+          );
         });
       }
 

@@ -24,6 +24,7 @@ import { getPythonPath, getWhisperCacheDir } from './python-installer';
 export interface SermonProcessingResult {
   title?: string;
   biblePassage?: string;
+  speaker?: string;
   tags: string[];
   references: string[];
   body: string;
@@ -48,6 +49,7 @@ interface PythonResponse {
   text?: string;
   title?: string;
   biblePassage?: string;
+  speaker?: string;
   tags?: string[];
   references?: string[];
   body?: string;
@@ -116,13 +118,27 @@ async function runPythonCommand<T>(
     let stdout = '';
     let stderr = '';
     let lastResult: T | null = null;
+    let stdoutBuffer = ''; // Buffer for incomplete JSON lines
 
     proc.stdout.on('data', (data) => {
       const text = data.toString();
       stdout += text;
+      stdoutBuffer += text;
 
       // Parse line-delimited JSON responses
-      const lines = text.split('\n').filter((line: string) => line.trim());
+      // Only process complete lines (ending with newline)
+      // Keep partial lines in buffer for the next chunk
+      const lastNewlineIndex = stdoutBuffer.lastIndexOf('\n');
+      if (lastNewlineIndex === -1) {
+        // No complete lines yet, keep buffering
+        return;
+      }
+
+      // Split into complete lines and remaining partial line
+      const completeData = stdoutBuffer.substring(0, lastNewlineIndex);
+      stdoutBuffer = stdoutBuffer.substring(lastNewlineIndex + 1);
+
+      const lines = completeData.split('\n').filter((line: string) => line.trim());
       for (const line of lines) {
         try {
           const response = JSON.parse(line) as PythonResponse;
@@ -148,6 +164,21 @@ async function runPythonCommand<T>(
 
     proc.on('close', (code) => {
       currentProcess = null;
+
+      // Process any remaining data in the buffer
+      if (stdoutBuffer.trim()) {
+        try {
+          const response = JSON.parse(stdoutBuffer) as PythonResponse;
+          if (response.type === 'result') {
+            lastResult = response as unknown as T;
+          } else if (response.type === 'error') {
+            reject(new Error(response.error || 'Unknown Python error'));
+            return;
+          }
+        } catch {
+          // Not JSON, ignore
+        }
+      }
 
       if (isCancelled) {
         reject(new Error('Transcription cancelled'));

@@ -42,6 +42,9 @@ export interface UseDocumentResult {
   /** Main Bible passage */
   biblePassage: string | undefined;
 
+  /** Speaker/Author (from audio metadata) */
+  speaker: string | undefined;
+
   /** Total word count */
   wordCount: number;
 
@@ -141,6 +144,7 @@ export function useDocument(): UseDocumentResult {
     root,
     title: context.title,
     biblePassage: context.biblePassage,
+    speaker: context.speaker,
     wordCount: context.wordCount,
     statistics: context.statistics,
     paragraphs: context.paragraphs,

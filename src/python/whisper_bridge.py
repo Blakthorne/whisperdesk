@@ -230,10 +230,12 @@ def get_tag_model():
 
 def extract_audio_metadata(file_path: str) -> Dict[str, Optional[str]]:
     """
-    Extract Title and Comment metadata from audio file.
+    Extract Title, Comment, and Authors metadata from audio file.
+    
+    Supports multiple audio formats including MP3, M4A/AAC, FLAC, OGG, etc.
     
     Returns:
-        Dict with 'title' and 'comment' keys (values may be None if not found)
+        Dict with 'title', 'comment', and 'authors' keys (values may be None if not found)
     """
     try:
         from mutagen._file import File as MutagenFile
@@ -244,6 +246,7 @@ def extract_audio_metadata(file_path: str) -> Dict[str, Optional[str]]:
         
         title = None
         comment = None
+        authors = None
         
         if audio is not None:
             # Try to get title
@@ -253,28 +256,74 @@ def extract_audio_metadata(file_path: str) -> Dict[str, Optional[str]]:
             # Try to get comment - this is trickier as it varies by format
             if 'comment' in audio:
                 comment = str(audio['comment'][0]) if audio['comment'] else None
+            
+            # Try to get authors/artist - check various common field names
+            # The "Authors" field in audio metadata is typically stored as "artist"
+            # but can also be "author", "albumartist", "composer", or "performer"
+            for field in ['artist', 'author', 'albumartist', 'composer', 'performer']:
+                if field in audio and audio[field]:
+                    authors = str(audio[field][0])
+                    break
         
-        # For MP3 files, also try the full ID3 tags for comments
-        if comment is None and file_path.lower().endswith('.mp3'):
+        # For MP3 files, also try the full ID3 tags for comments and authors
+        if file_path.lower().endswith('.mp3'):
             try:
                 id3 = ID3(file_path)
+                
                 # Comments can be in various frames
-                for key in id3.keys():
-                    if key.startswith('COMM'):
-                        comment = str(id3[key].text[0]) if id3[key].text else None
-                        if comment:
-                            break
-            except:
+                if comment is None:
+                    for key in id3.keys():
+                        if key.startswith('COMM'):
+                            comment = str(id3[key].text[0]) if id3[key].text else None
+                            if comment:
+                                break
+                
+                # Check for author in TPE1 (Lead performer/soloist), TPE2 (Band), TEXT (Lyricist/Text writer)
+                if authors is None:
+                    for frame_id in ['TPE1', 'TPE2', 'TPE3', 'TPE4', 'TCOM', 'TEXT']:
+                        if frame_id in id3:
+                            frame_val = id3[frame_id].text[0] if id3[frame_id].text else None
+                            if frame_val:
+                                authors = str(frame_val)
+                                break
+            except Exception:
+                pass
+        
+        # For M4A/AAC files, try specific atoms
+        if file_path.lower().endswith(('.m4a', '.m4b', '.mp4', '.aac')):
+            try:
+                from mutagen.mp4 import MP4
+                mp4 = MP4(file_path)
+                
+                if mp4.tags:
+                    # M4A uses different key format: ©ART for artist, ©wrt for composer, etc.
+                    if authors is None:
+                        for key in ['©ART', '©wrt', 'aART', '----:com.apple.iTunes:AUTHOR']:
+                            if key in mp4.tags:
+                                val = mp4.tags[key]
+                                if val:
+                                    authors = str(val[0]) if isinstance(val, list) else str(val)
+                                    break
+                    
+                    if title is None and '©nam' in mp4.tags:
+                        val = mp4.tags['©nam']
+                        title = str(val[0]) if isinstance(val, list) else str(val)
+                    
+                    if comment is None and '©cmt' in mp4.tags:
+                        val = mp4.tags['©cmt']
+                        comment = str(val[0]) if isinstance(val, list) else str(val)
+            except Exception:
                 pass
         
         return {
             'title': title,
-            'comment': comment
+            'comment': comment,
+            'authors': authors
         }
     except ImportError:
-        return {'title': None, 'comment': None, 'error': 'mutagen not installed'}
+        return {'title': None, 'comment': None, 'authors': None, 'error': 'mutagen not installed'}
     except Exception as e:
-        return {'title': None, 'comment': None, 'error': str(e)}
+        return {'title': None, 'comment': None, 'authors': None, 'error': str(e)}
 
 
 # ============================================================================
@@ -566,6 +615,7 @@ def process_sermon(
     result = {
         'title': None,
         'biblePassage': None,
+        'speaker': None,
         'tags': [],
         'references': [],
         'body': '',
@@ -582,6 +632,7 @@ def process_sermon(
     metadata = extract_audio_metadata(file_path)
     result['title'] = metadata.get('title')
     result['biblePassage'] = metadata.get('comment')
+    result['speaker'] = metadata.get('authors')  # Authors metadata becomes speaker
     emit_stage_complete(2, "Extracting metadata")
     
     # Stage 3: Process Bible quotes
@@ -613,6 +664,7 @@ def process_sermon(
                 quote_boundaries=quote_boundaries,
                 title=result['title'],
                 bible_passage=result['biblePassage'],
+                speaker=result['speaker'],
                 tags=tags
             )
             

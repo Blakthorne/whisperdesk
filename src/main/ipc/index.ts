@@ -388,6 +388,7 @@ export function registerIpcHandlers(getMainWindow: () => BrowserWindow | null) {
             sermonDocument: {
               title: result.sermon.title,
               biblePassage: result.sermon.biblePassage,
+              speaker: result.sermon.speaker,
               references: result.sermon.references || [],
               tags: result.sermon.tags || [],
               body: result.sermon.body || '',

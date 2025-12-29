@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState, type ReactNode } from 'react';
+import React, { useCallback, useMemo, useState, useRef, type ReactNode } from 'react';
 import { useTranscription, useBatchQueue, useQueueSelection } from '../features/transcription';
 import { useHistory } from '../features/history';
 import { useTheme, useCopyToClipboard, useElectronMenu } from '../hooks';
@@ -15,6 +15,7 @@ import type {
   HistoryContextValue,
   TranscriptionStateContextValue,
   TranscriptionActionsContextValue,
+  DocumentSaveState,
 } from './types';
 
 interface AppProviderProps {
@@ -55,6 +56,13 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
   const [sermonDocument, setSermonDocument] = useState<SermonDocument | null>(null);
   const [documentHtml, setDocumentHtml] = useState<string | null>(null);
   const [currentHistoryItemId, setCurrentHistoryItemId] = useState<string | null>(null);
+  const [documentSaveState, setDocumentSaveState] = useState<DocumentSaveState>('saved');
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+
+  // Track the last saved HTML to determine if document is dirty
+  const lastSavedHtmlRef = useRef<string | null>(null);
+  // Flag to skip initial HTML sync from editor (which fires on mount)
+  const isInitialHtmlSyncRef = useRef<boolean>(true);
 
   const {
     queue,
@@ -81,6 +89,11 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
       if (sermonDoc) {
         setSermonDocument(sermonDoc);
         setDocumentHtml(null); // Reset HTML when new document arrives
+        // Reset save state for new document
+        setDocumentSaveState('saved');
+        lastSavedHtmlRef.current = null;
+        isInitialHtmlSyncRef.current = true; // Reset flag for new document
+        setLastSavedAt(new Date());
       } else {
         setSermonDocument(null);
         setDocumentHtml(null);
@@ -102,14 +115,57 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
       }
       // Track which history item is currently being viewed
       setCurrentHistoryItemId(item.id);
+      // Mark as saved when loading from history
+      setDocumentSaveState('saved');
+      lastSavedHtmlRef.current = item.documentHtml || null;
+      isInitialHtmlSyncRef.current = true; // Reset flag for new document
+      setLastSavedAt(item.date ? new Date(item.date) : null);
       setShowHistory(false);
     },
     [setTranscription, setSelectedFile, setShowHistory]
   );
 
+  // Wrapper for setDocumentHtml that tracks dirty state
+  const handleSetDocumentHtml = useCallback((html: string | null): void => {
+    setDocumentHtml(html);
+
+    // Skip if null (clearing document)
+    if (html === null) {
+      return;
+    }
+
+    // Skip the initial HTML sync from editor mount - this is not a user edit
+    // The flag is reset when a new document loads (onFirstComplete, selectHistoryItem)
+    if (isInitialHtmlSyncRef.current) {
+      isInitialHtmlSyncRef.current = false;
+      lastSavedHtmlRef.current = html;
+      return; // First sync establishes baseline, not a change
+    }
+
+    // If baseline hasn't been set yet (edge case), set it now
+    if (lastSavedHtmlRef.current === null) {
+      lastSavedHtmlRef.current = html;
+      return;
+    }
+
+    // Check if document has changed from last saved version
+    if (html !== lastSavedHtmlRef.current) {
+      setDocumentSaveState('unsaved');
+    }
+  }, []);
+
   const saveEdits = useCallback((): void => {
     if (currentHistoryItemId && documentHtml) {
+      setDocumentSaveState('saving');
+      // Simulate a brief saving state for UX feedback (async operation is instant)
       updateHistoryItem(currentHistoryItemId, { documentHtml });
+      // Update tracking
+      lastSavedHtmlRef.current = documentHtml;
+      setLastSavedAt(new Date());
+      // Brief delay to show saving state, then transition to saved
+      setTimeout(() => {
+        setDocumentSaveState('saved');
+      }, 300);
     }
   }, [currentHistoryItemId, documentHtml, updateHistoryItem]);
 
@@ -276,6 +332,8 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
       sermonDocument,
       documentHtml,
       pipelineProgress,
+      documentSaveState,
+      lastSavedAt,
     }),
     [
       selectedFile,
@@ -290,6 +348,8 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
       sermonDocument,
       documentHtml,
       pipelineProgress,
+      documentSaveState,
+      lastSavedAt,
     ]
   );
 
@@ -307,7 +367,7 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
       clearCompletedFromQueue,
       selectQueueItem,
       setSermonDocument,
-      setDocumentHtml,
+      setDocumentHtml: handleSetDocumentHtml,
       saveEdits,
     }),
     [
@@ -322,6 +382,7 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
       removeFromQueue,
       clearCompletedFromQueue,
       selectQueueItem,
+      handleSetDocumentHtml,
       saveEdits,
     ]
   );

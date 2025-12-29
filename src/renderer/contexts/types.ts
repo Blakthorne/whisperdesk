@@ -9,6 +9,9 @@ import type {
 import type { Theme } from '../hooks';
 import type { PipelineProgress } from '../services/electronAPI';
 
+/** Document save state for UI indicators */
+export type DocumentSaveState = 'saved' | 'unsaved' | 'saving';
+
 export interface ThemeContextValue {
   theme: Theme;
   toggleTheme: () => void;
@@ -44,6 +47,10 @@ export interface TranscriptionStateContextValue {
   documentHtml: string | null;
   /** Pipeline progress for sermon processing */
   pipelineProgress: PipelineProgress | null;
+  /** Current save state of the document */
+  documentSaveState: DocumentSaveState;
+  /** Timestamp of last successful save */
+  lastSavedAt: Date | null;
 }
 
 export interface TranscriptionActionsContextValue {

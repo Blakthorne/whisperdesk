@@ -107,6 +107,7 @@ function createTestDocumentState(): DocumentState {
     updatedAt: now,
     title: 'Test Document',
     biblePassage: 'John 3:16',
+    speaker: 'Pastor John',
     children: [para1, quote1, para2, quote2],
   };
 
@@ -153,6 +154,7 @@ function createTestSermonDocument(): SermonDocument {
   return {
     title: 'Test Document',
     biblePassage: 'John 3:16',
+    speaker: 'Pastor John',
     references: ['John 3:16', 'John 1:1'],
     tags: ['gospel', 'love'],
     body: 'Hello world.\n\nSecond paragraph.',
@@ -196,6 +198,14 @@ describe('useDocument', () => {
       });
 
       expect(result.current.biblePassage).toBe('John 3:16');
+    });
+
+    it('should return speaker', () => {
+      const { result } = renderHook(() => useDocument(), {
+        wrapper: createWrapper(createTestSermonDocument()),
+      });
+
+      expect(result.current.speaker).toBe('Pastor John');
     });
 
     it('should return paragraphs', () => {
