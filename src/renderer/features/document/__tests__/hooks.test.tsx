@@ -338,7 +338,7 @@ describe('useQuotes', () => {
 
       const quote = result.current.getQuoteById('quote-1');
       expect(quote).toBeDefined();
-      expect(quote?.metadata.reference.normalizedReference).toBe('John 3:16');
+      expect(quote?.metadata.reference?.normalizedReference).toBe('John 3:16');
     });
 
     it('should get quotes by reference', () => {

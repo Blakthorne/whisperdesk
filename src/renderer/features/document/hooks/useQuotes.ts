@@ -136,9 +136,9 @@ export function useQuotes(): UseQuotesResult {
         ...quote,
         index,
         text: text.trim(),
-        reference: quote.metadata.reference.normalizedReference,
-        book: quote.metadata.reference.book,
-        confidenceLevel: quote.metadata.detection.confidenceLevel,
+        reference: quote.metadata.reference?.normalizedReference ?? 'Unknown',
+        book: quote.metadata.reference?.book ?? 'Unknown',
+        confidenceLevel: quote.metadata.detection?.confidenceLevel ?? 'low',
         interjectionCount,
       };
     });
@@ -149,7 +149,7 @@ export function useQuotes(): UseQuotesResult {
     const bookCounts = new Map<string, number>();
 
     context.quotes.forEach((quote) => {
-      const book = quote.metadata.reference.book;
+      const book = quote.metadata.reference?.book ?? 'Unknown';
       bookCounts.set(book, (bookCounts.get(book) || 0) + 1);
     });
 
@@ -182,18 +182,18 @@ export function useQuotes(): UseQuotesResult {
 
       if (options.minConfidence !== undefined) {
         filtered = filtered.filter(
-          (q) => q.metadata.detection.confidence >= options.minConfidence!
+          (q) => (q.metadata.detection?.confidence ?? 0) >= options.minConfidence!
         );
       }
 
       if (options.confidenceLevel !== undefined) {
         filtered = filtered.filter(
-          (q) => q.metadata.detection.confidenceLevel === options.confidenceLevel
+          (q) => q.metadata.detection?.confidenceLevel === options.confidenceLevel
         );
       }
 
       if (options.book !== undefined) {
-        filtered = filtered.filter((q) => q.metadata.reference.book === options.book);
+        filtered = filtered.filter((q) => q.metadata.reference?.book === options.book);
       }
 
       if (options.verified !== undefined) {

@@ -834,8 +834,8 @@ export function createDocumentState(root: DocumentRootNode): DocumentState {
     // Index quotes
     if (node.type === 'quote_block') {
       const quote = node as QuoteBlockNode;
-      const ref = quote.metadata.reference.normalizedReference;
-      const book = quote.metadata.reference.book;
+      const ref = quote.metadata.reference?.normalizedReference ?? 'Unknown';
+      const book = quote.metadata.reference?.book ?? 'Unknown';
 
       if (!quoteIndex.byReference[ref]) {
         quoteIndex.byReference[ref] = [];

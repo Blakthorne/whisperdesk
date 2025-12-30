@@ -415,9 +415,10 @@ function applyQuoteCreated(state: DocumentState, event: QuoteCreatedEvent): Docu
   const newQuoteIndex = addQuoteToIndex(state.quoteIndex, quote);
 
   // Update extracted references
+  const ref = quote.metadata.reference?.normalizedReference;
   const newExtracted = {
     ...state.extracted,
-    references: [...new Set([...state.extracted.references, quote.metadata.reference.normalizedReference])],
+    references: ref ? [...new Set([...state.extracted.references, ref])] : state.extracted.references,
   };
 
   return {
@@ -997,8 +998,8 @@ function addNodeAndDescendantsToIndex(
  * Add a quote to the quote index.
  */
 function addQuoteToIndex(index: QuoteIndex, quote: QuoteBlockNode): QuoteIndex {
-  const ref = quote.metadata.reference.normalizedReference;
-  const book = quote.metadata.reference.book;
+  const ref = quote.metadata.reference?.normalizedReference ?? 'Unknown';
+  const book = quote.metadata.reference?.book ?? 'Unknown';
 
   return {
     byReference: {
@@ -1017,8 +1018,8 @@ function addQuoteToIndex(index: QuoteIndex, quote: QuoteBlockNode): QuoteIndex {
  * Remove a quote from the quote index.
  */
 function removeQuoteFromIndex(index: QuoteIndex, quote: QuoteBlockNode): QuoteIndex {
-  const ref = quote.metadata.reference.normalizedReference;
-  const book = quote.metadata.reference.book;
+  const ref = quote.metadata.reference?.normalizedReference ?? 'Unknown';
+  const book = quote.metadata.reference?.book ?? 'Unknown';
 
   return {
     byReference: {
@@ -1045,8 +1046,8 @@ function rebuildQuoteIndex(root: DocumentRootNode): QuoteIndex {
 
   const traverse = (node: DocumentNode): void => {
     if (isQuoteBlockNode(node)) {
-      const ref = node.metadata.reference.normalizedReference;
-      const book = node.metadata.reference.book;
+      const ref = node.metadata.reference?.normalizedReference ?? 'Unknown';
+      const book = node.metadata.reference?.book ?? 'Unknown';
 
       if (!newIndex.byReference[ref]) {
         newIndex.byReference[ref] = [];

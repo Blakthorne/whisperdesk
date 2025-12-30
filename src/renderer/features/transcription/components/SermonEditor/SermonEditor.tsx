@@ -5,9 +5,15 @@ import Link from '@tiptap/extension-link';
 import Highlight from '@tiptap/extension-highlight';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
+import { Quote } from 'lucide-react';
 import type { SermonDocument, OutputFormat } from '../../../../types';
+import type { DocumentState } from '../../../../../shared/documentModel';
+import { astToTipTapJson } from '../../../document/bridge/astTipTapConverter';
 import { SermonToolbar } from './SermonToolbar';
 import { Button } from '../../../../components/ui/Button';
+import { useQuoteReviewOptional, useEditorActionsOptional } from '../../../../contexts';
+import { QuoteBlockExtension } from './extensions/QuoteBlockExtension';
+import { InterjectionMark } from './extensions/InterjectionMark';
 import './SermonEditor.css';
 
 /** Document save state for UI indicators */
@@ -16,6 +22,8 @@ export type DocumentSaveState = 'saved' | 'unsaved' | 'saving';
 export interface SermonEditorProps {
   /** Sermon document data from pipeline processing */
   document: SermonDocument | null;
+  /** Optional document state (AST) for quote-aware rendering */
+  documentState?: DocumentState;
   /** Optional initial HTML content (for restoring from history) */
   initialHtml?: string;
   /** Callback when user exports the document */
@@ -37,9 +45,11 @@ export interface SermonEditorProps {
 /**
  * Rich text WYSIWYG editor for sermon documents.
  * Uses TipTap editor with sermon-specific metadata display.
+ * Supports optional DocumentState (AST) for quote-aware rendering.
  */
 function SermonEditor({
   document,
+  documentState,
   initialHtml,
   onSave,
   onCopy,
@@ -49,12 +59,28 @@ function SermonEditor({
   saveState = 'saved',
   lastSaved,
 }: SermonEditorProps): React.JSX.Element {
-  // Convert sermon document to HTML if no initialHtml provided
+  // Convert sermon document to TipTap content
   const defaultContent = useMemo(() => {
+    // Priority 1: Use initialHtml if provided (for history restoration)
     if (initialHtml) {
       return initialHtml;
     }
 
+    // Priority 2: Use documentState (AST) if available for quote-aware rendering
+    // Only use AST if it has meaningful content (children nodes)
+    if (documentState?.root && documentState.root.children.length > 0) {
+      const result = astToTipTapJson(documentState.root, {
+        preserveIds: true,
+        includeMetadata: true,
+        includeInterjections: true,
+      });
+
+      if (result.success && result.data) {
+        return result.data;
+      }
+    }
+
+    // Priority 3: Fallback to document.body if no AST or AST conversion failed
     if (!document) {
       return '<p>No sermon content available. Start by processing an audio file with "Process as sermon" enabled.</p>';
     }
@@ -106,7 +132,7 @@ function SermonEditor({
     }
 
     return html || '<p>Empty sermon document.</p>';
-  }, [document, initialHtml]);
+  }, [document, documentState, initialHtml]);
 
   const editor = useEditor({
     extensions: [
@@ -131,6 +157,8 @@ function SermonEditor({
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
+      QuoteBlockExtension,
+      InterjectionMark,
     ],
     content: defaultContent,
     editable: true,
@@ -142,6 +170,23 @@ function SermonEditor({
     // Prevent SSR hydration issues
     immediatelyRender: false,
   });
+
+  // Register editor with EditorActionsContext for external components to use
+  const editorActions = useEditorActionsOptional();
+  useEffect(() => {
+    if (editorActions) {
+      editorActions.registerEditor(editor);
+    }
+    return () => {
+      if (editorActions) {
+        editorActions.registerEditor(null);
+      }
+    };
+  }, [editor, editorActions]);
+
+  const quoteReview = useQuoteReviewOptional();
+  const quoteCount = quoteReview?.quotes.length || document?.processingMetadata?.quoteCount || 0;
+  const isQuotePanelOpen = quoteReview?.review.panelOpen ?? false;
 
   // Update content when document changes
   useEffect(() => {
@@ -313,6 +358,28 @@ function SermonEditor({
           )}
         </div>
         <div className="sermon-actions-right">
+          {quoteReview && quoteCount > 0 && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                if (!isQuotePanelOpen) {
+                  quoteReview.setReviewModeActive(true);
+                  quoteReview.setPanelOpen(true);
+                } else {
+                  quoteReview.setPanelOpen(false);
+                }
+              }}
+              active={isQuotePanelOpen}
+              icon={<Quote size={16} />}
+              title={`${isQuotePanelOpen ? 'Hide' : 'Show'} Quote Review Panel`}
+              className="review-quotes-toggle"
+            >
+              Review Quotes{' '}
+              {quoteCount > 0 && <span className="quote-count-badge">{quoteCount}</span>}
+            </Button>
+          )}
+
           {onSaveEdits && (
             <Button
               variant={saveState === 'unsaved' ? 'primary' : 'secondary'}

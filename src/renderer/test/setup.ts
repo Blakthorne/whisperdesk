@@ -66,6 +66,9 @@ const mockElectronAPI: ElectronAPI = {
   downloadUpdate: vi.fn().mockResolvedValue({ success: true }),
   installUpdate: vi.fn(),
   onUpdateStatus: vi.fn().mockReturnValue(() => {}),
+  // Bible lookup APIs
+  getBibleBookNames: vi.fn().mockResolvedValue({ success: true, books: [] }),
+  lookupBibleVerse: vi.fn().mockResolvedValue({ success: true, verseText: '' }),
 };
 
 Object.defineProperty(window, 'electronAPI', {

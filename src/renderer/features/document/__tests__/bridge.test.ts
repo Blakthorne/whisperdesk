@@ -318,9 +318,9 @@ describe('TipTap to AST Conversion', () => {
     expect(result.success).toBe(true);
     const quote = result.data?.children.find((n) => n.type === 'quote_block') as QuoteBlockNode;
     expect(quote).toBeDefined();
-    expect(quote.metadata.reference.book).toBe('John');
-    expect(quote.metadata.reference.normalizedReference).toBe('John 3:16');
-    expect(quote.metadata.detection.confidence).toBe(0.9);
+    expect(quote.metadata.reference?.book).toBe('John');
+    expect(quote.metadata.reference?.normalizedReference).toBe('John 3:16');
+    expect(quote.metadata.detection?.confidence).toBe(0.9);
   });
 
   it('should preserve node IDs from attrs', () => {
@@ -506,9 +506,9 @@ describe('Round-Trip Conversions', () => {
     const originalQuote = original.children.find((n) => n.type === 'quote_block') as QuoteBlockNode;
     const resultQuote = astResult.data?.children.find((n) => n.type === 'quote_block') as QuoteBlockNode;
 
-    expect(resultQuote.metadata.reference.book).toBe(originalQuote.metadata.reference.book);
-    expect(resultQuote.metadata.reference.normalizedReference).toBe(
-      originalQuote.metadata.reference.normalizedReference
+    expect(resultQuote.metadata.reference?.book).toBe(originalQuote.metadata.reference?.book);
+    expect(resultQuote.metadata.reference?.normalizedReference).toBe(
+      originalQuote.metadata.reference?.normalizedReference
     );
     expect(resultQuote.metadata.userVerified).toBe(originalQuote.metadata.userVerified);
   });
@@ -539,7 +539,7 @@ describe('Round-Trip Conversions', () => {
     expect(root.biblePassage).toBe('John 3:16');
     const quote = root.children.find((n) => n.type === 'quote_block') as QuoteBlockNode;
     expect(quote).toBeDefined();
-    expect(quote.metadata.reference.book).toBe('John');
+    expect(quote.metadata.reference?.book).toBe('John');
   });
 });
 

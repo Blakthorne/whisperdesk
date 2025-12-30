@@ -29,6 +29,26 @@ export interface SermonProcessingResult {
   references: string[];
   body: string;
   rawTranscript: string;
+  /**
+   * Structured document state (AST-based model)
+   * Contains the full document tree with stable node IDs, quote metadata,
+   * interjection positions, and event log for undo/redo.
+   */
+  documentState?: import('../../shared/documentModel').DocumentState;
+  /**
+   * Processing metadata with timing and statistics
+   */
+  processingMetadata?: {
+    stageTimes: Record<string, number>;
+    totalTime: number;
+    quoteCount: number;
+    paragraphCount: number;
+    interjectionCount: number;
+  };
+  /**
+   * Error message if AST building failed (legacy output still available)
+   */
+  astError?: string;
 }
 
 export interface PipelineProgress {

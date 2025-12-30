@@ -1,0 +1,253 @@
+/* RightPanel layout with optional quote review side panel */
+
+.right-panel-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Processing Complete Banner positioning */
+.right-panel-container > .processing-complete-banner {
+  margin: 12px;
+  flex-shrink: 0;
+}
+
+.right-panel-container-inner {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.right-panel-main-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.right-panel-main-content > .right-panel {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Quote Review Panel Content */
+.quote-review-panel-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 16px;
+  overflow: hidden;
+}
+
+.quote-review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.quote-review-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.quote-review-progress {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.quote-review-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 4px;
+}
+
+/* Empty state */
+.quote-review-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.quote-review-empty p {
+  margin: 0 0 8px;
+}
+
+.quote-review-hint {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+/* Quote list item */
+.quote-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: 2px solid transparent;
+}
+
+.quote-list-item:hover {
+  background: var(--bg-hover);
+}
+
+.quote-list-item:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.quote-list-item.focused {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+
+.quote-list-item.reviewed {
+  opacity: 0.7;
+}
+
+.quote-list-item.reviewed .quote-list-item-status {
+  color: var(--success);
+}
+
+.quote-list-item-number {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  flex-shrink: 0;
+  min-width: 24px;
+}
+
+.quote-list-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.quote-list-item-text {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  line-height: 1.4;
+  margin-bottom: 4px;
+  word-break: break-word;
+}
+
+.quote-list-item-reference {
+  font-size: 0.8rem;
+  color: var(--accent);
+  font-style: italic;
+}
+
+.quote-list-item-status {
+  flex-shrink: 0;
+  font-size: 1rem;
+  color: var(--text-tertiary);
+}
+
+/* Actions */
+.quote-review-actions {
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+}
+
+.quote-review-next-btn {
+  width: 100%;
+  padding: 10px 16px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.quote-review-next-btn:hover {
+  background: var(--accent-hover);
+}
+
+.quote-review-next-btn:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Complete state */
+.quote-review-complete {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 16px;
+  text-align: center;
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+}
+
+.quote-review-complete-icon {
+  font-size: 2rem;
+  color: var(--success);
+}
+
+.quote-review-complete span:not(.quote-review-complete-icon) {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.quote-review-exit-btn {
+  padding: 8px 16px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.quote-review-exit-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+}
+
+/* Scrollbar styling for quote list */
+.quote-review-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.quote-review-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.quote-review-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.quote-review-list::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}

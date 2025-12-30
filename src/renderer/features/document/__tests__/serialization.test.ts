@@ -118,8 +118,8 @@ function createDocumentState(root: DocumentRootNode): DocumentState {
 
     if (node.type === 'quote_block') {
       const quote = node as QuoteBlockNode;
-      const ref = quote.metadata.reference.normalizedReference;
-      const book = quote.metadata.reference.book;
+      const ref = quote.metadata.reference?.normalizedReference ?? '';
+      const book = quote.metadata.reference?.book ?? '';
 
       if (!quoteIndex.byReference[ref]) {
         quoteIndex.byReference[ref] = [];
@@ -701,8 +701,8 @@ describe('Serialization Round-Trips', () => {
     const quoteNode = quoteEntry?.node;
     expect(quoteNode?.type).toBe('quote_block');
     if (quoteNode?.type === 'quote_block') {
-      expect(quoteNode.metadata.reference.book).toBe('John');
-      expect(quoteNode.metadata.reference.normalizedReference).toBe('John 3:16');
+      expect(quoteNode.metadata.reference?.book).toBe('John');
+      expect(quoteNode.metadata.reference?.normalizedReference).toBe('John 3:16');
       expect(quoteNode.metadata.detection?.confidence).toBe(0.95);
     }
   });

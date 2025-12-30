@@ -64,7 +64,7 @@ export function QuoteBlockRenderer({
 
   // Build class names
   const classNames = ['document-quote-block'];
-  if (showConfidence) {
+  if (showConfidence && detection?.confidenceLevel) {
     classNames.push(getConfidenceClass(detection.confidenceLevel));
   }
   if (showVerification && userVerified) {
@@ -88,7 +88,7 @@ export function QuoteBlockRenderer({
   };
 
   // Format reference text
-  const referenceText = reference.normalizedReference;
+  const referenceText = reference?.normalizedReference ?? 'Unknown';
   const referenceNode = formatReference ? formatReference(referenceText) : referenceText;
 
   return (
@@ -96,14 +96,14 @@ export function QuoteBlockRenderer({
       className={classNames.join(' ')}
       data-node-id={node.id}
       data-reference={referenceText}
-      data-confidence={detection.confidence.toFixed(2)}
+      data-confidence={detection?.confidence?.toFixed(2) ?? '0.00'}
     >
       <div className="document-quote-content">{renderChildren()}</div>
 
       {showReference && (
         <cite className="document-quote-reference">
           <span className="document-quote-reference-link">{referenceNode}</span>
-          {showTranslation && detection.translation && (
+          {showTranslation && detection?.translation && (
             <span className="document-quote-translation">({detection.translation})</span>
           )}
         </cite>

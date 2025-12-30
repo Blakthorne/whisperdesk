@@ -1,0 +1,162 @@
+/* QuoteBoundaryEditor - Drag handles for adjusting quote boundaries */
+
+.quote-boundary-editor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 50;
+}
+
+.quote-boundary-editor:focus {
+  outline: none;
+}
+
+/* Boundary handles */
+.boundary-handle {
+  position: absolute;
+  width: 16px;
+  height: 28px;
+  cursor: col-resize;
+  pointer-events: auto;
+  z-index: 51;
+  transition: transform var(--transition-fast);
+}
+
+.boundary-handle:hover {
+  transform: scale(1.1);
+}
+
+.boundary-handle.dragging {
+  transform: scale(1.2);
+}
+
+.boundary-handle-grip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 100%;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: background var(--transition-fast);
+}
+
+.boundary-handle:hover .boundary-handle-grip {
+  background: var(--accent-hover);
+}
+
+.boundary-handle.dragging .boundary-handle-grip {
+  background: var(--accent-hover);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+.boundary-handle-line {
+  width: 2px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 1px;
+}
+
+/* Start handle - vertical lines indicating left direction */
+.boundary-handle-start .boundary-handle-grip {
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+
+/* End handle - vertical lines indicating right direction */
+.boundary-handle-end .boundary-handle-grip {
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+/* Highlight overlay around the quote */
+.boundary-highlight {
+  position: absolute;
+  border: 2px dashed var(--accent);
+  border-radius: var(--radius-sm);
+  background: rgba(var(--accent-rgb), 0.05);
+  pointer-events: none;
+  animation: boundaryPulse 2s ease-in-out infinite;
+}
+
+@keyframes boundaryPulse {
+  0%, 100% {
+    border-color: var(--accent);
+    background: rgba(var(--accent-rgb), 0.05);
+  }
+  50% {
+    border-color: var(--accent-hover);
+    background: rgba(var(--accent-rgb), 0.1);
+  }
+}
+
+/* Instructions tooltip */
+.boundary-instructions {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 16px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 52;
+  animation: instructionsFadeIn 0.3s ease-out;
+}
+
+@keyframes instructionsFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Focus state for keyboard accessibility */
+.boundary-handle:focus {
+  outline: none;
+}
+
+.boundary-handle:focus .boundary-handle-grip {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), 0 0 0 3px rgba(255, 255, 255, 0.5);
+}
+
+/* Drag preview state */
+.boundary-editor-dragging {
+  cursor: col-resize !important;
+}
+
+.boundary-editor-dragging * {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+
+/* Selection highlight during drag */
+::selection {
+  background: var(--accent-light);
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .boundary-instructions {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  }
+  
+  .boundary-handle-grip {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  }
+}

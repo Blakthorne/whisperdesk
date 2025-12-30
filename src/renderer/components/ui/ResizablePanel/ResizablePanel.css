@@ -1,0 +1,172 @@
+/**
+ * ResizablePanel Styles
+ *
+ * Styling for the resizable panel component with support for:
+ * - Left/right positioning
+ * - Collapsed state
+ * - Resize handle with hover/active states
+ * - Light and dark themes
+ */
+
+.resizable-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-secondary, #f5f5f5);
+  border-left: 1px solid var(--border-color, #e0e0e0);
+  transition: width 0.2s ease-out, min-width 0.2s ease-out;
+  overflow: hidden;
+}
+
+.resizable-panel--left {
+  border-left: none;
+  border-right: 1px solid var(--border-color, #e0e0e0);
+}
+
+.resizable-panel--collapsed {
+  transition: width 0.15s ease-out, min-width 0.15s ease-out;
+}
+
+.resizable-panel--resizing {
+  transition: none;
+  user-select: none;
+}
+
+/* Resize Handle */
+.resizable-panel__handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  background-color: transparent;
+  z-index: 10;
+  transition: background-color 0.15s ease;
+}
+
+.resizable-panel__handle--left {
+  left: -3px;
+}
+
+.resizable-panel__handle--right {
+  right: -3px;
+}
+
+.resizable-panel__handle:hover {
+  background-color: var(--accent-color, #007acc);
+  opacity: 0.5;
+}
+
+.resizable-panel__handle:active,
+.resizable-panel--resizing .resizable-panel__handle {
+  background-color: var(--accent-color, #007acc);
+  opacity: 0.8;
+}
+
+.resizable-panel__handle:focus-visible {
+  outline: 2px solid var(--focus-color, #007acc);
+  outline-offset: 2px;
+  background-color: var(--accent-color, #007acc);
+  opacity: 0.3;
+}
+
+/* Collapse Button */
+.resizable-panel__collapse-btn {
+  position: absolute;
+  top: 8px;
+  z-index: 11;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 4px;
+  background-color: var(--bg-primary, #ffffff);
+  color: var(--text-secondary, #666666);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  transition: all 0.15s ease;
+}
+
+.resizable-panel--right .resizable-panel__collapse-btn {
+  left: 8px;
+}
+
+.resizable-panel--left .resizable-panel__collapse-btn {
+  right: 8px;
+}
+
+.resizable-panel--collapsed .resizable-panel__collapse-btn {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.resizable-panel__collapse-btn:hover {
+  background-color: var(--bg-hover, #f0f0f0);
+  border-color: var(--border-color-hover, #ccc);
+  color: var(--text-primary, #333333);
+}
+
+.resizable-panel__collapse-btn:focus-visible {
+  outline: 2px solid var(--focus-color, #007acc);
+  outline-offset: 2px;
+}
+
+.resizable-panel__collapse-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Content */
+.resizable-panel__content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.resizable-panel__header {
+  padding: 12px 16px;
+  padding-top: 40px; /* Space for collapse button */
+  border-bottom: 1px solid var(--border-color, #e0e0e0);
+  flex-shrink: 0;
+}
+
+.resizable-panel--collapsed .resizable-panel__header {
+  display: none;
+}
+
+.resizable-panel__body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.resizable-panel--collapsed .resizable-panel__body {
+  display: none;
+}
+
+/* Dark theme adjustments */
+[data-theme="dark"] .resizable-panel {
+  background-color: var(--bg-secondary, #252526);
+  border-color: var(--border-color, #3c3c3c);
+}
+
+[data-theme="dark"] .resizable-panel__collapse-btn {
+  background-color: var(--bg-primary, #1e1e1e);
+  border-color: var(--border-color, #3c3c3c);
+  color: var(--text-secondary, #999999);
+}
+
+[data-theme="dark"] .resizable-panel__collapse-btn:hover {
+  background-color: var(--bg-hover, #2d2d2d);
+  color: var(--text-primary, #cccccc);
+}
+
+[data-theme="dark"] .resizable-panel__header {
+  border-color: var(--border-color, #3c3c3c);
+}

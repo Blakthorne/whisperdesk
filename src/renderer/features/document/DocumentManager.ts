@@ -451,7 +451,7 @@ export class DocumentManager {
       if (checkIsQuoteBlockNode(node)) {
         const quoteText = node.children.map(extractFromNode).join('');
         if (includeQuoteAnnotations) {
-          const ref = node.metadata.reference.normalizedReference;
+          const ref = node.metadata.reference?.normalizedReference ?? 'Unknown';
           return `"${quoteText}" (${ref})`;
         }
         return quoteText;

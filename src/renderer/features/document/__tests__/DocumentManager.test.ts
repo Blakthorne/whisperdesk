@@ -323,7 +323,7 @@ describe('DocumentManager', () => {
     it('should get quote by ID', () => {
       const quote = manager.getQuoteById('quote-0001');
       expect(quote).toBeDefined();
-      expect(quote?.metadata.reference.normalizedReference).toBe('Matthew 5:3');
+      expect(quote?.metadata.reference?.normalizedReference).toBe('Matthew 5:3');
     });
 
     it('should return undefined for non-quote node ID', () => {
@@ -350,8 +350,8 @@ describe('DocumentManager', () => {
     it('should get quote metadata', () => {
       const metadata = manager.getQuoteMetadata('quote-0001');
       expect(metadata).toBeDefined();
-      expect(metadata?.reference.book).toBe('Matthew');
-      expect(metadata?.detection.confidence).toBe(0.92);
+      expect(metadata?.reference?.book).toBe('Matthew');
+      expect(metadata?.detection?.confidence).toBe(0.92);
     });
   });
 

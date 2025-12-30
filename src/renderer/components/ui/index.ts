@@ -6,3 +6,5 @@ export { ProgressBar } from './ProgressBar';
 export { SystemWarning } from './SystemWarning';
 export { DebugLogsModal } from './DebugLogsModal';
 export type { DebugLogsModalProps } from './DebugLogsModal';
+export { ResizablePanel } from './ResizablePanel';
+export type { ResizablePanelProps } from './ResizablePanel';

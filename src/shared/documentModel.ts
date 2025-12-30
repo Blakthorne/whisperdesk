@@ -203,16 +203,22 @@ export interface InterjectionMetadata {
  * Complete metadata for a Bible quote block.
  */
 export interface QuoteMetadata {
-  /** Reference information */
-  reference: BibleReferenceMetadata;
-  /** Detection metadata */
-  detection: QuoteDetectionMetadata;
+  /** Reference information (optional for non-biblical quotes) */
+  reference?: BibleReferenceMetadata;
+  /** Detection metadata (optional for user-created quotes) */
+  detection?: QuoteDetectionMetadata;
   /** Interjections found within this quote */
   interjections: InterjectionMetadata[];
   /** Whether the quote has been manually verified by user */
   userVerified: boolean;
   /** User notes about this quote */
   userNotes?: string;
+  /** Whether this is a non-biblical quote (e.g., speaker's memorable statement) */
+  isNonBiblicalQuote?: boolean;
+  /** Character offset of quote start within parent paragraph */
+  startOffset?: number;
+  /** Character offset of quote end within parent paragraph */
+  endOffset?: number;
 }
 
 /**
@@ -419,6 +425,42 @@ export interface InterjectionRemovedEvent extends BaseEvent {
   previousIndex: number;
 }
 
+export interface QuoteBoundaryChangedEvent extends BaseEvent {
+  type: 'quote_boundary_changed';
+  /** ID of the quote */
+  quoteId: NodeId;
+  /** Previous boundaries */
+  previousBoundaries: {
+    startOffset: number;
+    endOffset: number;
+  };
+  /** New boundaries */
+  newBoundaries: {
+    startOffset: number;
+    endOffset: number;
+  };
+  /** Previous quote content (for undo) */
+  previousContent: string;
+  /** New quote content */
+  newContent: string;
+  /** IDs of paragraphs that were merged (if any) */
+  mergedParagraphIds?: NodeId[];
+  /** Snapshot of merged paragraphs (for undo) */
+  mergedParagraphs?: ParagraphNode[];
+}
+
+export interface ParagraphsMergedForQuoteEvent extends BaseEvent {
+  type: 'paragraphs_merged_for_quote';
+  /** ID of the resulting merged paragraph */
+  resultParagraphId: NodeId;
+  /** IDs of all paragraphs that were merged */
+  mergedParagraphIds: NodeId[];
+  /** Snapshots of merged paragraphs (for undo) */
+  mergedParagraphs: ParagraphNode[];
+  /** The quote that triggered this merge */
+  triggeringQuoteId?: NodeId;
+}
+
 // --- Structure Events ---
 
 export interface NodesJoinedEvent extends BaseEvent {
@@ -538,12 +580,14 @@ export type DocumentEvent =
   | QuoteRemovedEvent
   | QuoteMetadataUpdatedEvent
   | QuoteVerifiedEvent
+  | QuoteBoundaryChangedEvent
   | InterjectionAddedEvent
   | InterjectionRemovedEvent
   | NodesJoinedEvent
   | NodeSplitEvent
   | ParagraphMergedEvent
   | ParagraphSplitEvent
+  | ParagraphsMergedForQuoteEvent
   | DocumentCreatedEvent
   | DocumentMetadataUpdatedEvent
   | DocumentImportedEvent

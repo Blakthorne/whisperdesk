@@ -267,15 +267,19 @@ function convertQuoteToTipTap(
   if (preserveIds) {
     attrs.nodeId = node.id;
   }
-  if (includeMetadata) {
+  if (includeMetadata && node.metadata.reference) {
     attrs.reference = node.metadata.reference.normalizedReference;
     attrs.book = node.metadata.reference.book;
     attrs.chapter = node.metadata.reference.chapter;
     attrs.verseStart = node.metadata.reference.verseStart;
     attrs.verseEnd = node.metadata.reference.verseEnd;
+  }
+  if (includeMetadata && node.metadata.detection) {
     attrs.translation = node.metadata.detection.translation;
-    attrs.userVerified = node.metadata.userVerified;
     attrs.confidence = node.metadata.detection.confidence;
+  }
+  if (includeMetadata) {
+    attrs.userVerified = node.metadata.userVerified;
   }
 
   return {
@@ -646,7 +650,7 @@ function nodeToHtml(node: DocumentNode): string {
     for (const child of node.children) {
       content += nodeToHtml(child);
     }
-    const ref = node.metadata.reference.normalizedReference;
+    const ref = node.metadata.reference?.normalizedReference ?? 'Unknown';
     return `<blockquote data-quote-id="${node.id}" data-reference="${escapeHtml(ref)}">${content}<footer>— ${escapeHtml(ref)}</footer></blockquote>`;
   }
 

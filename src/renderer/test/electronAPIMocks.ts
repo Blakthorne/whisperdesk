@@ -64,6 +64,9 @@ export const createDefaultElectronAPIMock = (): ElectronAPI => ({
   downloadUpdate: vi.fn().mockResolvedValue({ success: true }),
   installUpdate: vi.fn(),
   onUpdateStatus: vi.fn().mockReturnValue(() => {}),
+  // Bible lookup APIs
+  getBibleBookNames: vi.fn().mockResolvedValue({ success: true, books: [] }),
+  lookupBibleVerse: vi.fn().mockResolvedValue({ success: true, verseText: '' }),
 });
 
 export const createFullElectronAPIMock = (): ElectronAPI => ({
@@ -112,6 +115,9 @@ export const createFullElectronAPIMock = (): ElectronAPI => ({
   downloadUpdate: vi.fn().mockResolvedValue({ success: true }),
   installUpdate: vi.fn(),
   onUpdateStatus: vi.fn().mockReturnValue(() => {}),
+  // Bible lookup APIs
+  getBibleBookNames: vi.fn().mockResolvedValue({ success: true, books: [] }),
+  lookupBibleVerse: vi.fn().mockResolvedValue({ success: true, verseText: '' }),
 });
 
 export class ElectronAPIMockBuilder {

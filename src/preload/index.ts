@@ -124,4 +124,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('update:status', (_event, data) => callback(data));
     return () => ipcRenderer.removeAllListeners('update:status');
   },
+
+  // Bible API
+  getBibleBookNames: () => ipcRenderer.invoke('bible:getBookNames'),
+  lookupBibleVerse: (reference: string, translation?: string) =>
+    ipcRenderer.invoke('bible:lookupVerse', reference, translation),
 });

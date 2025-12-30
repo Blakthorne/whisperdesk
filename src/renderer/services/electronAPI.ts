@@ -241,3 +241,39 @@ export async function cancelPythonTranscription(): Promise<{
 export function onPipelineProgress(callback: (progress: PipelineProgress) => void): Unsubscribe {
   return window.electronAPI?.onPipelineProgress(callback) ?? (() => {});
 }
+
+// =============================================================================
+// Bible API
+// =============================================================================
+
+import type { BibleBookInfo, BibleLookupResult } from '../types/electron';
+
+export type { BibleBookInfo, BibleLookupResult };
+
+/**
+ * Get the list of all Bible book names with their abbreviations.
+ * Used for autocomplete in quote creation.
+ */
+export async function getBibleBookNames(): Promise<BibleBookInfo[]> {
+  const result = await window.electronAPI?.getBibleBookNames();
+  return result ?? [];
+}
+
+/**
+ * Look up a Bible verse by reference string.
+ * @param reference - The Bible reference (e.g., "John 3:16", "Matthew 5:3-12")
+ * @param translation - Optional translation code (default: "KJV")
+ * @returns The lookup result with verse text or error
+ */
+export async function lookupBibleVerse(
+  reference: string,
+  translation?: string
+): Promise<BibleLookupResult> {
+  const result = await window.electronAPI?.lookupBibleVerse(reference, translation);
+  return (
+    result ?? {
+      success: false,
+      error: 'Electron API not available',
+    }
+  );
+}

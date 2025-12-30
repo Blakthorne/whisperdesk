@@ -115,6 +115,28 @@ export interface ElectronAPI {
   downloadUpdate: () => Promise<{ success: boolean; error?: string }>;
   installUpdate: () => void;
   onUpdateStatus: (callback: (data: UpdateStatus) => void) => Unsubscribe;
+
+  // Bible API
+  getBibleBookNames: () => Promise<BibleBookInfo[]>;
+  lookupBibleVerse: (reference: string, translation?: string) => Promise<BibleLookupResult>;
+}
+
+// Bible API types
+export interface BibleBookInfo {
+  name: string;
+  abbreviations: string[];
+}
+
+export interface BibleLookupResult {
+  success: boolean;
+  verseText?: string;
+  normalizedReference?: string;
+  book?: string;
+  chapter?: number;
+  verseStart?: number | null;
+  verseEnd?: number | null;
+  translation?: string;
+  error?: string;
 }
 
 declare global {

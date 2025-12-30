@@ -1,0 +1,222 @@
+/* QuoteListItem - Single quote in the review list */
+
+.quote-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: 2px solid transparent;
+}
+
+.quote-list-item:hover {
+  background: var(--bg-hover);
+}
+
+.quote-list-item:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.quote-list-item:focus-visible {
+  box-shadow: 0 0 0 2px var(--accent-light);
+}
+
+/* Focused state */
+.quote-list-item.focused {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+
+/* Reviewed state */
+.quote-list-item.reviewed {
+  opacity: 0.75;
+}
+
+.quote-list-item.reviewed:hover {
+  opacity: 1;
+}
+
+/* Editing state */
+.quote-list-item.editing {
+  border-color: var(--warning);
+  background: rgba(251, 191, 36, 0.1);
+}
+
+/* Non-biblical state */
+.quote-list-item.non-biblical {
+  background: var(--bg-tertiary, var(--bg-secondary));
+}
+
+/* Quote number badge */
+.quote-item-number {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-primary);
+  border-radius: 50%;
+  border: 1px solid var(--border);
+}
+
+.quote-item-number-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.quote-list-item.focused .quote-item-number {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.quote-list-item.focused .quote-item-number-text {
+  color: white;
+}
+
+/* Main content */
+.quote-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.quote-item-text {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin-bottom: 6px;
+  word-break: break-word;
+}
+
+.quote-item-quote-mark {
+  color: var(--text-tertiary);
+  font-size: 1rem;
+}
+
+.quote-item-quote-mark:first-child {
+  margin-right: 2px;
+}
+
+.quote-item-quote-mark:last-child {
+  margin-left: 2px;
+}
+
+/* Meta info */
+.quote-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.quote-item-reference {
+  font-size: 0.8rem;
+  color: var(--accent);
+  font-style: italic;
+}
+
+.quote-item-reference.missing {
+  color: var(--text-tertiary);
+  font-style: normal;
+}
+
+.quote-item-reference.non-biblical {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.quote-item-interjections {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  background: var(--bg-primary);
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+}
+
+/* Status section */
+.quote-item-status {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.quote-item-verify-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--text-tertiary);
+  transition: all var(--transition-fast);
+}
+
+.quote-item-verify-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.quote-item-verify-btn.verified {
+  background: var(--success);
+  border-color: var(--success);
+  color: white;
+}
+
+.quote-item-verify-btn.verified:hover {
+  background: #16a34a;
+  border-color: #16a34a;
+}
+
+.quote-item-editing-badge {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--warning);
+  border-radius: 50%;
+  font-size: 0.7rem;
+  color: white;
+}
+
+/* Hover effects for interactive elements */
+.quote-list-item:hover .quote-item-verify-btn:not(.verified) {
+  border-color: var(--border-hover);
+}
+
+/* Animation for new items */
+@keyframes quoteItemAppear {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.quote-list-item {
+  animation: quoteItemAppear 0.2s ease-out;
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .quote-item-number {
+    background: var(--bg-secondary);
+  }
+  
+  .quote-list-item.focused .quote-item-number {
+    background: var(--accent);
+  }
+}

@@ -1,0 +1,371 @@
+/* InterjectionEditMode - UI for marking interjections in quotes */
+
+.interjection-edit-mode {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  background: var(--bg-primary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  max-width: 400px;
+}
+
+.interjection-edit-mode:focus {
+  outline: none;
+}
+
+/* Header */
+.interjection-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.interjection-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.interjection-count {
+  font-size: 0.85rem;
+  color: var(--accent);
+  background: var(--accent-light);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+}
+
+/* Empty state */
+.interjection-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.interjection-empty p {
+  margin: 0 0 8px;
+}
+
+.interjection-hint {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+/* Step-through view */
+.interjection-step-view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.interjection-candidate-card {
+  padding: 16px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.interjection-candidate-text {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.interjection-candidate-context {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.interjection-candidate-confidence {
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+}
+
+.interjection-step-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.interjection-step-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.interjection-nav-btn {
+  padding: 6px 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.interjection-nav-btn:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+}
+
+.interjection-nav-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.interjection-step-progress {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* List view */
+.interjection-list-view {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.interjection-list-header {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.interjection-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 150px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.interjection-list-item {
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+
+.interjection-list-item:hover {
+  background: var(--bg-hover);
+}
+
+.interjection-list-item.current {
+  background: var(--accent-light);
+}
+
+.interjection-list-item.confirmed {
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.interjection-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.interjection-checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
+.interjection-item-text {
+  flex: 1;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.interjection-item-confidence {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+/* Footer */
+.interjection-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+/* Buttons */
+.interjection-btn {
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.interjection-btn-mark {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  min-width: 160px;
+}
+
+.interjection-btn-mark:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+}
+
+.interjection-btn-mark.marked {
+  background: var(--success);
+  border-color: var(--success);
+  color: white;
+}
+
+.interjection-btn-cancel {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.interjection-btn-cancel:hover {
+  background: var(--bg-hover);
+}
+
+.interjection-btn-done {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.interjection-btn-done:hover {
+  background: var(--accent-hover);
+}
+
+/* Keyboard shortcuts hint */
+.interjection-shortcuts {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding-top: 8px;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+.interjection-shortcuts kbd {
+  display: inline-block;
+  padding: 2px 6px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  font-family: monospace;
+  font-size: 0.7rem;
+  margin-right: 2px;
+}
+
+/* Auto-detect prompt (toast-like) */
+.interjection-auto-prompt {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  animation: promptSlideUp 0.2s ease-out;
+}
+
+@keyframes promptSlideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.interjection-prompt-content {
+  padding: 16px 24px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.interjection-prompt-content h4 {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.interjection-prompt-text {
+  margin: 0 0 16px;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+.interjection-highlight {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.interjection-prompt-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.interjection-btn-yes {
+  background: var(--success);
+  border-color: var(--success);
+  color: white;
+}
+
+.interjection-btn-yes:hover {
+  background: #16a34a;
+}
+
+.interjection-btn-no {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.interjection-btn-no:hover {
+  background: var(--bg-hover);
+}
+
+.interjection-btn-key {
+  display: inline-block;
+  padding: 0 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-xs);
+  font-size: 0.75rem;
+  margin-right: 4px;
+}
+
+/* Scrollbar for list */
+.interjection-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.interjection-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.interjection-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  .interjection-prompt-content {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  }
+}

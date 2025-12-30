@@ -1,0 +1,291 @@
+/* QuoteDetailView - Detailed view of a single quote */
+
+.quote-detail-view {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 4px 0;
+}
+
+/* Section labels */
+.quote-detail-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-tertiary);
+  margin-bottom: 6px;
+}
+
+/* Quote text section */
+.quote-detail-text-section {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.quote-detail-text {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  padding: 12px;
+  border-radius: var(--radius-md);
+  word-break: break-word;
+}
+
+.quote-detail-quote-mark {
+  color: var(--accent);
+  font-size: 1.2rem;
+  font-family: Georgia, serif;
+}
+
+.quote-detail-quote-mark:first-child {
+  margin-right: 4px;
+}
+
+.quote-detail-quote-mark:last-child {
+  margin-left: 4px;
+}
+
+/* Reference section */
+.quote-detail-reference-section {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.quote-detail-reference-display {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quote-detail-reference-text {
+  font-size: 1rem;
+  font-style: italic;
+  color: var(--accent);
+}
+
+.quote-detail-reference-missing {
+  font-size: 0.9rem;
+  color: var(--text-tertiary);
+}
+
+.quote-detail-reference-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.quote-detail-link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.85rem;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color var(--transition-fast);
+}
+
+.quote-detail-link-btn:hover {
+  color: var(--accent-hover);
+}
+
+/* Reference editor */
+.quote-detail-reference-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quote-detail-verse-input {
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.quote-detail-verse-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.quote-detail-reference-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.quote-detail-btn {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.quote-detail-btn:hover {
+  background: var(--bg-hover);
+}
+
+.quote-detail-btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.quote-detail-btn-primary:hover {
+  background: var(--accent-hover);
+}
+
+/* Non-biblical display */
+.quote-detail-non-biblical {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.non-biblical-badge {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* Interjections section */
+.quote-detail-interjections-section {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.quote-detail-interjections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.quote-detail-interjection-tag {
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+}
+
+/* Status section */
+.quote-detail-status-section {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.quote-detail-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  border-radius: var(--radius-md);
+}
+
+.quote-detail-status-badge.reviewed {
+  background: rgba(34, 197, 94, 0.1);
+  color: var(--success);
+}
+
+.quote-detail-status-badge.pending {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+}
+
+/* Actions section */
+.quote-detail-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.quote-detail-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  width: 100%;
+}
+
+.quote-detail-action-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-hover, var(--accent));
+}
+
+.quote-detail-action-btn:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-light);
+}
+
+.quote-detail-action-btn.active {
+  background: var(--accent-light);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Verify button states */
+.quote-detail-verify-btn {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.quote-detail-verify-btn:hover {
+  background: var(--accent-hover);
+}
+
+.quote-detail-verify-btn.verified {
+  background: var(--success);
+  border-color: var(--success);
+}
+
+.quote-detail-verify-btn.verified:hover {
+  background: #16a34a;
+}
+
+/* Delete button */
+.quote-detail-delete-btn {
+  background: transparent;
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.quote-detail-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* Animation */
+.quote-detail-view {
+  animation: detailViewFadeIn 0.2s ease-out;
+}
+
+@keyframes detailViewFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

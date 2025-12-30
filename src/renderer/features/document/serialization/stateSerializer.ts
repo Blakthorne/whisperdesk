@@ -314,14 +314,14 @@ export function buildQuoteIndex(_root: DocumentRootNode, nodeIndex: NodeIndex): 
       all.push(quote.id);
 
       // Index by reference
-      const ref = quote.metadata.reference.normalizedReference;
+      const ref = quote.metadata.reference?.normalizedReference ?? 'Unknown';
       if (!byReference[ref]) {
         byReference[ref] = [];
       }
       byReference[ref].push(quote.id);
 
       // Index by book
-      const book = quote.metadata.reference.book;
+      const book = quote.metadata.reference?.book ?? 'Unknown';
       if (!byBook[book]) {
         byBook[book] = [];
       }
@@ -345,8 +345,8 @@ export function buildExtracted(
   for (const entry of Object.values(nodeIndex)) {
     if (isQuoteBlockNode(entry.node)) {
       const quote = entry.node as QuoteBlockNode;
-      const ref = quote.metadata.reference.normalizedReference;
-      if (!references.includes(ref)) {
+      const ref = quote.metadata.reference?.normalizedReference;
+      if (ref && !references.includes(ref)) {
         references.push(ref);
       }
     }
