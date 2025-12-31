@@ -319,14 +319,33 @@ class ASTBuilder:
         return children
     
     def _clean_quote_markers(self, text: str) -> str:
-        """Remove embedded quotation marks that were added by the old system."""
-        # Remove leading/trailing quotation marks
-        text = text.strip()
-        if text.startswith('"') or text.startswith('"'):
-            text = text[1:]
-        if text.endswith('"') or text.endswith('"'):
-            text = text[:-1]
-        return text.strip()
+        """
+        Surgically remove legacy quotation marks while preserving whitespace.
+        Only removes one level of quotes if they exist at the boundaries.
+        """
+        if not text:
+            return text
+            
+        # We only remove markers if they are part of the 'decoration' 
+        # specifically added by the older pipeline phases.
+        # Handle both straight and smart quotes.
+        quotes = ('"', '“', '”', '"', '"') # including literal strings from view
+        
+        # Strip from start (preserving internal spaces)
+        stripped_start = text.lstrip()
+        leading_ws = text[:len(text) - len(stripped_start)]
+        
+        if stripped_start and stripped_start[0] in quotes:
+            text = leading_ws + stripped_start[1:]
+        
+        # Strip from end (preserving internal spaces)
+        stripped_end = text.rstrip()
+        trailing_ws = text[len(stripped_end):]
+        
+        if stripped_end and stripped_end[-1] in quotes:
+            text = stripped_end[:-1] + trailing_ws
+            
+        return text
     
     def _build_quote_node(self, quote: QuoteBoundary, content: str) -> QuoteBlockNode:
         """

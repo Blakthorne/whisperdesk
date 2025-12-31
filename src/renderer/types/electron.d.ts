@@ -56,6 +56,7 @@ export interface PipelineProgress {
 
 export interface ExtendedTranscriptionOptions extends TranscriptionOptions {
   processAsSermon?: boolean;
+  testMode?: boolean;
 }
 
 export interface SermonTranscriptionResult extends TranscriptionResult {
@@ -145,4 +146,4 @@ declare global {
   }
 }
 
-export {};
+export { };

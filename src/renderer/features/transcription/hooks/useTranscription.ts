@@ -28,6 +28,7 @@ export function useTranscription(): UseTranscriptionReturn {
     model: 'base',
     language: 'auto',
     processAsSermon: false,
+    testMode: false,
   });
   const [transcription, setTranscription] = useState<string>('');
   const [error, setError] = useState<string | null>(null);

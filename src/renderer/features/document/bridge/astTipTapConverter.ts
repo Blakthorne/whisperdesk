@@ -273,6 +273,7 @@ function convertQuoteToTipTap(
     attrs.chapter = node.metadata.reference.chapter;
     attrs.verseStart = node.metadata.reference.verseStart;
     attrs.verseEnd = node.metadata.reference.verseEnd;
+    attrs.originalText = node.metadata.reference.originalText;
   }
   if (includeMetadata && node.metadata.detection) {
     attrs.translation = node.metadata.detection.translation;
@@ -522,7 +523,7 @@ function convertTipTapBlockquote(
       chapter: (attrs.chapter as number) || 0,
       verseStart: (attrs.verseStart as number) || null,
       verseEnd: (attrs.verseEnd as number) ?? null,
-      originalText: refString,
+      originalText: (attrs.originalText as string) || refString,
       normalizedReference: refString,
     },
     detection: {
@@ -651,7 +652,7 @@ function nodeToHtml(node: DocumentNode): string {
       content += nodeToHtml(child);
     }
     const ref = node.metadata.reference?.normalizedReference ?? 'Unknown';
-    return `<blockquote data-quote-id="${node.id}" data-reference="${escapeHtml(ref)}">${content}<footer>— ${escapeHtml(ref)}</footer></blockquote>`;
+    return `<div class="bible-quote" data-quote-id="${node.id}" data-reference="${escapeHtml(ref)}">${content}</div>`;
   }
 
   if (isHeadingNode(node)) {
@@ -748,9 +749,23 @@ function elementToNode(element: Element): DocumentNode | null {
         children: extractInlineNodes(element),
       };
 
+    case 'DIV':
     case 'BLOCKQUOTE': {
       const quoteId = element.getAttribute('data-quote-id') || createNodeId();
       const reference = element.getAttribute('data-reference') || 'Unknown';
+
+      // Only treat as quote_block if it has the data-quote-id or data-reference attribute
+      // or if it's a blockquote (for legacy support)
+      if (tagName === 'DIV' && !element.hasAttribute('data-quote-id') && !element.hasAttribute('data-reference') && !element.classList.contains('quote-block')) {
+        return {
+          id: createNodeId(),
+          type: 'paragraph',
+          version: 1,
+          updatedAt: createTimestamp(),
+          children: extractInlineNodes(element),
+        };
+      }
+
       return {
         id: quoteId as NodeId,
         type: 'quote_block',

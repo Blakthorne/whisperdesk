@@ -35,23 +35,15 @@ export function QuoteReviewPanel({
     endBoundaryDrag,
     enterBoundaryEditMode,
     enterInterjectionEditMode,
-    setReviewModeActive,
     setPanelOpen,
   } = context;
 
   const focusedQuoteId = review.focusedQuoteId;
-  const isReviewMode = review.isReviewModeActive;
 
   // Handle close panel
   const handleClosePanel = useCallback(() => {
     setPanelOpen(false);
   }, [setPanelOpen]);
-
-  // Handle exit review
-  const handleExitReview = useCallback(() => {
-    setReviewModeActive(false);
-    setPanelOpen(false);
-  }, [setReviewModeActive, setPanelOpen]);
 
   // Get the focused quote
   const focusedQuote = useMemo((): QuoteReviewItem | null => {
@@ -133,8 +125,10 @@ export function QuoteReviewPanel({
       editorActions?.quoteActions.deleteQuote(focusedQuoteId);
       // Then remove from context state
       removeQuote(focusedQuoteId);
+      // Deselect
+      setFocusedQuote(null);
     }
-  }, [focusedQuoteId, removeQuote, editorActions]);
+  }, [focusedQuoteId, removeQuote, editorActions, setFocusedQuote]);
 
   // Handle toggle non-biblical - update BOTH context and editor
   const handleToggleNonBiblical = useCallback(() => {
@@ -155,13 +149,27 @@ export function QuoteReviewPanel({
     [onLookupVerse]
   );
 
-  // Handle "next unreviewed" navigation
-  const handleNextUnreviewed = useCallback(() => {
-    const nextUnreviewed = quotes.find((q: QuoteReviewItem) => !q.isReviewed);
-    if (nextUnreviewed) {
-      setFocusedQuote(nextUnreviewed.id);
-    }
-  }, [quotes, setFocusedQuote]);
+  // Handle Update Text
+  const handleUpdateText = useCallback((text: string) => {
+      if (focusedQuoteId) {
+          updateQuote(focusedQuoteId, { text });
+          editorActions?.quoteActions.updateQuoteText(focusedQuoteId, text);
+      }
+  }, [focusedQuoteId, updateQuote, editorActions]);
+
+  // Handle Update Interjections
+  const handleUpdateInterjections = useCallback((interjections: string[]) => {
+      if (focusedQuoteId) {
+          updateQuote(focusedQuoteId, { interjections });
+          editorActions?.quoteActions.updateQuoteInterjections(focusedQuoteId, interjections);
+      }
+  }, [focusedQuoteId, updateQuote, editorActions]);
+
+  // Handle close detail view
+  const handleCloseDetail = useCallback(() => {
+    setFocusedQuote(null);
+  }, [setFocusedQuote]);
+
 
   // Render empty state
   if (quotes.length === 0) {
@@ -184,7 +192,6 @@ export function QuoteReviewPanel({
         <div className="quote-review-title-row">
           <div className="quote-review-title">
             <h3>Quote Review</h3>
-            {isReviewMode && <span className="review-mode-badge">Review Mode</span>}
           </div>
           <button
             className="quote-review-close-btn"
@@ -226,8 +233,8 @@ export function QuoteReviewPanel({
           </div>
         </div>
 
-        {/* Detail view for focused quote */}
-        {focusedQuote && !compact && (
+        {/* Detail view for focused quote - SLIDE OVER OVERLAY */}
+         {focusedQuote && !compact && (
           <div className="quote-review-detail-section">
             <QuoteDetailView
               quote={focusedQuote}
@@ -238,30 +245,15 @@ export function QuoteReviewPanel({
               onDelete={handleDelete}
               onToggleNonBiblical={handleToggleNonBiblical}
               onLookupVerse={handleLookupVerse}
+              onUpdateText={handleUpdateText}
+              onUpdateInterjections={handleUpdateInterjections}
+              onClose={handleCloseDetail}
               isBoundaryEditing={
                 boundaryDrag.isDragging && boundaryDrag.quoteId === focusedQuote.id
               }
             />
           </div>
         )}
-      </div>
-
-      {/* Footer with actions */}
-      <div className="quote-review-panel-footer">
-        {reviewProgress.reviewed < reviewProgress.total ? (
-          <button className="quote-review-next-btn" onClick={handleNextUnreviewed}>
-            Next Unreviewed →
-          </button>
-        ) : (
-          <div className="quote-review-complete">
-            <span className="complete-icon">✓</span>
-            <span>All quotes verified!</span>
-          </div>
-        )}
-
-        <button className="quote-review-exit-btn" onClick={handleExitReview}>
-          Exit Review
-        </button>
       </div>
     </div>
   );

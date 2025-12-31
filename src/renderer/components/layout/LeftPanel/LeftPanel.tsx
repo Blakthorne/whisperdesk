@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { FileDropZone, FileQueue, PipelineProgress } from '../../../features/transcription';
 import { SettingsPanel } from '../../../features/settings';
 import { useAppTranscription } from '../../../contexts';
@@ -7,6 +7,9 @@ import { TranscriptionActions } from './TranscriptionActions';
 import { ErrorMessage } from './ErrorMessage';
 import { DonationSection } from './DonationSection';
 import { SystemWarning } from '../../ui';
+import { getAppInfo } from '../../../services/electronAPI';
+// Reuse SermonToggle styles for consistency
+import '../../../features/settings/components/SermonToggle/SermonToggle.css';
 
 function LeftPanel(): React.JSX.Element {
   const {
@@ -24,6 +27,23 @@ function LeftPanel(): React.JSX.Element {
   } = useAppTranscription();
 
   const { isFFmpegAvailable, isChecking, recheckStatus } = useFFmpegStatus();
+  const [isDev, setIsDev] = useState(false);
+
+  useEffect(() => {
+    getAppInfo().then((info) => {
+      setIsDev(info.isDev);
+    });
+  }, []);
+
+  const handleTestModeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const isEnabled = e.target.checked;
+    setSettings({
+      ...settings,
+      testMode: isEnabled,
+      // Enforce settings when enabling test mode
+      ...(isEnabled ? { language: 'en', processAsSermon: true } : {})
+    });
+  };
 
   return (
     <div className="left-panel">
@@ -34,13 +54,32 @@ function LeftPanel(): React.JSX.Element {
       )}
       {isFFmpegAvailable === false && <SystemWarning onRefresh={recheckStatus} />}
 
+      {isDev && (
+        <div className="sermon-toggle" style={{ marginTop: 0, marginBottom: '20px' }}>
+          <label className="sermon-toggle-label">
+            <input
+              type="checkbox"
+              className="sermon-toggle-checkbox"
+              checked={settings.testMode || false}
+              onChange={handleTestModeChange}
+              disabled={isTranscribing}
+            />
+            <span className="sermon-toggle-checkmark" />
+            <span className="sermon-toggle-text">Test Mode (Skip Whisper)</span>
+          </label>
+          <p className="sermon-toggle-description">
+            Injects test transcript. Disables file input. FORCE ENABLES: English, Sermon Mode.
+          </p>
+        </div>
+      )}
+
       <FileDropZone
         onFilesSelect={handleFilesSelect}
         queueCount={queue.length}
-        disabled={isTranscribing}
+        disabled={isTranscribing || !!settings.testMode}
       />
 
-      {queue.length > 0 && (
+      {queue.length > 0 && !settings.testMode && (
         <FileQueue
           queue={queue}
           onRemove={removeFromQueue}
@@ -59,7 +98,7 @@ function LeftPanel(): React.JSX.Element {
           isComplete={
             !isTranscribing &&
             pipelineProgress === null &&
-            queue.some((q) => q.status === 'completed')
+            (queue.some((q) => q.status === 'completed') || !!settings.testMode)
           }
         />
       )}
@@ -67,7 +106,7 @@ function LeftPanel(): React.JSX.Element {
       <SettingsPanel
         settings={settings}
         onChange={setSettings}
-        disabled={isTranscribing}
+        disabled={isTranscribing || !!settings.testMode}
         onModelStatusChange={setModelDownloaded}
       />
 

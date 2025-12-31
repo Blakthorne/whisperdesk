@@ -685,16 +685,18 @@ def detect_translation_for_quote(ref: 'BibleReference', transcript: str,
     
     # Extract the search area - text after the reference
     search_start = ref.position
-    search_end = min(ref.position + 2000, len(transcript))
+    # Use a smaller search area (500 chars) for better translation detection accuracy
+    # This prevents matching common words from later in the transcript
+    search_end = min(ref.position + 500, len(transcript))
     search_area = transcript.lower()[search_start:search_end]
     search_words = set(normalize_for_comparison(search_area).split())
     
     # Store original translation to restore later
     original_translation = api_client.translation
     
-    best_translation = 'KJV'
+    best_translation = TRANSLATION_PRIORITY[0] if TRANSLATION_PRIORITY else 'KJV'
     best_verse_text = ''
-    best_score = 0.0
+    best_score = -1.0
     all_scores = {}
     
     # Fetch verse in each translation and score by word overlap
@@ -718,8 +720,8 @@ def detect_translation_for_quote(ref: 'BibleReference', transcript: str,
                     best_translation = translation
                     best_verse_text = verse_text
                 
-                # Early exit if we have a very high confidence match
-                if match_ratio >= 0.85:
+                # Only exit early if we have a perfect match
+                if match_ratio >= 1.0:
                     break
     
     # Restore original translation
@@ -1397,7 +1399,7 @@ def find_best_phrase_match(phrases: List[List[str]], transcript: str, search_sta
                         matches += 1
             
             score = matches / phrase_len
-            if score > best_score and score >= 0.7:
+            if score > best_score and score >= 0.6:
                 best_score = score
                 start_pos = search_start + word_matches[i].start()
                 end_pos = search_start + word_matches[i + phrase_len - 1].end()
@@ -2581,7 +2583,7 @@ def process_text(text: str, translation: Optional[str] = None, verbose: bool = T
     api_client = BibleAPIClient(translation=initial_translation)
     
     # Determine if we're doing per-quote detection
-    per_quote_detection = (translation is None and auto_detect)
+    per_quote_detection = (not translation and auto_detect)
     
     if verbose:
         if per_quote_detection:

@@ -1,291 +1,435 @@
-/* QuoteDetailView - Detailed view of a single quote */
+/* QuoteDetailView.css - Restyled to match app design system */
 
 .quote-detail-view {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 4px 0;
+  height: 100%;
+  background-color: var(--bg-secondary);
+  overflow: hidden;
 }
 
-/* Section labels */
-.quote-detail-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--text-tertiary);
-  margin-bottom: 6px;
-}
-
-/* Quote text section */
-.quote-detail-text-section {
-  padding-bottom: 12px;
+/* Header / Controls */
+.quote-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
   border-bottom: 1px solid var(--border);
+  background: var(--bg-secondary);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.quote-detail-back-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.quote-detail-back-btn:hover {
+  background-color: var(--surface-hover);
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+
+.quote-detail-id {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: ui-monospace, 'SF Mono', Monaco, monospace;
+  background: var(--surface);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+}
+
+/* Sections */
+.quote-detail-section {
+  padding: 20px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.quote-detail-section:last-of-type {
+  border-bottom: none;
+}
+
+.quote-detail-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Text Display */
+.quote-detail-text-container {
+  background-color: var(--surface);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  border: 1px solid var(--border);
+  transition: all var(--transition-fast);
+}
+
+.quote-detail-text-container:hover {
+  border-color: var(--border-hover);
 }
 
 .quote-detail-text {
-  font-size: 0.95rem;
-  line-height: 1.6;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 15px;
+  line-height: 1.7;
   color: var(--text-primary);
-  background: var(--bg-secondary);
-  padding: 12px;
-  border-radius: var(--radius-md);
-  word-break: break-word;
+  font-style: italic;
 }
 
 .quote-detail-quote-mark {
   color: var(--accent);
-  font-size: 1.2rem;
-  font-family: Georgia, serif;
+  font-weight: 600;
+  font-size: 1.1em;
+  margin: 0 2px;
 }
 
-.quote-detail-quote-mark:first-child {
-  margin-right: 4px;
+/* Text Editor */
+.quote-detail-text-editor textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 16px;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 15px;
+  line-height: 1.7;
+  border: 2px solid var(--accent);
+  border-radius: var(--radius);
+  resize: vertical;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  outline: none;
+  box-shadow: var(--shadow-accent);
 }
 
-.quote-detail-quote-mark:last-child {
-  margin-left: 4px;
+.quote-detail-text-editor textarea:focus {
+  border-color: var(--accent-hover);
 }
 
-/* Reference section */
-.quote-detail-reference-section {
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--border);
+.quote-detail-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
+/* Reference Display */
 .quote-detail-reference-display {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  align-items: center;
+  gap: 12px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+}
+
+.quote-detail-reference-display svg {
+  color: var(--text-muted);
+  flex-shrink: 0;
 }
 
 .quote-detail-reference-text {
-  font-size: 1rem;
-  font-style: italic;
-  color: var(--accent);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .quote-detail-reference-missing {
-  font-size: 0.9rem;
-  color: var(--text-tertiary);
+  color: var(--danger);
+  font-style: italic;
+  font-size: 14px;
 }
 
-.quote-detail-reference-buttons {
+.quote-detail-actions-row {
+  margin-left: auto;
   display: flex;
-  gap: 12px;
+  gap: 4px;
 }
 
-.quote-detail-link-btn {
-  background: none;
-  border: none;
-  padding: 0;
-  font-size: 0.85rem;
-  color: var(--accent);
-  cursor: pointer;
-  text-decoration: underline;
-  transition: color var(--transition-fast);
-}
-
-.quote-detail-link-btn:hover {
-  color: var(--accent-hover);
-}
-
-/* Reference editor */
+/* Reference Editor */
 .quote-detail-reference-editor {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
-.quote-detail-verse-input {
-  padding: 8px 12px;
-  font-size: 0.9rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg-primary);
-  color: var(--text-primary);
-}
-
-.quote-detail-verse-input:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-
-.quote-detail-reference-actions {
+.quote-detail-reference-inputs {
   display: flex;
   gap: 8px;
-  margin-top: 4px;
 }
 
-.quote-detail-btn {
-  padding: 6px 12px;
-  font-size: 0.85rem;
-  border: 1px solid var(--border);
+.quote-detail-reference-inputs>div:first-child {
+  flex: 1;
+}
+
+.quote-detail-chapter-input {
+  width: 80px;
+  padding: 10px 12px;
   border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
   background: var(--bg-secondary);
   color: var(--text-primary);
+  font-size: 14px;
+  transition: all var(--transition-fast);
+}
+
+.quote-detail-chapter-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--shadow-accent);
+}
+
+/* Interjections */
+.quote-detail-interjections-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 32px;
+}
+
+.quote-detail-interjection-tag {
+  background-color: var(--surface);
+  color: var(--text-secondary);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border);
+  transition: all var(--transition-fast);
+}
+
+.quote-detail-interjection-tag:hover {
+  border-color: var(--border-hover);
+}
+
+.quote-interjection-remove-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all var(--transition-fast);
+}
+
+.quote-interjection-remove-btn:hover {
+  background-color: var(--danger-light);
+  color: var(--danger);
+}
+
+.quote-detail-empty-state {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 8px 0;
+}
+
+.quote-detail-add-interjection {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.quote-detail-add-interjection input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  transition: all var(--transition-fast);
+}
+
+.quote-detail-add-interjection input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--shadow-accent);
+}
+
+/* Common Buttons */
+.quote-icon-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.quote-icon-btn:hover {
+  background-color: var(--surface-hover);
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+
+.quote-btn-primary {
+  background-color: var(--accent);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  font-size: 13px;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
-.quote-detail-btn:hover {
-  background: var(--bg-hover);
+.quote-btn-primary:hover {
+  background-color: var(--accent-hover);
 }
 
-.quote-detail-btn-primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: white;
+.quote-btn-secondary {
+  background-color: var(--surface);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
 }
 
-.quote-detail-btn-primary:hover {
-  background: var(--accent-hover);
+.quote-btn-secondary:hover {
+  background-color: var(--surface-hover);
+  color: var(--text-primary);
+  border-color: var(--border-hover);
 }
 
-/* Non-biblical display */
-.quote-detail-non-biblical {
+/* Main Actions Footer */
+.quote-detail-main-actions {
+  margin-top: auto;
+  padding: 20px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 12px;
+  background-color: var(--bg-tertiary);
+  border-top: 1px solid var(--border);
+}
+
+.quote-action-row {
+  display: flex;
   gap: 12px;
 }
 
-.non-biblical-badge {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  font-style: italic;
-}
-
-/* Interjections section */
-.quote-detail-interjections-section {
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--border);
-}
-
-.quote-detail-interjections {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-
-.quote-detail-interjection-tag {
-  padding: 4px 10px;
-  font-size: 0.8rem;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  color: var(--text-secondary);
-}
-
-/* Status section */
-.quote-detail-status-section {
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--border);
-}
-
-.quote-detail-status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  font-size: 0.85rem;
-  border-radius: var(--radius-md);
-}
-
-.quote-detail-status-badge.reviewed {
-  background: rgba(34, 197, 94, 0.1);
-  color: var(--success);
-}
-
-.quote-detail-status-badge.pending {
-  background: var(--bg-secondary);
-  color: var(--text-secondary);
-}
-
-/* Actions section */
-.quote-detail-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding-top: 4px;
-}
-
-.quote-detail-action-btn {
+.verify-btn-large {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 16px;
-  font-size: 0.9rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--bg-secondary);
-  color: var(--text-primary);
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 14px;
   cursor: pointer;
   transition: all var(--transition-fast);
-  width: 100%;
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+  color: var(--text-secondary);
 }
 
-.quote-detail-action-btn:hover {
-  background: var(--bg-hover);
-  border-color: var(--border-hover, var(--accent));
+.verify-btn-large:hover {
+  border-color: var(--success);
+  color: var(--success);
+  background-color: var(--success-light);
 }
 
-.quote-detail-action-btn:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-light);
-}
-
-.quote-detail-action-btn.active {
-  background: var(--accent-light);
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-/* Verify button states */
-.quote-detail-verify-btn {
-  background: var(--accent);
-  border-color: var(--accent);
+.verify-btn-large.verified {
+  background-color: var(--success);
   color: white;
-}
-
-.quote-detail-verify-btn:hover {
-  background: var(--accent-hover);
-}
-
-.quote-detail-verify-btn.verified {
-  background: var(--success);
   border-color: var(--success);
 }
 
-.quote-detail-verify-btn.verified:hover {
-  background: #16a34a;
+.verify-btn-large.verified:hover {
+  opacity: 0.9;
 }
 
-/* Delete button */
-.quote-detail-delete-btn {
-  background: transparent;
+/* Boundary edit button styles */
+.boundary-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+  color: var(--text-secondary);
+}
+
+.boundary-btn:hover {
+  background-color: var(--surface-hover);
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+}
+
+.boundary-btn.editing {
+  background-color: var(--accent-light);
+  color: var(--accent);
+  border-color: var(--accent-border);
+}
+
+.delete-btn-large {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--danger);
+  background-color: var(--danger-light);
   color: var(--danger);
-  border-color: var(--danger);
+  cursor: pointer;
+  transition: all var(--transition-fast);
 }
 
-.quote-detail-delete-btn:hover {
-  background: rgba(239, 68, 68, 0.1);
+.delete-btn-large:hover {
+  background-color: var(--danger);
+  color: white;
 }
 
-/* Animation */
-.quote-detail-view {
-  animation: detailViewFadeIn 0.2s ease-out;
+/* Non-biblical badge */
+.non-biblical-badge {
+  font-size: 12px;
+  color: var(--warning-dark);
+  background-color: var(--warning-light);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
 }
 
-@keyframes detailViewFadeIn {
-  from {
-    opacity: 0;
-    transform: translateX(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
+/* Dark mode already handled by CSS variables */

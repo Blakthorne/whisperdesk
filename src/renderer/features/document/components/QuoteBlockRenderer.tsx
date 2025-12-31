@@ -53,14 +53,11 @@ function getConfidenceClass(level: ConfidenceLevel): string {
 export function QuoteBlockRenderer({
   node,
   className,
-  showReference = true,
-  showTranslation = true,
   showConfidence = true,
   showVerification = true,
-  formatReference,
 }: QuoteBlockRendererProps): React.JSX.Element {
   const { metadata } = node;
-  const { reference, detection, userVerified } = metadata;
+  const { detection, userVerified } = metadata;
 
   // Build class names
   const classNames = ['document-quote-block'];
@@ -87,28 +84,16 @@ export function QuoteBlockRenderer({
     });
   };
 
-  // Format reference text
-  const referenceText = reference?.normalizedReference ?? 'Unknown';
-  const referenceNode = formatReference ? formatReference(referenceText) : referenceText;
-
   return (
-    <blockquote
+    <div
       className={classNames.join(' ')}
       data-node-id={node.id}
-      data-reference={referenceText}
       data-confidence={detection?.confidence?.toFixed(2) ?? '0.00'}
     >
-      <div className="document-quote-content">{renderChildren()}</div>
-
-      {showReference && (
-        <cite className="document-quote-reference">
-          <span className="document-quote-reference-link">{referenceNode}</span>
-          {showTranslation && detection?.translation && (
-            <span className="document-quote-translation">({detection.translation})</span>
-          )}
-        </cite>
-      )}
-    </blockquote>
+      <div className="document-quote-content">
+        &ldquo;{renderChildren()}&rdquo;
+      </div>
+    </div>
   );
 }
 

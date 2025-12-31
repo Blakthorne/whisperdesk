@@ -429,9 +429,10 @@ def process_bible_quotes(
     # Extract unique references and merge overlapping ones
     scripture_refs = merge_overlapping_references(quote_boundaries)
     
-    emit_stage_complete(3, "Processing Bible quotes")
-    
-    return processed_text, quote_boundaries, scripture_refs
+    # We return the original text here because we want subsequent stages (paragraphing, AST)
+    # to work with the original offsets from quote_boundaries. 
+    # The decorative quotation marks will be added by the renderer.
+    return text, quote_boundaries, scripture_refs
 
 
 def merge_overlapping_references(quote_boundaries: Optional[List[Any]]) -> List[str]:
@@ -588,11 +589,12 @@ def process_sermon(
     file_path: str,
     model_name: str = "medium",
     language: str = "en",
-    use_ast: bool = True  # New: enable structured document model
+    use_ast: bool = True,  # New: enable structured document model
+    skip_transcription: bool = False
 ) -> Dict[str, Any]:
     """
     Full sermon processing pipeline:
-    1. Transcribe audio
+    1. Transcribe audio (or load test transcript)
     2. Extract metadata (Title, Comment)
     3. Process Bible quotes (with per-quote translation detection)
     4. Segment into paragraphs
@@ -604,6 +606,7 @@ def process_sermon(
         model_name: Whisper model to use
         language: Language code or 'auto'
         use_ast: If True, include documentState with structured AST
+        skip_transcription: If True, load test transcript instead of processing audio
     
     Returns:
         Structured document data with optional documentState
@@ -624,7 +627,27 @@ def process_sermon(
     }
     
     # Stage 1: Transcribe
-    raw_text = transcribe_audio(file_path, model_name, language)
+    if skip_transcription:
+        emit_progress(1, "Transcribing audio", 0, "Test Mode: Loading transcript...")
+        try:
+            # Load test transcript from the same directory as this script
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            test_file_path = os.path.join(script_dir, "test_mode_transcript.txt")
+            
+            with open(test_file_path, 'r', encoding='utf-8') as f:
+                raw_text = f.read()
+            
+            # Simulate a brief delay to show the progress
+            import time
+            emit_progress(1, "Transcribing audio", 50, "Test Mode: Simulating transcription...")
+            time.sleep(0.5)
+            emit_progress(1, "Transcribing audio", 100, "Test Mode: Complete")
+            emit_stage_complete(1, "Transcribing audio")
+        except Exception as e:
+            return {'error': f"Failed to load test transcript: {str(e)}"}
+    else:
+        raw_text = transcribe_audio(file_path, model_name, language)
+        
     result['rawTranscript'] = raw_text
     
     # Stage 2: Extract metadata
@@ -642,9 +665,10 @@ def process_sermon(
     )
     result['references'] = scripture_refs
     
-    # Stage 4: Segment paragraphs
+    # Stage 4: Segment paragraphs using original raw_text to preserve offsets
+    # quote_boundaries are relative to raw_text.
     paragraphed_text = segment_paragraphs(
-        processed_text,
+        raw_text,
         quote_boundaries=quote_boundaries
     )
     result['body'] = paragraphed_text
@@ -756,11 +780,12 @@ def handle_command(command: Dict[str, Any]) -> Dict[str, Any]:
         file_path = command.get('filePath')
         model_name = command.get('model', 'medium')
         language = command.get('language', 'en')
+        skip_transcription = command.get('skip_transcription', False)
         
         if not file_path:
             return {'error': 'filePath is required'}
         
-        return process_sermon(file_path, model_name, language)
+        return process_sermon(file_path, model_name, language, skip_transcription=skip_transcription)
     
     elif cmd == 'extract_metadata':
         file_path = command.get('filePath')

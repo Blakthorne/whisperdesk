@@ -8,7 +8,7 @@ export interface TranscriptionActionsProps {
 }
 
 function TranscriptionActions({ isFFmpegAvailable }: TranscriptionActionsProps): React.JSX.Element {
-  const { isTranscribing, modelDownloaded, handleTranscribe, handleCancel, queue } =
+  const { isTranscribing, modelDownloaded, handleTranscribe, handleCancel, queue, settings } =
     useAppTranscription();
 
   const { retryableCount } = useMemo(() => {
@@ -23,7 +23,7 @@ function TranscriptionActions({ isFFmpegAvailable }: TranscriptionActionsProps):
     return { retryableCount: retryable };
   }, [queue]);
 
-  const canTranscribe = retryableCount > 0 && modelDownloaded && isFFmpegAvailable === true;
+  const canTranscribe = (retryableCount > 0 || settings.testMode) && modelDownloaded && isFFmpegAvailable === true;
 
   const getDisabledReason = (): string => {
     if (!isFFmpegAvailable) return 'Please install FFmpeg first';
@@ -35,18 +35,20 @@ function TranscriptionActions({ isFFmpegAvailable }: TranscriptionActionsProps):
   return (
     <div className="actions">
       {!isTranscribing ? (
-        <Button
-          variant="primary"
-          size="lg"
-          icon={<Zap size={18} />}
-          onClick={handleTranscribe}
-          disabled={!canTranscribe}
-          aria-label="Start transcription"
-          title={getDisabledReason()}
-          fullWidth
-        >
-          Transcribe
-        </Button>
+        <>
+          <Button
+            variant="primary"
+            size="lg"
+            icon={<Zap size={18} />}
+            onClick={handleTranscribe}
+            disabled={!canTranscribe}
+            aria-label="Start transcription"
+            title={getDisabledReason()}
+            fullWidth
+          >
+            Transcribe
+          </Button>
+        </>
       ) : (
         <Button
           variant="danger"

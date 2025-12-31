@@ -410,7 +410,7 @@ describe('AST to HTML Conversion', () => {
     const root = createDocumentWithQuote();
     const html = astToHtml(root);
 
-    expect(html).toContain('<blockquote');
+    expect(html).toContain('<div');
     expect(html).toContain('data-reference="John 3:16"');
     expect(html).toContain('For God so loved the world');
   });
@@ -460,7 +460,7 @@ describe('HTML to AST Conversion', () => {
   });
 
   it('should convert blockquote with data attributes', () => {
-    const html = '<blockquote data-reference="John 3:16">For God so loved the world</blockquote>';
+    const html = '<div class="quote-block" data-reference="John 3:16">For God so loved the world</div>';
     const result = htmlToAst(html);
 
     expect(result.success).toBe(true);

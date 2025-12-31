@@ -1,222 +1,172 @@
-/* QuoteListItem - Single quote in the review list */
+/* QuoteListItem.css */
 
 .quote-list-item {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  background-color: var(--bg-primary, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
   padding: 12px;
-  background: var(--bg-secondary);
-  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all var(--transition-fast);
-  border: 2px solid transparent;
+  transition: all 0.2s ease;
+  position: relative;
+  gap: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .quote-list-item:hover {
-  background: var(--bg-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border-color: var(--border-hover, #cbd5e1);
 }
 
-.quote-list-item:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-
-.quote-list-item:focus-visible {
-  box-shadow: 0 0 0 2px var(--accent-light);
-}
-
-/* Focused state */
 .quote-list-item.focused {
-  border-color: var(--accent);
-  background: var(--accent-light);
+  border-color: var(--accent-primary, #3b82f6);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+  background-color: var(--accent-light, #eff6ff);
 }
 
-/* Reviewed state */
 .quote-list-item.reviewed {
-  opacity: 0.75;
+  border-color: var(--success-border, #bbf7d0);
+  background-color: var(--success-bg, #f0fdf4);
 }
 
-.quote-list-item.reviewed:hover {
-  opacity: 1;
-}
-
-/* Editing state */
-.quote-list-item.editing {
-  border-color: var(--warning);
-  background: rgba(251, 191, 36, 0.1);
-}
-
-/* Non-biblical state */
 .quote-list-item.non-biblical {
-  background: var(--bg-tertiary, var(--bg-secondary));
+  border-color: var(--warning-border, #fdba74);
+  background-color: var(--warning-bg, #fff7ed);
 }
 
-/* Quote number badge */
+/* Number badge */
 .quote-item-number {
   flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background-color: var(--bg-tertiary, #f1f5f9);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-primary);
-  border-radius: 50%;
-  border: 1px solid var(--border);
-}
-
-.quote-item-number-text {
-  font-size: 0.75rem;
+  font-size: 11px;
+  color: var(--text-secondary, #64748b);
   font-weight: 600;
-  color: var(--text-secondary);
 }
 
 .quote-list-item.focused .quote-item-number {
-  background: var(--accent);
-  border-color: var(--accent);
-}
-
-.quote-list-item.focused .quote-item-number-text {
+  background-color: var(--accent-primary, #3b82f6);
   color: white;
 }
 
-/* Main content */
+/* Content */
 .quote-item-content {
   flex: 1;
   min-width: 0;
+  /* Enable text truncation */
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .quote-item-text {
-  font-size: 0.9rem;
-  color: var(--text-primary);
-  line-height: 1.5;
-  margin-bottom: 6px;
-  word-break: break-word;
+  font-family: 'Georgia', serif;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--text-primary, #334155);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-style: italic;
 }
 
 .quote-item-quote-mark {
-  color: var(--text-tertiary);
-  font-size: 1rem;
+  color: var(--text-tertiary, #cbd5e1);
+  font-weight: bold;
 }
 
-.quote-item-quote-mark:first-child {
-  margin-right: 2px;
-}
-
-.quote-item-quote-mark:last-child {
-  margin-left: 2px;
-}
-
-/* Meta info */
 .quote-item-meta {
   display: flex;
   align-items: center;
-  gap: 8px;
   flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
 }
 
 .quote-item-reference {
-  font-size: 0.8rem;
-  color: var(--accent);
-  font-style: italic;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary, #64748b);
+  background-color: rgba(0, 0, 0, 0.03);
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
 .quote-item-reference.missing {
-  color: var(--text-tertiary);
-  font-style: normal;
+  color: var(--error-text, #ef4444);
+  background-color: var(--error-bg, #fef2f2);
 }
 
 .quote-item-reference.non-biblical {
-  color: var(--text-secondary);
-  font-style: italic;
+  color: var(--warning-text, #ea580c);
+  background-color: var(--warning-bg, #fff7ed);
 }
 
 .quote-item-interjections {
-  font-size: 0.75rem;
-  color: var(--text-tertiary);
-  background: var(--bg-primary);
-  padding: 2px 6px;
-  border-radius: var(--radius-xs);
-}
-
-/* Status section */
-.quote-item-status {
-  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--text-tertiary, #94a3b8);
   display: flex;
   align-items: center;
+  gap: 2px;
+}
+
+/* Status Actions */
+.quote-item-status {
+  display: flex;
+  flex-direction: column;
   gap: 4px;
+  align-items: center;
 }
 
 .quote-item-verify-btn {
   width: 28px;
   height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color, #cbd5e1);
+  background: white;
+  color: var(--text-tertiary, #cbd5e1);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-primary);
-  border: 1px solid var(--border);
-  border-radius: 50%;
   cursor: pointer;
-  font-size: 0.9rem;
-  color: var(--text-tertiary);
-  transition: all var(--transition-fast);
+  transition: all 0.2s;
+  font-size: 14px;
 }
 
 .quote-item-verify-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--success-primary, #22c55e);
+  color: var(--success-primary, #22c55e);
+  transform: scale(1.05);
 }
 
 .quote-item-verify-btn.verified {
-  background: var(--success);
-  border-color: var(--success);
+  background-color: var(--success-primary, #22c55e);
+  border-color: var(--success-primary, #22c55e);
   color: white;
-}
-
-.quote-item-verify-btn.verified:hover {
-  background: #16a34a;
-  border-color: #16a34a;
 }
 
 .quote-item-editing-badge {
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--warning);
-  border-radius: 50%;
-  font-size: 0.7rem;
-  color: white;
+  font-size: 12px;
+  animation: pulse 2s infinite;
 }
 
-/* Hover effects for interactive elements */
-.quote-list-item:hover .quote-item-verify-btn:not(.verified) {
-  border-color: var(--border-hover);
-}
-
-/* Animation for new items */
-@keyframes quoteItemAppear {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
+@keyframes pulse {
+  0% {
+    opacity: 0.5;
   }
-  to {
+
+  50% {
     opacity: 1;
-    transform: translateY(0);
   }
-}
 
-.quote-list-item {
-  animation: quoteItemAppear 0.2s ease-out;
-}
-
-/* Dark mode adjustments */
-@media (prefers-color-scheme: dark) {
-  .quote-item-number {
-    background: var(--bg-secondary);
-  }
-  
-  .quote-list-item.focused .quote-item-number {
-    background: var(--accent);
+  100% {
+    opacity: 0.5;
   }
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { OutputDisplay } from '../../../features/transcription';
 import { QuoteAwareSermonEditor } from '../../../features/transcription/components/SermonEditor/QuoteAwareSermonEditor';
 import { TranscriptionHistory } from '../../../features/history';
@@ -64,12 +64,38 @@ function extractQuotesFromDocument(doc: SermonDocument): QuoteReviewItem[] {
           // Extract text from quote children
           const text = extractTextFromChildren(node.children || []);
           const metadata = node.metadata || {};
-          const reference = metadata.reference as { displayReference?: string } | undefined;
+          const reference = metadata.reference as {
+            normalizedReference?: string;
+            book?: string;
+            chapter?: number;
+            verseStart?: number;
+            verseEnd?: number;
+            originalText?: string;
+          } | undefined;
+
+          // Build reference string with fallback logic
+          let referenceStr = reference?.normalizedReference;
+          if (!referenceStr && reference) {
+            const { book, chapter, verseStart, verseEnd } = reference;
+            if (book && chapter) {
+              referenceStr = `${book} ${chapter}`;
+              if (verseStart) {
+                referenceStr += `:${verseStart}`;
+                if (verseEnd && verseEnd !== verseStart) {
+                  referenceStr += `-${verseEnd}`;
+                }
+              }
+            }
+          }
+          // Last fallback: use originalText
+          if (!referenceStr && reference?.originalText) {
+            referenceStr = reference.originalText;
+          }
 
           quotes.push({
             id: node.id || `quote-${quotes.length}`,
             text,
-            reference: reference?.displayReference,
+            reference: referenceStr,
             isNonBiblical: (metadata.isNonBiblicalQuote as boolean) || false,
             isReviewed: (metadata.userVerified as boolean) || false,
             interjections: metadata.interjections as string[] | undefined,
@@ -122,12 +148,10 @@ function QuoteSyncAndAutoOpen({
     if (!quoteReview || hasSynced) return;
 
     const quotes = extractQuotesFromDocument(document);
-    if (quotes.length > 0) {
-      quoteReview.setQuotes(quotes);
-      // Auto-open review panel when quotes are detected
-      quoteReview.setPanelOpen(true);
-      quoteReview.setReviewModeActive(true);
-    }
+    quoteReview.setQuotes(quotes);
+    // Auto-open review panel whenever sermon document loads
+    quoteReview.setPanelOpen(true);
+    quoteReview.setReviewModeActive(true);
     setHasSynced(true);
   }, [document, quoteReview, hasSynced]);
 
@@ -199,7 +223,30 @@ function RightPanel(): React.JSX.Element {
     saveEdits,
     documentSaveState,
     lastSavedAt,
+    selectedFile,
   } = useAppTranscription();
+
+  // Generate a stable document ID to key the provider
+  // This ensures state (reviewed quotes, panel width) persists for the same document
+  // but resets when opening a new one
+  // NOTE: This hook must be called unconditionally (before any early returns) per Rules of Hooks
+  const documentId = useMemo(() => {
+    if (!sermonDocument) return null;
+    // 1. Prefer AST root ID (most stable)
+    if (sermonDocument.documentState?.root?.id) {
+      return `doc-${sermonDocument.documentState.root.id}`;
+    }
+    // 2. Fallback to sermon title
+    if (sermonDocument.title) {
+      return `doc-${sermonDocument.title.replace(/\s+/g, '-').toLowerCase().slice(0, 30)}`;
+    }
+    // 3. Fallback to filename (if available via selectedFile in context)
+    if (selectedFile?.name) {
+      return `doc-${selectedFile.name.replace(/\.\w+$/, '').replace(/\s+/g, '-').toLowerCase()}`;
+    }
+    // 4. Fallback to timestamp (memoized, so stable for this document instance)
+    return `doc-${Date.now()}`;
+  }, [sermonDocument, selectedFile]);
 
   if (showHistory) {
     return (
@@ -217,16 +264,11 @@ function RightPanel(): React.JSX.Element {
 
   // Show SermonEditor if we have a sermon document
   // Wrap with QuoteReviewProvider and EditorActionsProvider for quote review functionality
-  if (sermonDocument) {
-    // Generate a document ID for the quote review context based on available fields
-    const documentId = sermonDocument.title
-      ? `doc-${sermonDocument.title.replace(/\s+/g, '-').toLowerCase().slice(0, 30)}`
-      : `doc-${Date.now()}`;
-
+  if (sermonDocument && documentId) {
     return (
       <EditorActionsProvider>
         <QuoteReviewProvider documentId={documentId}>
-          <RightPanelWithQuoteReview document={sermonDocument}>
+          <RightPanelWithQuoteReview document={sermonDocument} key={documentId}>
             <div className="right-panel">
               <QuoteAwareSermonEditor
                 document={sermonDocument}

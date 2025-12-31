@@ -153,7 +153,7 @@ export function useDocumentQuoteSync(
     const quotes: QuoteReviewItem[] = quoteNodes.map((node) => {
       const text = extractTextFromNode(node);
       const metadata = node.metadata;
-      
+
       // Find which paragraph contains this quote
       let paragraphId: NodeId | undefined;
       let startOffset: number | undefined = metadata.startOffset;
@@ -176,8 +176,28 @@ export function useDocumentQuoteSync(
         }
       }
 
-      // Get reference string
-      const reference = metadata.reference?.normalizedReference;
+      // Get reference string with robust fallback
+      let reference = metadata.reference?.normalizedReference;
+
+      // Fallback: Construct from parts if normalized reference is missing
+      if (!reference && metadata.reference) {
+        const { book, chapter, verseStart, verseEnd } = metadata.reference;
+        if (book && chapter) {
+          reference = `${book} ${chapter}`;
+          if (verseStart) {
+            reference += `:${verseStart}`;
+            if (verseEnd) {
+              reference += `-${verseEnd}`;
+            }
+          }
+        }
+      }
+
+      // Fallback: Use original text if available
+      if (!reference && metadata.reference?.originalText) {
+        reference = metadata.reference.originalText;
+      }
+
 
       // Get interjection texts
       const interjections = metadata.interjections?.map((i) => i.text) || [];

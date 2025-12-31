@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react';
+import { Check, Edit2 } from 'lucide-react';
 import type { QuoteReviewItem } from '../../../types/quoteReview';
 import './QuoteListItem.css';
 
@@ -16,7 +17,7 @@ interface QuoteListItemProps {
   /** Callback when verify button is clicked */
   onVerify: (quoteId: string) => void;
   /** Optional: show compact view */
-  compact?: boolean;
+  compact?: boolean; // Kept for future use but currently unused
 }
 
 /**
@@ -57,14 +58,7 @@ export function QuoteListItem({
     [quote.id, onVerify]
   );
 
-  // Truncate text for display
-  const displayText = compact
-    ? quote.text.length > 50
-      ? `${quote.text.slice(0, 50)}...`
-      : quote.text
-    : quote.text.length > 100
-      ? `${quote.text.slice(0, 100)}...`
-      : quote.text;
+
 
   // Status classes
   const statusClasses = [
@@ -85,22 +79,15 @@ export function QuoteListItem({
       role="button"
       tabIndex={0}
       aria-pressed={isFocused}
-      aria-label={`Quote ${index + 1}: ${displayText.slice(0, 30)}... ${quote.isReviewed ? 'Reviewed' : 'Not reviewed'}`}
+      aria-label={`Quote ${index + 1}: ${quote.reference || (quote.isNonBiblical ? 'Non-biblical' : 'Missing reference')} - ${quote.isReviewed ? 'Reviewed' : 'Not reviewed'}`}
     >
       {/* Quote number badge */}
       <div className="quote-item-number">
-        <span className="quote-item-number-text">#{index + 1}</span>
+        <span className="quote-item-number-text">{index + 1}</span>
       </div>
 
       {/* Main content */}
       <div className="quote-item-content">
-        {/* Quote text */}
-        <div className="quote-item-text">
-          <span className="quote-item-quote-mark">"</span>
-          {displayText}
-          <span className="quote-item-quote-mark">"</span>
-        </div>
-
         {/* Reference or non-biblical indicator */}
         <div className="quote-item-meta">
           {quote.isNonBiblical ? (
@@ -108,13 +95,13 @@ export function QuoteListItem({
           ) : quote.reference ? (
             <span className="quote-item-reference">{quote.reference}</span>
           ) : (
-            <span className="quote-item-reference missing">No reference</span>
+            <span className="quote-item-reference missing">Missing Reference</span>
           )}
 
           {/* Interjection count */}
           {quote.interjections && quote.interjections.length > 0 && (
-            <span className="quote-item-interjections">
-              {quote.interjections.length} interjection{quote.interjections.length > 1 ? 's' : ''}
+            <span className="quote-item-interjections" title="Interjections">
+               • {quote.interjections.length} interjection{quote.interjections.length > 1 ? 's' : ''}
             </span>
           )}
         </div>
@@ -127,15 +114,14 @@ export function QuoteListItem({
           className={`quote-item-verify-btn ${quote.isReviewed ? 'verified' : ''}`}
           onClick={handleVerifyClick}
           title={quote.isReviewed ? 'Verified' : 'Mark as verified'}
-          aria-label={quote.isReviewed ? 'Verified' : 'Mark as verified'}
         >
-          {quote.isReviewed ? '✓' : '○'}
+          <Check size={14} strokeWidth={3} />
         </button>
 
         {/* Editing indicator */}
         {isBoundaryEditing && (
           <span className="quote-item-editing-badge" title="Editing boundaries">
-            ✎
+            <Edit2 size={12} />
           </span>
         )}
       </div>

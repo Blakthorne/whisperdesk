@@ -40,6 +40,7 @@ export interface TranscriptionSettings {
   model: WhisperModelName;
   language: LanguageCode;
   processAsSermon: boolean;
+  testMode?: boolean;
 }
 
 // ============================================================================

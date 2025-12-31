@@ -22,6 +22,12 @@ export interface QuoteBlockAttrs {
   chapter?: number;
   /** Verse number or range */
   verse?: string;
+  /** Start verse number */
+  verseStart?: number;
+  /** End verse number */
+  verseEnd?: number;
+  /** Original reference text as spoken */
+  originalText?: string;
   /** Whether user verified this quote */
   userVerified?: boolean;
   /** Whether this quote contains text interjected by the speaker */
@@ -67,8 +73,8 @@ export const QuoteBlockExtension = TipTapNode.create({
 
   group: 'block',
 
-  // Allow inline content (text, marks, interjections)
-  content: 'inline*',
+  // Allow block content (paragraphs) as the converter wraps text in paragraphs
+  content: 'block+',
 
   // Allow marks inside quotes (bold, italic, etc.)
   marks: '_',
@@ -83,7 +89,7 @@ export const QuoteBlockExtension = TipTapNode.create({
   addOptions() {
     return {
       HTMLAttributes: {
-        class: 'quote-block',
+        class: 'bible-quote',
       },
     };
   },
@@ -143,6 +149,42 @@ export const QuoteBlockExtension = TipTapNode.create({
           if (!attrs.verse) return {};
           return {
             'data-verse': attrs.verse,
+          };
+        },
+      },
+      verseStart: {
+        default: null,
+        parseHTML: (element) => {
+          const val = element.getAttribute('data-verse-start');
+          return val ? parseInt(val, 10) : null;
+        },
+        renderHTML: (attrs) => {
+          if (attrs.verseStart === null) return {};
+          return {
+            'data-verse-start': String(attrs.verseStart),
+          };
+        },
+      },
+      verseEnd: {
+        default: null,
+        parseHTML: (element) => {
+          const val = element.getAttribute('data-verse-end');
+          return val ? parseInt(val, 10) : null;
+        },
+        renderHTML: (attrs) => {
+          if (attrs.verseEnd === null) return {};
+          return {
+            'data-verse-end': String(attrs.verseEnd),
+          };
+        },
+      },
+      originalText: {
+        default: null,
+        parseHTML: (element) => element.getAttribute('data-original-text'),
+        renderHTML: (attrs) => {
+          if (!attrs.originalText) return {};
+          return {
+            'data-original-text': attrs.originalText,
           };
         },
       },
@@ -243,15 +285,24 @@ export const QuoteBlockExtension = TipTapNode.create({
   /**
    * Parse HTML into this node type
    * Handles both blockquote and our custom quote-block markup
+   * Handles both blockquote and our custom bible-quote markup
    */
   parseHTML() {
     return [
+      {
+        tag: 'div[data-quote-id]',
+        preserveAttributes: true,
+      },
+      {
+        tag: 'div.bible-quote',
+        preserveAttributes: true,
+      },
       {
         tag: 'blockquote[data-quote-id]',
         preserveAttributes: true,
       },
       {
-        tag: 'blockquote.quote-block',
+        tag: 'blockquote.bible-quote',
         preserveAttributes: true,
       },
       {
@@ -286,20 +337,11 @@ export const QuoteBlockExtension = TipTapNode.create({
       HTMLAttributes
     );
 
-    // Add CSS classes based on verification state
-    const classes = ['quote-block'];
-    if (HTMLAttributes['data-user-verified'] === 'true') {
-      classes.push('quote-verified');
-    }
-    if (HTMLAttributes['data-non-biblical'] === 'true') {
-      classes.push('quote-non-biblical');
-    }
-    if (HTMLAttributes['data-has-interjections'] === 'true') {
-      classes.push('quote-has-interjections');
-    }
+    // Use a neutral class
+    const classes = ['bible-quote'];
 
     return [
-      'blockquote',
+      'div',
       {
         ...attrs,
         class: classes.join(' '),
@@ -328,74 +370,77 @@ export const QuoteBlockExtension = TipTapNode.create({
        */
       createQuoteBlock:
         (attrs: Partial<QuoteBlockAttrs>) =>
-        ({ commands }: { commands: any }) => {
-          return commands.wrapIn(this.name, {
-            reference: attrs.reference || null,
-            book: attrs.book || null,
-            chapter: attrs.chapter || null,
-            verse: attrs.verse || null,
-            userVerified: false,
-            isNonBiblical: false,
-          });
-        },
+          ({ commands }: { commands: any }) => {
+            return commands.wrapIn(this.name, {
+              reference: attrs.reference || null,
+              book: attrs.book || null,
+              chapter: attrs.chapter || null,
+              verse: attrs.verse || null,
+              verseStart: attrs.verseStart || null,
+              verseEnd: attrs.verseEnd || null,
+              originalText: attrs.originalText || null,
+              userVerified: false,
+              isNonBiblical: false,
+            });
+          },
 
       /**
        * Toggle quote block on/off
        */
       toggleQuoteBlock:
         () =>
-        ({ commands }: { commands: any }) => {
-          return commands.toggleNode(this.name, 'paragraph');
-        },
+          ({ commands }: { commands: any }) => {
+            return commands.toggleNode(this.name, 'paragraph');
+          },
 
       /**
        * Update quote metadata
        */
       updateQuoteAttrs:
         (attrs: Partial<QuoteBlockAttrs>) =>
-        ({ commands }: { commands: any }) => {
-          return commands.updateAttributes(this.name, attrs);
-        },
+          ({ commands }: { commands: any }) => {
+            return commands.updateAttributes(this.name, attrs);
+          },
 
       /**
        * Mark quote as verified by user
        */
       verifyQuote:
         () =>
-        ({ commands }: { commands: any }) => {
-          return commands.updateAttributes(this.name, { userVerified: true });
-        },
+          ({ commands }: { commands: any }) => {
+            return commands.updateAttributes(this.name, { userVerified: true });
+          },
 
       /**
        * Unmark quote verification
        */
       unverifyQuote:
         () =>
-        ({ commands }: { commands: any }) => {
-          return commands.updateAttributes(this.name, {
-            userVerified: false,
-          });
-        },
+          ({ commands }: { commands: any }) => {
+            return commands.updateAttributes(this.name, {
+              userVerified: false,
+            });
+          },
 
       /**
        * Mark quote as non-biblical
        */
       markNonBiblical:
         () =>
-        ({ commands }: { commands: any }) => {
-          return commands.updateAttributes(this.name, { isNonBiblical: true });
-        },
+          ({ commands }: { commands: any }) => {
+            return commands.updateAttributes(this.name, { isNonBiblical: true });
+          },
 
       /**
        * Unmark quote as non-biblical
        */
       unmarkNonBiblical:
         () =>
-        ({ commands }: { commands: any }) => {
-          return commands.updateAttributes(this.name, {
-            isNonBiblical: false,
-          });
-        },
+          ({ commands }: { commands: any }) => {
+            return commands.updateAttributes(this.name, {
+              isNonBiblical: false,
+            });
+          },
     };
   },
 });

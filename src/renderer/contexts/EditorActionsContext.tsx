@@ -35,6 +35,10 @@ export interface QuoteEditorActions {
   deleteQuote: (quoteId: NodeId) => boolean;
   /** Update quote metadata attributes */
   updateQuoteAttributes: (quoteId: NodeId, attrs: Record<string, unknown>) => boolean;
+  /** Update the actual text content of a quote */
+  updateQuoteText: (quoteId: NodeId, text: string) => boolean;
+  /** Update the interjections list for a quote */
+  updateQuoteInterjections: (quoteId: NodeId, interjections: string[]) => boolean;
   /** Focus the editor on a specific quote */
   focusQuote: (quoteId: NodeId) => boolean;
   /** Check if editor is available */
@@ -224,6 +228,46 @@ export function EditorActionsProvider({ children }: EditorActionsProviderProps):
     [editor]
   );
 
+  const updateQuoteText = useCallback(
+    (quoteId: NodeId, text: string): boolean => {
+      if (!editor || editor.isDestroyed) return false;
+
+      const found = findQuotePosition(editor, quoteId);
+      if (!found) return false;
+
+      const { tr } = editor.state;
+      
+      // We need to replace the content of the node
+      // The node likely contains a text node
+      const nodeStart = found.pos + 1; // Skip the open tag
+      const nodeEnd = found.pos + found.node.nodeSize - 1; // Skip the close tag
+      
+      // Create new text node
+      const textNode = editor.schema.text(text);
+      
+      // Replace content
+      tr.replaceWith(nodeStart, nodeEnd, textNode);
+      
+      // Also update modifiedAt
+      tr.setNodeMarkup(found.pos, undefined, {
+        ...found.node.attrs,
+        modifiedAt: new Date().toISOString(),
+      });
+
+      editor.view.dispatch(tr);
+      return true;
+    },
+    [editor]
+  );
+
+  const updateQuoteInterjections = useCallback(
+    (quoteId: NodeId, interjections: string[]): boolean => {
+      // This is just a wrapper around updateQuoteAttributes for convenience and type safety
+      return updateQuoteAttributes(quoteId, { interjections });
+    },
+    [updateQuoteAttributes]
+  );
+
   const focusQuote = useCallback(
     (quoteId: NodeId): boolean => {
       if (!editor || editor.isDestroyed) return false;
@@ -261,6 +305,8 @@ export function EditorActionsProvider({ children }: EditorActionsProviderProps):
       toggleQuoteNonBiblical,
       deleteQuote,
       updateQuoteAttributes,
+      updateQuoteText,
+      updateQuoteInterjections,
       focusQuote,
       isEditorReady,
     }),
@@ -270,6 +316,8 @@ export function EditorActionsProvider({ children }: EditorActionsProviderProps):
       toggleQuoteNonBiblical,
       deleteQuote,
       updateQuoteAttributes,
+      updateQuoteText,
+      updateQuoteInterjections,
       focusQuote,
       isEditorReady,
     ]

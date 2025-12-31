@@ -277,7 +277,8 @@ export async function transcribe(
 export async function processSermon(
   options: TranscriptionOptions,
   onTranscriptionProgress?: TranscribeProgressCallback,
-  onPipelineProgress?: PipelineProgressCallback
+  onPipelineProgress?: PipelineProgressCallback,
+  skipTranscription: boolean = false
 ): Promise<TranscriptionResult & { sermon?: SermonProcessingResult }> {
   const { filePath, model, language } = options;
 
@@ -288,6 +289,7 @@ export async function processSermon(
         filePath,
         model,
         language,
+        skip_transcription: skipTranscription,
       },
       (response) => {
         // Route progress to appropriate callbacks

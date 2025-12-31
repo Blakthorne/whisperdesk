@@ -134,7 +134,7 @@ export function useBatchQueue(options: UseBatchQueueOptions): UseBatchQueueRetur
       progressUnsubscribeRef.current = onTranscriptionProgress((progress) => {
         // Only update queue progress from transcription events when NOT in sermon mode
         // In sermon mode, we use the pipeline's overall progress instead
-        if (!usePythonTranscription) {
+        if (!usePythonTranscription && item.id !== 'test-mode-dummy-id') {
           setQueue((prev) => prev.map((q) => (q.id === item.id ? { ...q, progress } : q)));
         }
       });
@@ -143,7 +143,7 @@ export function useBatchQueue(options: UseBatchQueueOptions): UseBatchQueueRetur
       if (usePythonTranscription) {
         pipelineProgressUnsubscribeRef.current = onPipelineProgress((progress) => {
           setPipelineProgress(progress);
-          
+
           // Calculate overall progress using weighted stages (matching PipelineProgress component)
           // Stage weights: Transcribe=60%, Metadata=5%, Bible Quotes=25%, Paragraphs=5%, Tags=5%
           const stageWeights: Record<number, { start: number; end: number }> = {
@@ -153,7 +153,7 @@ export function useBatchQueue(options: UseBatchQueueOptions): UseBatchQueueRetur
             4: { start: 90, end: 95 },
             5: { start: 95, end: 100 },
           };
-          
+
           const stageId = progress.currentStage?.id;
           let calculatedOverallProgress = 0;
           if (stageId && stageWeights[stageId]) {
@@ -161,22 +161,24 @@ export function useBatchQueue(options: UseBatchQueueOptions): UseBatchQueueRetur
             const stageContribution = (progress.stageProgress / 100) * (weight.end - weight.start);
             calculatedOverallProgress = Math.min(100, Math.round(weight.start + stageContribution));
           }
-          
+
           // Update the queue item's progress to reflect overall pipeline progress
           // This ensures the FileQueue progress bar matches the PipelineProgress display
-          setQueue((prev) =>
-            prev.map((q) =>
-              q.id === item.id
-                ? {
+          if (item.id !== 'test-mode-dummy-id') {
+            setQueue((prev) =>
+              prev.map((q) =>
+                q.id === item.id
+                  ? {
                     ...q,
                     progress: {
                       percent: calculatedOverallProgress,
                       status: progress.message,
                     },
                   }
-                : q
-            )
-          );
+                  : q
+              )
+            );
+          }
         });
       }
 
@@ -199,6 +201,7 @@ export function useBatchQueue(options: UseBatchQueueOptions): UseBatchQueueRetur
             language: settings.language,
             outputFormat: 'vtt',
             processAsSermon: true,
+            testMode: settings.testMode,
           });
         } else {
           // Use original whisper.cpp transcription
@@ -314,26 +317,46 @@ export function useBatchQueue(options: UseBatchQueueOptions): UseBatchQueueRetur
       (item) => item.status === 'pending' || item.status === 'cancelled' || item.status === 'error'
     );
 
-    if (itemsToProcess.length === 0) {
+    if (itemsToProcess.length === 0 && !settings.testMode) {
       logger.warn('No items to process');
       return;
     }
 
-    setQueue((prev) =>
-      prev.map((item) =>
-        item.status === 'cancelled' || item.status === 'error'
-          ? { ...item, status: 'pending' as QueueItemStatus, error: undefined, endTime: undefined }
-          : item
-      )
-    );
+    // New logic for Test Mode with empty queue
+    let effectiveQueue = itemsToProcess;
+    if (itemsToProcess.length === 0 && settings.testMode) {
+      const dummyItem: QueueItem = {
+        id: 'test-mode-dummy-id',
+        file: {
+          name: 'test_transcript.txt',
+          path: 'test_transcript.txt',
+          size: 0
+        },
+        status: 'pending',
+        progress: { percent: 0, status: 'Pending' }
+      };
+      effectiveQueue = [dummyItem];
+      // We don't verify update the main queue state for this dummy item to avoid UI clutter, 
+      // or we could add it temporarily. For now, let's treat it as transient.
+    }
+
+    if (!settings.testMode) {
+      setQueue((prev) =>
+        prev.map((item) =>
+          item.status === 'cancelled' || item.status === 'error'
+            ? { ...item, status: 'pending' as QueueItemStatus, error: undefined, endTime: undefined }
+            : item
+        )
+      );
+    }
 
     setIsProcessing(true);
     isCancelledRef.current = false;
     hasCalledFirstCompleteRef.current = false;
 
-    logger.info('Starting batch processing', { count: itemsToProcess.length });
+    logger.info('Starting batch processing', { count: effectiveQueue.length, testMode: settings.testMode });
 
-    for (const item of itemsToProcess) {
+    for (const item of effectiveQueue) {
       if (isCancelledRef.current) {
         setQueue((prev) =>
           prev.map((q) =>
@@ -345,8 +368,11 @@ export function useBatchQueue(options: UseBatchQueueOptions): UseBatchQueueRetur
 
       const resetItem = { ...item, status: 'pending' as QueueItemStatus, error: undefined };
       const processedItem = await processItem(resetItem);
-      setQueue((prev) => prev.map((q) => (q.id === processedItem.id ? processedItem : q)));
-      
+
+      if (processedItem.id !== 'test-mode-dummy-id') {
+        setQueue((prev) => prev.map((q) => (q.id === processedItem.id ? processedItem : q)));
+      }
+
       // Clear pipeline progress after each item completes
       setPipelineProgress(null);
     }

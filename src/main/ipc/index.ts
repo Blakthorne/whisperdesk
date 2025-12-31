@@ -309,6 +309,7 @@ export function registerIpcHandlers(getMainWindow: () => BrowserWindow | null) {
 
   interface ExtendedTranscriptionOptions extends TranscriptionOptions {
     processAsSermon?: boolean;
+    skipTranscription?: boolean;
   }
 
   // Stage names for progress mapping
@@ -341,92 +342,97 @@ export function registerIpcHandlers(getMainWindow: () => BrowserWindow | null) {
     return Math.round(weight.start + stageContribution);
   }
 
-  ipcMain.handle('transcribe:startPython', async (_event, options: ExtendedTranscriptionOptions) => {
-    try {
-      const { processAsSermon, ...transcriptionOptions } = options;
+  ipcMain.handle(
+    'transcribe:startPython',
+    async (_event, options: ExtendedTranscriptionOptions & { testMode?: boolean }) => {
+      try {
+        const { processAsSermon, testMode, ...transcriptionOptions } = options;
 
-      trackEvent(AnalyticsEvents.TRANSCRIPTION_STARTED, {
-        model: options.model,
-        language: options.language,
-        sermonMode: processAsSermon ? 'true' : 'false',
-      });
-
-      let result;
-
-      if (processAsSermon) {
-        // Full sermon processing pipeline
-        result = await processSermon(
-          transcriptionOptions,
-          (progress) => {
-            // Transcription progress (stage 1)
-            getMainWindow()?.webContents.send('transcribe:progress', progress);
-          },
-          (pipelineProgress) => {
-            // Transform pipeline progress to match UI format
-            const transformedProgress = {
-              currentStage: {
-                id: pipelineProgress.stage,
-                name: STAGE_NAMES[pipelineProgress.stage] || pipelineProgress.stageName,
-              },
-              stageProgress: pipelineProgress.percent,
-              overallProgress: calculateOverallProgress(
-                pipelineProgress.stage,
-                pipelineProgress.percent
-              ),
-              message: pipelineProgress.message,
-            };
-            getMainWindow()?.webContents.send('transcribe:pipelineProgress', transformedProgress);
-          }
-        );
-
-        // Transform result to match SermonTranscriptionResult interface
-        // The Python bridge returns sermon data directly in result.sermon
-        if (result.success && result.sermon) {
-          return {
-            success: true,
-            text: result.text,
-            sermonDocument: {
-              title: result.sermon.title,
-              biblePassage: result.sermon.biblePassage,
-              speaker: result.sermon.speaker,
-              references: result.sermon.references || [],
-              tags: result.sermon.tags || [],
-              body: result.sermon.body || '',
-              rawTranscript: result.sermon.rawTranscript || result.text || '',
-              // Include AST document state (quote boundaries, interjections, etc.)
-              documentState: result.sermon.documentState,
-              processingMetadata: result.sermon.processingMetadata,
-              astError: result.sermon.astError,
-            },
-          };
-        }
-      } else {
-        // Simple transcription only
-        result = await pythonTranscribe(transcriptionOptions, (progress) => {
-          getMainWindow()?.webContents.send('transcribe:progress', progress);
-        });
-      }
-
-      if (result.success && !result.cancelled) {
-        trackEvent(AnalyticsEvents.TRANSCRIPTION_COMPLETED, {
+        trackEvent(AnalyticsEvents.TRANSCRIPTION_STARTED, {
           model: options.model,
           language: options.language,
           sermonMode: processAsSermon ? 'true' : 'false',
+          testMode: testMode ? 'true' : 'false',
         });
-      } else if (result.cancelled) {
-        trackEvent(AnalyticsEvents.TRANSCRIPTION_CANCELLED);
-      }
 
-      return result;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      trackEvent(AnalyticsEvents.TRANSCRIPTION_FAILED, {
-        model: options.model,
-        error: errorMessage.substring(0, 100),
-      });
-      return { success: false, error: errorMessage };
+        let result;
+
+        if (processAsSermon) {
+          // Full sermon processing pipeline
+          result = await processSermon(
+            transcriptionOptions,
+            (progress) => {
+              // Transcription progress (stage 1)
+              getMainWindow()?.webContents.send('transcribe:progress', progress);
+            },
+            (pipelineProgress) => {
+              // Transform pipeline progress to match UI format
+              const transformedProgress = {
+                currentStage: {
+                  id: pipelineProgress.stage,
+                  name: STAGE_NAMES[pipelineProgress.stage] || pipelineProgress.stageName,
+                },
+                stageProgress: pipelineProgress.percent,
+                overallProgress: calculateOverallProgress(
+                  pipelineProgress.stage,
+                  pipelineProgress.percent
+                ),
+                message: pipelineProgress.message,
+              };
+              getMainWindow()?.webContents.send('transcribe:pipelineProgress', transformedProgress);
+            },
+            testMode // Pass skipTranscription flag
+          );
+
+          // Transform result to match SermonTranscriptionResult interface
+          // The Python bridge returns sermon data directly in result.sermon
+          if (result.success && result.sermon) {
+            return {
+              success: true,
+              text: result.text,
+              sermonDocument: {
+                title: result.sermon.title,
+                biblePassage: result.sermon.biblePassage,
+                speaker: result.sermon.speaker,
+                references: result.sermon.references || [],
+                tags: result.sermon.tags || [],
+                body: result.sermon.body || '',
+                rawTranscript: result.sermon.rawTranscript || result.text || '',
+                // Include AST document state (quote boundaries, interjections, etc.)
+                documentState: result.sermon.documentState,
+                processingMetadata: result.sermon.processingMetadata,
+                astError: result.sermon.astError,
+              },
+            };
+          }
+        } else {
+          // Simple transcription only
+          result = await pythonTranscribe(transcriptionOptions, (progress) => {
+            getMainWindow()?.webContents.send('transcribe:progress', progress);
+          });
+        }
+
+        if (result.success && !result.cancelled) {
+          trackEvent(AnalyticsEvents.TRANSCRIPTION_COMPLETED, {
+            model: options.model,
+            language: options.language,
+            sermonMode: processAsSermon ? 'true' : 'false',
+          });
+        } else if (result.cancelled) {
+          trackEvent(AnalyticsEvents.TRANSCRIPTION_CANCELLED);
+        }
+
+        return result;
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        trackEvent(AnalyticsEvents.TRANSCRIPTION_FAILED, {
+          model: options.model,
+          error: errorMessage.substring(0, 100),
+        });
+        return { success: false, error: errorMessage };
+      }
     }
-  });
+  );
 
   ipcMain.handle('transcribe:cancelPython', () => {
     return cancelPythonTranscription();
@@ -540,24 +546,24 @@ export function registerIpcHandlers(getMainWindow: () => BrowserWindow | null) {
   } | null {
     // Normalize the reference
     const normalized = reference.trim();
-    
+
     // Match patterns like "John 3:16", "1 Corinthians 13:4-7", "Psalms 23"
     // Book can have numbers at start (1 John, 2 Kings)
     const match = normalized.match(
       /^(\d?\s*[A-Za-z]+(?:\s+of\s+[A-Za-z]+)?)\s+(\d+)(?::(\d+)(?:-(\d+))?)?/i
     );
-    
+
     if (!match) return null;
-    
+
     const [, bookPart, chapterStr, verseStartStr, verseEndStr] = match;
-    
+
     // Check if bookPart is defined
     if (!bookPart || !chapterStr) return null;
-    
+
     // Normalize book name
     const bookLower = bookPart.toLowerCase().trim();
     let book: string | null = null;
-    
+
     for (const bookInfo of BIBLE_BOOKS) {
       if (bookInfo.name.toLowerCase() === bookLower) {
         book = bookInfo.name;
@@ -571,9 +577,9 @@ export function registerIpcHandlers(getMainWindow: () => BrowserWindow | null) {
       }
       if (book) break;
     }
-    
+
     if (!book) return null;
-    
+
     return {
       book,
       chapter: parseInt(chapterStr, 10),
@@ -622,24 +628,24 @@ export function registerIpcHandlers(getMainWindow: () => BrowserWindow | null) {
     }> => {
       try {
         const parsed = parseReference(reference);
-        
+
         if (!parsed) {
           return {
             success: false,
             error: `Could not parse reference: "${reference}"`,
           };
         }
-        
+
         const { book, chapter, verseStart, verseEnd } = parsed;
         const bookId = BOOK_ID_MAP[book];
-        
+
         if (!bookId) {
           return {
             success: false,
             error: `Unknown book: "${book}"`,
           };
         }
-        
+
         // Build normalized reference string
         let normalizedReference = `${book} ${chapter}`;
         if (verseStart !== null) {
@@ -648,10 +654,10 @@ export function registerIpcHandlers(getMainWindow: () => BrowserWindow | null) {
             normalizedReference += `-${verseEnd}`;
           }
         }
-        
+
         // Fetch from Bolls.life API
         const https = await import('https');
-        
+
         const fetchVerse = (url: string): Promise<string> => {
           return new Promise((resolve, reject) => {
             https.get(url, (res) => {
@@ -662,15 +668,15 @@ export function registerIpcHandlers(getMainWindow: () => BrowserWindow | null) {
             }).on('error', reject);
           });
         };
-        
+
         let verseText = '';
-        
+
         if (verseStart === null) {
           // Fetch entire chapter
           const url = `https://bolls.life/get-text/${translation}/${bookId}/${chapter}/`;
           const response = await fetchVerse(url);
           const data = JSON.parse(response);
-          
+
           if (Array.isArray(data)) {
             verseText = data.map((v: { text: string }) => cleanHtml(v.text)).join(' ');
           }
@@ -679,7 +685,7 @@ export function registerIpcHandlers(getMainWindow: () => BrowserWindow | null) {
           const url = `https://bolls.life/get-verse/${translation}/${bookId}/${chapter}/${verseStart}/`;
           const response = await fetchVerse(url);
           const data = JSON.parse(response);
-          
+
           if (data && data.text) {
             verseText = cleanHtml(data.text);
           }
@@ -696,14 +702,14 @@ export function registerIpcHandlers(getMainWindow: () => BrowserWindow | null) {
           }
           verseText = verses.join(' ');
         }
-        
+
         if (!verseText) {
           return {
             success: false,
             error: 'Verse not found',
           };
         }
-        
+
         return {
           success: true,
           verseText,
