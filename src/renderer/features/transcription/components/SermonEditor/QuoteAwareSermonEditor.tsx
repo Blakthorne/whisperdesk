@@ -8,57 +8,41 @@
  * - Quote detail toolbar (FloatingEditBar)
  * - Right-click context menu
  *
- * This component uses DocumentState as the source of truth when available,
- * with fallback to plain text rendering for backward compatibility.
+ * AST-ONLY ARCHITECTURE:
+ * - DocumentState is the single source of truth
+ * - All content flows through the AST (no HTML state)
+ * - Changes propagate: TipTap edit → tipTapJsonToAst → onAstChange → Context
  */
 
 import React, { useCallback, useRef, useMemo, useState, useEffect } from 'react';
-import type { SermonDocument, OutputFormat } from '../../../../types';
-import type { DocumentState } from '../../../../../shared/documentModel';
+import type { SermonDocument } from '../../../../types';
+import type { DocumentState, DocumentRootNode } from '../../../../../shared/documentModel';
 import { SelectionAdder } from '../../../quote-review/components/SelectionAdder';
 import { FloatingEditBar } from '../../../quote-review/components/FloatingEditBar';
 import { QuoteBoundaryEditor } from '../../../quote-review/components/QuoteBoundaryEditor';
 import { useQuoteReview, useEditorActionsOptional } from '../../../../contexts';
-import { SermonEditor, type DocumentSaveState } from './SermonEditor';
+import { SermonEditor } from './SermonEditor';
 import './QuoteAwareSermonEditor.css';
 
 export interface QuoteAwareSermonEditorProps {
   /** Sermon document data from pipeline processing */
   document: SermonDocument | null;
-  /** Optional document state (AST) for quote-aware rendering */
+  /** Optional document state (AST) - THE SOURCE OF TRUTH for quote-aware rendering */
   documentState?: DocumentState;
-  /** Optional initial HTML content (for restoring from history) */
-  initialHtml?: string;
-  /** Callback when user exports the document */
-  onSave: (format: OutputFormat) => void;
-  /** Callback when copy button is clicked */
-  onCopy: () => void;
-  /** Whether copy was successful */
-  copySuccess: boolean;
-  /** Callback when HTML content changes */
-  onHtmlChange?: (html: string) => void;
-  /** Callback when user clicks Save Edits button */
-  onSaveEdits?: () => void;
-  /** Current save state of the document */
-  saveState?: DocumentSaveState;
-  /** Timestamp of last successful save */
-  lastSaved?: Date | null;
+  /** Callback when AST changes (debounced) - replaces onHtmlChange */
+  onAstChange?: (newRoot: DocumentRootNode) => void;
 }
 
 /**
  * Quote-aware sermon editor with in-document editing features.
+ *
+ * Note: Action buttons (save, copy, undo, redo, review quotes) are now handled
+ * by UnifiedEditorActions in RightPanel for consistency across editor modes.
  */
 export function QuoteAwareSermonEditor({
   document,
   documentState,
-  initialHtml,
-  onSave,
-  onCopy,
-  copySuccess,
-  onHtmlChange,
-  onSaveEdits,
-  saveState = 'saved',
-  lastSaved,
+  onAstChange,
 }: QuoteAwareSermonEditorProps): React.JSX.Element {
   const quoteReview = useQuoteReview();
   const editorActions = useEditorActionsOptional();
@@ -332,18 +316,7 @@ export function QuoteAwareSermonEditor({
   // Render base SermonEditor with quote features overlay
   return (
     <div ref={editorContainerRef} className="quote-aware-sermon-editor">
-      <SermonEditor
-        document={document}
-        documentState={documentState}
-        initialHtml={initialHtml}
-        onSave={onSave}
-        onCopy={onCopy}
-        copySuccess={copySuccess}
-        onHtmlChange={onHtmlChange}
-        onSaveEdits={onSaveEdits}
-        saveState={saveState}
-        lastSaved={lastSaved}
-      />
+      <SermonEditor document={document} documentState={documentState} onAstChange={onAstChange} />
 
       {/* Selection-based quote creation */}
       {documentState && editorContainerRef.current && (

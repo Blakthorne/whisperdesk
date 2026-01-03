@@ -267,10 +267,9 @@ export function useBatchQueue(options: UseBatchQueueOptions): UseBatchQueueRetur
             duration: Math.round((endTime - startTime) / 1000),
             preview: result.text.substring(0, 100) + (result.text.length > 100 ? '...' : ''),
             fullText: result.text,
-            // Sermon-specific fields
+            // Sermon-specific fields - AST in sermonDocument.documentState is source of truth
             isSermon: settings.processAsSermon === true,
             sermonDocument: result.sermonDocument,
-            documentHtml: result.documentHtml,
           };
           onHistoryAdd(historyItem);
         }

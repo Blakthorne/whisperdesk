@@ -141,11 +141,8 @@ export function useDocumentEditor(
       const result = restoreFromHistoryItem(historyItem);
       if (result.success && result.state) {
         newState = result.state;
-      } else if (result.isLegacy && result.legacyHtml) {
-        // For legacy items, start with empty state
-        // The HTML can be loaded into TipTap directly
-        newState = createDocumentState(createDocumentRootNode());
       }
+      // Note: Legacy HTML items are no longer supported (AST-only architecture)
     }
 
     // Priority 2: Use initial state
@@ -344,12 +341,8 @@ export function useDocumentEditor(
             editor.commands.setContent(tipTapResult.data);
           }
         }
-      } else if (result.isLegacy && result.legacyHtml && editor) {
-        // Load legacy HTML directly into editor
-        editor.commands.setContent(result.legacyHtml);
-        // We don't have a DocumentState for legacy items
-        setError(null);
       }
+      // Note: Legacy HTML items are no longer supported (AST-only architecture)
 
       return result;
     },

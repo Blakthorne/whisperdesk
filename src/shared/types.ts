@@ -184,17 +184,15 @@ export interface HistoryItem {
   fullText: string;
   /** Whether this was processed as a sermon */
   isSermon?: boolean;
-  /** Sermon document data (if isSermon) */
+  /** Sermon document data (if isSermon) - contains DocumentState as source of truth */
   sermonDocument?: SermonDocument;
-  /** HTML content from WYSIWYG editor for restoring state */
-  documentHtml?: string;
 }
 
 export interface SaveFileOptions {
   defaultName: string;
   content: string;
   format: OutputFormat;
-  /** HTML content from sermon editor (used instead of content for sermon exports) */
+  /** HTML content generated from AST on-demand for sermon exports */
   html?: string;
   /** Whether this is a sermon document */
   isSermon?: boolean;

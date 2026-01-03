@@ -49,7 +49,6 @@ export function createHistoryItem(
   options?: {
     isSermon?: boolean;
     sermonDocument?: SermonDocument;
-    documentHtml?: string;
   }
 ): Omit<HistoryItem, 'id'> {
   return {
@@ -63,6 +62,5 @@ export function createHistoryItem(
     fullText,
     isSermon: options?.isSermon,
     sermonDocument: options?.sermonDocument,
-    documentHtml: options?.documentHtml,
   };
 }

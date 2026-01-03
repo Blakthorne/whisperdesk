@@ -4,6 +4,15 @@ import { useHistory } from '../features/history';
 import { useTheme, useCopyToClipboard, useElectronMenu } from '../hooks';
 import { selectAndProcessFiles } from '../utils';
 import type { HistoryItem, SelectedFile, SermonDocument, OutputFormat } from '../types';
+import type { DocumentState, DocumentRootNode } from '../../shared/documentModel';
+import { astToHtml } from '../features/document/bridge/astTipTapConverter';
+import {
+  buildNodeIndex,
+  buildQuoteIndex,
+  buildExtracted,
+} from '../features/document/serialization/stateSerializer';
+import { createDocumentMutator } from '../features/document/DocumentMutator';
+import { createContentReplacedEvent } from '../features/document/events';
 import {
   ThemeContext,
   HistoryContext,
@@ -21,6 +30,11 @@ import type {
 interface AppProviderProps {
   children: ReactNode;
 }
+
+// Debounce delay for AST sync in milliseconds (300ms)
+const AST_SYNC_DEBOUNCE = 300;
+// Debounce delay for auto-save to history (300ms - fast, unobtrusive UX)
+const AUTO_SAVE_DEBOUNCE = 300;
 
 export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
   const { theme, toggleTheme, isDark } = useTheme();
@@ -54,12 +68,26 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
 
   const [selectedQueueItemId, setSelectedQueueItemId] = useState<string | null>(null);
   const [sermonDocument, setSermonDocument] = useState<SermonDocument | null>(null);
-  const [documentHtml, setDocumentHtml] = useState<string | null>(null);
+  // Draft AST JSON from Monaco editor (persists unsaved edits across tab switches)
+  const [draftAstJson, setDraftAstJson] = useState<string | null>(null);
   const [currentHistoryItemId, setCurrentHistoryItemId] = useState<string | null>(null);
+  // Version counter to track AST updates (used for sync detection between editors)
+  const [documentStateVersion, setDocumentStateVersion] = useState<number>(0);
   const [documentSaveState, setDocumentSaveState] = useState<DocumentSaveState>('saved');
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [isDev, setIsDev] = useState<boolean>(false);
   const [visibleNodeId, setVisibleNodeId] = useState<string | null>(null);
+
+  // Version-based dirty tracking (AST-only architecture)
+  const [editVersion, setEditVersion] = useState<number>(0);
+  const [savedVersion, setSavedVersion] = useState<number>(0);
+
+  // Ref for debounced AST sync timer
+  const astSyncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Ref to track pending AST changes (for debouncing)
+  const pendingAstRootRef = useRef<DocumentRootNode | null>(null);
+  // Ref for debounced auto-save timer
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fetch app info on mount
   useEffect(() => {
@@ -70,10 +98,45 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
     }
   }, []);
 
-  // Track the last saved HTML to determine if document is dirty
-  const lastSavedHtmlRef = useRef<string | null>(null);
-  // Flag to skip initial HTML sync from editor (which fires on mount)
-  const isInitialHtmlSyncRef = useRef<boolean>(true);
+  // Auto-save with debounce when there are unsaved changes
+  useEffect(() => {
+    // Only auto-save if there are unsaved changes and we have a history item to save to
+    if (editVersion > savedVersion && currentHistoryItemId && sermonDocument) {
+      // Clear any existing auto-save timer
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+
+      // Set new debounced auto-save timer (2 seconds)
+      autoSaveTimerRef.current = setTimeout(() => {
+        setDocumentSaveState('auto-saving');
+
+        // Save to history - AST is already up to date
+        updateHistoryItem(currentHistoryItemId, {
+          sermonDocument,
+        });
+
+        // Update saved version to match current edit version
+        setSavedVersion(editVersion);
+        setLastSavedAt(new Date());
+
+        // Brief delay to show saving state, then transition to saved
+        setTimeout(() => {
+          setDocumentSaveState('saved');
+        }, 300);
+
+        autoSaveTimerRef.current = null;
+      }, AUTO_SAVE_DEBOUNCE);
+    }
+
+    // Cleanup function to clear timer on unmount or dependency changes
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+        autoSaveTimerRef.current = null;
+      }
+    };
+  }, [editVersion, savedVersion, currentHistoryItemId, sermonDocument, updateHistoryItem]);
 
   const {
     queue,
@@ -96,18 +159,18 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
       setSelectedQueueItemId(id);
       setTranscription(text);
       setSelectedFile(file);
-      // Set sermon document if available
+      // Set sermon document if available (AST is source of truth)
       if (sermonDoc) {
         setSermonDocument(sermonDoc);
-        setDocumentHtml(null); // Reset HTML when new document arrives
-        // Reset save state for new document
+        setDraftAstJson(null); // Clear any draft AST from previous document
+        // Reset version tracking for new document
+        setEditVersion(0);
+        setSavedVersion(0);
         setDocumentSaveState('saved');
-        lastSavedHtmlRef.current = null;
-        isInitialHtmlSyncRef.current = true; // Reset flag for new document
         setLastSavedAt(new Date());
       } else {
         setSermonDocument(null);
-        setDocumentHtml(null);
+        setDraftAstJson(null);
       }
     },
   });
@@ -116,89 +179,286 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
     (item: HistoryItem): void => {
       setTranscription(item.fullText);
       setSelectedFile({ name: item.fileName, path: item.filePath });
-      // Restore sermon document and HTML from history
+      // Restore sermon document from history (AST is source of truth)
       if (item.isSermon && item.sermonDocument) {
         setSermonDocument(item.sermonDocument);
-        setDocumentHtml(item.documentHtml || null);
+        setDraftAstJson(null); // Clear any draft AST from previous document
       } else {
         setSermonDocument(null);
-        setDocumentHtml(null);
+        setDraftAstJson(null);
       }
       // Track which history item is currently being viewed
       setCurrentHistoryItemId(item.id);
-      // Mark as saved when loading from history
+      // Reset version tracking - document is saved state from history
+      setEditVersion(0);
+      setSavedVersion(0);
       setDocumentSaveState('saved');
-      lastSavedHtmlRef.current = item.documentHtml || null;
-      isInitialHtmlSyncRef.current = true; // Reset flag for new document
       setLastSavedAt(item.date ? new Date(item.date) : null);
       setShowHistory(false);
     },
     [setTranscription, setSelectedFile, setShowHistory]
   );
 
-  // Wrapper for setDocumentHtml that tracks dirty state
-  const handleSetDocumentHtml = useCallback((html: string | null): void => {
-    setDocumentHtml(html);
-
-    // Skip if null (clearing document)
-    if (html === null) {
+  /**
+   * Apply pending AST changes to the document state.
+   * This is called after the debounce period for both TipTap and DevASTPanel changes.
+   */
+  const applyPendingAstChanges = useCallback(() => {
+    const newRoot = pendingAstRootRef.current;
+    if (!newRoot || !sermonDocument) {
       return;
     }
 
-    // Skip the initial HTML sync from editor mount - this is not a user edit
-    // The flag is reset when a new document loads (onFirstComplete, selectHistoryItem)
-    if (isInitialHtmlSyncRef.current) {
-      isInitialHtmlSyncRef.current = false;
-      lastSavedHtmlRef.current = html;
-      return; // First sync establishes baseline, not a change
+    const existingState = sermonDocument.documentState;
+    const previousRoot = existingState?.root;
+
+    // Always generate an event if we have a previous root
+    // This enables undo/redo for all AST changes
+    if (previousRoot) {
+      console.log(
+        '[AppContext] Generating undo event. Previous root ID:',
+        previousRoot.id,
+        'New root ID:',
+        newRoot.id
+      );
+
+      // CRITICAL: Preserve the root ID for undo/redo to work
+      // TipTap creates new root IDs, but we need stable IDs for the event system
+      const stableRoot: DocumentRootNode = {
+        ...newRoot,
+        id: previousRoot.id, // Keep the same root ID
+      };
+
+      // Create a content replacement event for the document root
+      const contentReplacedEvent = createContentReplacedEvent(
+        previousRoot.id, // Use the stable root ID
+        previousRoot.children,
+        stableRoot.children,
+        (existingState?.version || 0) + 1,
+        'user'
+      );
+
+      // Build new document state with the event and stable root
+      const nodeIndex = buildNodeIndex(stableRoot);
+      const newDocumentState: DocumentState = {
+        version: (existingState?.version || 0) + 1,
+        root: stableRoot, // Use the root with stable ID
+        // Append the event to the log
+        eventLog: [...(existingState?.eventLog || []), contentReplacedEvent],
+        // Add this event to the undo stack
+        undoStack: [...(existingState?.undoStack || []), contentReplacedEvent.id],
+        // Clear redo stack when new change is made
+        redoStack: [],
+        nodeIndex,
+        quoteIndex: buildQuoteIndex(stableRoot, nodeIndex),
+        extracted: buildExtracted(stableRoot, nodeIndex),
+        lastModified: new Date().toISOString(),
+        createdAt: existingState?.createdAt || new Date().toISOString(),
+      };
+
+      console.log(
+        '[AppContext] Event generated. UndoStack length:',
+        newDocumentState.undoStack.length
+      );
+
+      const updatedSermonDocument = {
+        ...sermonDocument,
+        documentState: newDocumentState,
+      };
+
+      setSermonDocument(updatedSermonDocument);
+      setDocumentStateVersion((v) => v + 1);
+      setEditVersion((v) => v + 1);
+    } else {
+      // No previous root - this is initial load, just update without event
+      console.log('[AppContext] No previous root - initial load');
+      const nodeIndex = buildNodeIndex(newRoot);
+      const newDocumentState: DocumentState = {
+        version: (existingState?.version || 0) + 1,
+        root: newRoot,
+        eventLog: existingState?.eventLog || [],
+        undoStack: existingState?.undoStack || [],
+        redoStack: existingState?.redoStack || [],
+        nodeIndex,
+        quoteIndex: buildQuoteIndex(newRoot, nodeIndex),
+        extracted: buildExtracted(newRoot, nodeIndex),
+        lastModified: new Date().toISOString(),
+        createdAt: existingState?.createdAt || new Date().toISOString(),
+      };
+
+      const updatedSermonDocument = {
+        ...sermonDocument,
+        documentState: newDocumentState,
+      };
+
+      setSermonDocument(updatedSermonDocument);
+      setDocumentStateVersion((v) => v + 1);
+      setEditVersion((v) => v + 1);
     }
 
-    // If baseline hasn't been set yet (edge case), set it now
-    if (lastSavedHtmlRef.current === null) {
-      lastSavedHtmlRef.current = html;
+    // Clear pending ref
+    pendingAstRootRef.current = null;
+  }, [sermonDocument]);
+
+  /**
+   * Handle AST changes from the TipTap editor (debounced).
+   * This is the primary way content changes flow from the editor to the AST.
+   */
+  const handleAstChange = useCallback(
+    (newRoot: DocumentRootNode) => {
+      // Store the pending root
+      pendingAstRootRef.current = newRoot;
+
+      // Clear existing timer
+      if (astSyncTimerRef.current) {
+        clearTimeout(astSyncTimerRef.current);
+      }
+
+      // Set new debounced timer
+      astSyncTimerRef.current = setTimeout(() => {
+        applyPendingAstChanges();
+        astSyncTimerRef.current = null;
+      }, AST_SYNC_DEBOUNCE);
+    },
+    [applyPendingAstChanges]
+  );
+
+  /**
+   * Update document state (AST) directly from the root node.
+   * Used by DevASTPanel when JSON changes are made.
+   * This now uses the same debounced autosave as TipTap.
+   */
+  const updateDocumentState = useCallback(
+    (newRoot: DocumentRootNode): void => {
+      // Store the pending root and trigger debounced sync
+      pendingAstRootRef.current = newRoot;
+
+      // Clear existing timer
+      if (astSyncTimerRef.current) {
+        clearTimeout(astSyncTimerRef.current);
+      }
+
+      // Set new debounced timer (same as TipTap)
+      astSyncTimerRef.current = setTimeout(() => {
+        applyPendingAstChanges();
+        astSyncTimerRef.current = null;
+      }, AST_SYNC_DEBOUNCE);
+    },
+    [applyPendingAstChanges]
+  );
+
+  /**
+   * Undo the last change using the event-based undo system.
+   * Works for both TipTap editor and AST mode edits.
+   */
+  const handleUndo = useCallback(() => {
+    if (!sermonDocument?.documentState) {
+      console.log('[AppContext] handleUndo: no document state');
       return;
     }
 
-    // Check if document has changed from last saved version
-    if (html !== lastSavedHtmlRef.current) {
-      setDocumentSaveState('unsaved');
+    console.log(
+      '[AppContext] handleUndo: undoStack length:',
+      sermonDocument.documentState.undoStack.length
+    );
+
+    // Create a mutator with current state
+    const mutator = createDocumentMutator(sermonDocument.documentState);
+
+    // Perform undo
+    const result = mutator.undo();
+
+    console.log('[AppContext] handleUndo result:', result.success, result.error);
+
+    if (result.success) {
+      // Update the sermon document with the new state
+      const updatedSermonDocument = {
+        ...sermonDocument,
+        documentState: result.state,
+      };
+
+      setSermonDocument(updatedSermonDocument);
+      setDocumentStateVersion((v) => v + 1);
+      // Trigger autosave for undo
+      setEditVersion((v) => v + 1);
+      // Clear any draft AST to sync DevASTPanel
+      setDraftAstJson(null);
+    } else {
+      console.error('[AppContext] Undo failed:', result.error);
     }
+  }, [sermonDocument]);
+
+  /**
+   * Redo a previously undone change using the event-based redo system.
+   * Works for both TipTap editor and AST mode edits.
+   */
+  const handleRedo = useCallback(() => {
+    if (!sermonDocument?.documentState) {
+      console.log('[AppContext] handleRedo: no document state');
+      return;
+    }
+
+    console.log(
+      '[AppContext] handleRedo: redoStack length:',
+      sermonDocument.documentState.redoStack.length
+    );
+
+    // Create a mutator with current state
+    const mutator = createDocumentMutator(sermonDocument.documentState);
+
+    // Perform redo
+    const result = mutator.redo();
+
+    console.log('[AppContext] handleRedo result:', result.success, result.error);
+
+    if (result.success) {
+      // Update the sermon document with the new state
+      const updatedSermonDocument = {
+        ...sermonDocument,
+        documentState: result.state,
+      };
+
+      setSermonDocument(updatedSermonDocument);
+      setDocumentStateVersion((v) => v + 1);
+      // Trigger autosave for redo
+      setEditVersion((v) => v + 1);
+      // Clear any draft AST to sync DevASTPanel
+      setDraftAstJson(null);
+    } else {
+      console.error('[AppContext] Redo failed:', result.error);
+    }
+  }, [sermonDocument]);
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (astSyncTimerRef.current) {
+        clearTimeout(astSyncTimerRef.current);
+      }
+    };
   }, []);
-
-  const saveEdits = useCallback((): void => {
-    if (currentHistoryItemId && documentHtml) {
-      setDocumentSaveState('saving');
-      // Simulate a brief saving state for UX feedback (async operation is instant)
-      updateHistoryItem(currentHistoryItemId, { documentHtml });
-      // Update tracking
-      lastSavedHtmlRef.current = documentHtml;
-      setLastSavedAt(new Date());
-      // Brief delay to show saving state, then transition to saved
-      setTimeout(() => {
-        setDocumentSaveState('saved');
-      }, 300);
-    }
-  }, [currentHistoryItemId, documentHtml, updateHistoryItem]);
 
   const onCopy = useCallback(async (): Promise<void> => {
     await handleCopy(copyToClipboard);
   }, [handleCopy, copyToClipboard]);
 
   // Wrap handleSave to include sermon-specific data
+  // Generate HTML on-demand from AST for exports
   const wrappedHandleSave = useCallback(
     async (format?: OutputFormat): Promise<void> => {
-      // For sermon documents with HTML, we need to pass extra data
-      // The handleSave function from useTranscription is basic
-      // We need to call saveFile directly with sermon data
-      if (sermonDocument && documentHtml) {
+      // For sermon documents, generate HTML from AST on-demand
+      if (sermonDocument?.documentState?.root) {
         const { saveFile } = await import('../services/electronAPI');
         const fileName = selectedFile?.name?.replace(/\.[^/.]+$/, '') || 'sermon';
+
+        // Generate HTML from AST (single source of truth)
+        const html = astToHtml(sermonDocument.documentState.root);
 
         const result = await saveFile({
           defaultName: `${fileName}.${format || 'txt'}`,
           content: transcription, // Fallback plain text
           format: format || 'txt',
-          html: documentHtml,
+          html, // Generated on-demand from AST
           isSermon: true,
         });
 
@@ -210,7 +470,7 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
         await handleSave(format);
       }
     },
-    [sermonDocument, documentHtml, selectedFile, transcription, handleSave]
+    [sermonDocument, selectedFile, transcription, handleSave]
   );
 
   const handleFilesSelect = useCallback(
@@ -243,7 +503,7 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
         setTranscription('');
         setSelectedFile(null);
         setSermonDocument(null);
-        setDocumentHtml(null);
+        setDraftAstJson(null);
       }
     },
     [removeFile, selectedQueueItemId, setTranscription, setSelectedFile]
@@ -255,7 +515,7 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
     setTranscription('');
     setSelectedFile(null);
     setSermonDocument(null);
-    setDocumentHtml(null);
+    setDraftAstJson(null);
   }, [clearCompleted, setTranscription, setSelectedFile]);
 
   const { selectQueueItem } = useQueueSelection(
@@ -341,12 +601,16 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
       queue,
       selectedQueueItemId,
       sermonDocument,
-      documentHtml,
+      draftAstJson,
       pipelineProgress,
       documentSaveState,
       lastSavedAt,
+      editVersion,
+      savedVersion,
       isDev,
       visibleNodeId,
+      canUndo: (sermonDocument?.documentState?.undoStack?.length ?? 0) > 0,
+      canRedo: (sermonDocument?.documentState?.redoStack?.length ?? 0) > 0,
     }),
     [
       selectedFile,
@@ -359,10 +623,12 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
       queue,
       selectedQueueItemId,
       sermonDocument,
-      documentHtml,
+      draftAstJson,
       pipelineProgress,
       documentSaveState,
       lastSavedAt,
+      editVersion,
+      savedVersion,
       isDev,
       visibleNodeId,
     ]
@@ -382,9 +648,13 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
       clearCompletedFromQueue,
       selectQueueItem,
       setSermonDocument,
-      setDocumentHtml: handleSetDocumentHtml,
-      saveEdits,
+      setDraftAstJson,
+      updateDocumentState,
+      handleAstChange,
       setVisibleNodeId,
+      documentStateVersion,
+      handleUndo,
+      handleRedo,
     }),
     [
       setSelectedFile,
@@ -398,9 +668,12 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
       removeFromQueue,
       clearCompletedFromQueue,
       selectQueueItem,
-      handleSetDocumentHtml,
-      saveEdits,
+      updateDocumentState,
+      handleAstChange,
       setVisibleNodeId,
+      documentStateVersion,
+      handleUndo,
+      handleRedo,
     ]
   );
 

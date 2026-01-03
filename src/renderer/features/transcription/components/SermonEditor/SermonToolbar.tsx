@@ -281,54 +281,6 @@ function SermonToolbar({ editor }: SermonToolbarProps): React.JSX.Element {
           </svg>
         </button>
       </div>
-
-      <div className="toolbar-divider" />
-
-      {/* Undo/Redo */}
-      <div className="toolbar-group">
-        <button
-          onClick={() => editor.chain().focus().undo().run()}
-          disabled={!editor.can().undo()}
-          className="toolbar-btn"
-          title="Undo (⌘Z)"
-          type="button"
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M3 7v6h6"></path>
-            <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path>
-          </svg>
-        </button>
-        <button
-          onClick={() => editor.chain().focus().redo().run()}
-          disabled={!editor.can().redo()}
-          className="toolbar-btn"
-          title="Redo (⇧⌘Z)"
-          type="button"
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M21 7v6h-6"></path>
-            <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"></path>
-          </svg>
-        </button>
-      </div>
     </div>
   );
 }

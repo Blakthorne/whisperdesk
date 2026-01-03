@@ -2,93 +2,123 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 1rem;
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  gap: 1rem;
 }
 
 .dev-ast-panel.empty {
   justify-content: center;
   align-items: center;
   color: var(--text-secondary);
+  padding: 1rem;
 }
 
-.dev-ast-header {
+/* ============================================
+   AST ACTIONS HEADER
+   Matches sermon-actions-header styling
+   ============================================ */
+
+.ast-actions-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-}
-
-.dev-ast-header h3 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--accent-color, #e11d48);
-}
-
-.header-top {
-  display: flex;
   justify-content: space-between;
-  align-items: center;
-  width: 100%;
+  padding: 10px 16px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
-.dev-ast-actions {
+.ast-actions-left {
   display: flex;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 12px;
 }
 
-.dev-button {
-  padding: 0.4rem 0.8rem;
-  border-radius: 4px;
-  font-size: 0.85rem;
+.ast-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* State indicators */
+.ast-state-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
   font-weight: 500;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition: all 0.2s;
+  transition: all var(--transition-fast);
 }
 
-.dev-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.ast-state-indicator .state-text {
+  white-space: nowrap;
 }
 
-.dev-button.reset {
-  background-color: var(--bg-secondary);
-  color: var(--text-primary);
-  border-color: var(--border-color);
+/* Modified state - attention-getting */
+.ast-state-indicator.state-modified {
+  background: var(--warning-light);
+  color: var(--warning-dark);
 }
 
-.dev-button.reset:hover:not(:disabled) {
-  background-color: var(--bg-tertiary);
+.ast-state-indicator.state-modified .state-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--warning);
+  border-radius: 50%;
+  animation: pulse-dot 2s ease-in-out infinite;
 }
 
-.dev-button.update {
-  background-color: var(--accent-color, #e11d48);
-  color: white;
+/* Applied state - success */
+.ast-state-indicator.state-applied {
+  background: var(--success-light);
+  color: var(--success);
 }
 
-.dev-button.update:hover:not(:disabled) {
-  filter: brightness(1.1);
+/* Synced state - subtle */
+.ast-state-indicator.state-synced {
+  background: var(--surface);
+  color: var(--text-muted);
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(0.85);
+  }
+}
+
+/* Apply button success state */
+.apply-success {
+  background: var(--success) !important;
+  border-color: var(--success) !important;
 }
 
 .dev-ast-error {
+  margin: 0 16px;
   padding: 0.75rem;
   background-color: rgba(220, 38, 38, 0.1);
   border: 1px solid rgba(220, 38, 38, 0.2);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   color: #ef4444;
   font-size: 0.85rem;
   font-family: monospace;
   white-space: pre-wrap;
+  flex-shrink: 0;
 }
 
 .dev-ast-editor-container {
   flex: 1;
   min-height: 0;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
+  margin: 12px 16px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   overflow: hidden;
   /* Strict containment of the editor content */
   position: relative;

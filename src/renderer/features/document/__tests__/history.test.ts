@@ -134,12 +134,7 @@ function createFullHistoryItem(): HistoryItem {
   };
 }
 
-function createLegacyHistoryItem(): HistoryItem {
-  return {
-    ...createFullHistoryItem(),
-    documentHtml: '<h1>Test</h1><p>Content</p>',
-  };
-}
+// Note: createLegacyHistoryItem removed - legacy HTML items no longer supported
 
 function createTestEvent(version: number): DocumentEvent {
   const textNode = createTextNode(`text-${version}`, 'Test');
@@ -226,14 +221,7 @@ describe('updateHistoryItemState', () => {
     expect(result.date).toBe(item.date);
   });
 
-  it('should clear documentHtml for backward compatibility handling', () => {
-    const item = createLegacyHistoryItem();
-    const state = createTestDocumentState();
-    const result = updateHistoryItemState(item, state);
-
-    expect(result.documentHtml).toBeUndefined();
-    expect(result.documentStateJson).toBeDefined();
-  });
+  // Note: documentHtml backward compatibility tests removed (AST-only architecture)
 
   it('should respect options when updating', () => {
     const item = createFullHistoryItem();
@@ -280,24 +268,17 @@ describe('restoreFromHistoryItem', () => {
     expect(result.isLegacy).toBe(false);
   });
 
-  it('should fall back to legacy HTML', () => {
-    const item = createLegacyHistoryItem();
-    const result = restoreFromHistoryItem(item);
-
-    expect(result.success).toBe(true);
-    expect(result.isLegacy).toBe(true);
-    expect(result.legacyHtml).toBe('<h1>Test</h1><p>Content</p>');
-    expect(result.state).toBeUndefined();
-  });
+  // Note: Legacy HTML fallback tests removed (AST-only architecture)
 
   it('should return error when no document data available', () => {
     const item = createFullHistoryItem();
-    // No documentStateJson, sermonDocument, or documentHtml
+    // No documentStateJson or sermonDocument.documentState
     const result = restoreFromHistoryItem(item);
 
     expect(result.success).toBe(false);
     expect(result.error).toBeDefined();
-    expect(result.isLegacy).toBe(true);
+    // Note: isLegacy is now always false since legacy support removed
+    expect(result.isLegacy).toBe(false);
   });
 
   it('should handle corrupted documentStateJson', () => {
@@ -336,10 +317,7 @@ describe('hasDocumentState', () => {
     expect(hasDocumentState(item)).toBe(true);
   });
 
-  it('should return true for legacy HTML', () => {
-    const item = createLegacyHistoryItem();
-    expect(hasDocumentState(item)).toBe(true);
-  });
+  // Note: Legacy HTML test removed (AST-only architecture - documentHtml no longer supported)
 
   it('should return false when no document data', () => {
     const item = createFullHistoryItem();
@@ -371,10 +349,7 @@ describe('hasNewFormatState', () => {
     expect(hasNewFormatState(item)).toBe(true);
   });
 
-  it('should return false for legacy HTML only', () => {
-    const item = createLegacyHistoryItem();
-    expect(hasNewFormatState(item)).toBe(false);
-  });
+  // Note: Legacy HTML test removed (AST-only architecture - documentHtml no longer supported)
 
   it('should return false when no document data', () => {
     const item = createFullHistoryItem();
@@ -400,29 +375,10 @@ describe('migrateHistoryItem', () => {
     expect(mockConverter).not.toHaveBeenCalled();
   });
 
-  it('should convert legacy HTML using provided converter', () => {
-    const legacyItem = createLegacyHistoryItem();
-    const newState = createTestDocumentState();
+  // Note: Legacy HTML conversion tests removed (AST-only architecture)
+  // migrateHistoryItem now returns null for items without DocumentState
 
-    const mockConverter = vi.fn().mockReturnValue(newState);
-    const result = migrateHistoryItem(legacyItem, mockConverter);
-
-    expect(result).toBeDefined();
-    expect(mockConverter).toHaveBeenCalledWith(legacyItem.documentHtml);
-    expect(result?.documentStateJson).toBeDefined();
-  });
-
-  it('should return null if converter returns null', () => {
-    const legacyItem = createLegacyHistoryItem();
-    const mockConverter = vi.fn().mockReturnValue(null);
-
-    const result = migrateHistoryItem(legacyItem, mockConverter);
-
-    expect(result).toBeNull();
-    expect(mockConverter).toHaveBeenCalled();
-  });
-
-  it('should return null if no HTML to convert', () => {
+  it('should return null if no DocumentState available', () => {
     const item = createFullHistoryItem();
     const mockConverter = vi.fn();
 

@@ -31,7 +31,7 @@ export function QuoteListItem({
   isBoundaryEditing,
   onSelect,
   onVerify,
-  compact = false,
+  compact: _compact = false,
 }: QuoteListItemProps): React.JSX.Element {
   const handleClick = useCallback(() => {
     onSelect(quote.id);
@@ -57,8 +57,6 @@ export function QuoteListItem({
     },
     [quote.id, onVerify]
   );
-
-
 
   // Status classes
   const statusClasses = [
@@ -101,7 +99,7 @@ export function QuoteListItem({
           {/* Interjection count */}
           {quote.interjections && quote.interjections.length > 0 && (
             <span className="quote-item-interjections" title="Interjections">
-               • {quote.interjections.length} interjection{quote.interjections.length > 1 ? 's' : ''}
+              • {quote.interjections.length} interjection{quote.interjections.length > 1 ? 's' : ''}
             </span>
           )}
         </div>

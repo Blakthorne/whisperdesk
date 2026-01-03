@@ -4,6 +4,17 @@
  * Converts between the DocumentState AST and TipTap's JSON format.
  * Preserves metadata using TipTap's mark/attribute system.
  *
+ * ## Architecture Note (AST as Single Source of Truth):
+ * The AST (DocumentState) is the single source of truth for document content.
+ * TipTap is a view/editor that reads from and writes to the AST.
+ * - AST → TipTap: For rendering in the editor
+ * - TipTap → AST: For persisting edits (debounced)
+ *
+ * ## Node ID Preservation Strategy:
+ * - Structural nodes (paragraphs, quotes, headings): Preserve IDs via attrs
+ * - Text nodes: Regenerate IDs (they change frequently during editing)
+ * - This balances stability with simplicity
+ *
  * ## Node Mapping:
  * - DocumentRootNode → TipTap doc
  * - ParagraphNode → TipTap paragraph
@@ -323,10 +334,19 @@ function convertHeadingToTipTap(
 
 /**
  * Convert TipTap JSON document to DocumentRootNode.
+ * 
+ * This is the primary conversion for the AST-only architecture.
+ * Node IDs for structural nodes (paragraphs, quotes, headings) are preserved
+ * via TipTap attrs. Text node IDs are regenerated.
+ * 
+ * @param doc - TipTap document JSON
+ * @param options - Conversion options
+ * @param existingRoot - Optional existing root for ID preservation hints
  */
 export function tipTapJsonToAst(
   doc: TipTapDocument,
-  options: ConversionOptions = {}
+  options: ConversionOptions = {},
+  existingRoot?: DocumentRootNode
 ): ConversionResult<DocumentRootNode> {
   const { preserveIds = true } = options;
   const warnings: string[] = [];
@@ -335,6 +355,7 @@ export function tipTapJsonToAst(
     const children: DocumentNode[] = [];
     let title: string | undefined;
     let biblePassage: string | undefined;
+    let speaker: string | undefined;
 
     for (const node of doc.content) {
       // Extract title from H1
@@ -354,6 +375,10 @@ export function tipTapJsonToAst(
         if (text.startsWith('References from the Sermon:') || text.startsWith('Tags:')) {
           continue;
         }
+        if (text.startsWith('Speaker:')) {
+          speaker = text.replace(/^Speaker:\s*/, '');
+          continue;
+        }
       }
 
       // Skip horizontal rules
@@ -367,13 +392,19 @@ export function tipTapJsonToAst(
       }
     }
 
+    // Preserve root ID from existing document or attrs, fallback to constant
+    const rootId = preserveIds 
+      ? (existingRoot?.id || 'root-1' as NodeId)
+      : createNodeId();
+
     const root: DocumentRootNode = {
-      id: preserveIds ? ('root-1' as NodeId) : createNodeId(),
+      id: rootId,
       type: 'document',
       version: 1,
       updatedAt: createTimestamp(),
-      title,
-      biblePassage,
+      title: title || existingRoot?.title,
+      biblePassage: biblePassage || existingRoot?.biblePassage,
+      speaker: speaker || existingRoot?.speaker,
       children,
     };
 

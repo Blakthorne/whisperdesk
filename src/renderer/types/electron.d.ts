@@ -59,9 +59,14 @@ export interface ExtendedTranscriptionOptions extends TranscriptionOptions {
   testMode?: boolean;
 }
 
+/**
+ * Result from Python transcription pipeline.
+ * 
+ * AST-ONLY ARCHITECTURE: The sermonDocument.documentState contains the AST
+ * which is the single source of truth. HTML is generated on-demand when needed.
+ */
 export interface SermonTranscriptionResult extends TranscriptionResult {
   sermonDocument?: SermonDocument;
-  documentHtml?: string;
 }
 
 export interface ElectronAPI {

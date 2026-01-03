@@ -1,0 +1,230 @@
+/**
+ * UnifiedEditorActions.css - Styles for the shared editor actions bar
+ */
+
+.unified-editor-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: var(--bg-secondary, #f8f9fa);
+  border-bottom: 1px solid var(--border-color, #e1e4e8);
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.unified-actions-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.unified-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Undo/Redo button group */
+.undo-redo-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.undo-redo-group .undo-btn,
+.undo-redo-group .redo-btn {
+  padding: 4px 8px;
+  min-width: unset;
+}
+
+.undo-redo-group button:disabled {
+  opacity: 0.4;
+}
+
+/* Action divider */
+.action-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border-color, #e1e4e8);
+  margin: 0 4px;
+}
+
+/* Word count */
+.word-count {
+  font-size: 12px;
+  color: var(--text-muted, #6a737d);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Document state indicator - mirrors the original SermonEditor styles */
+.document-state-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-muted, #6a737d);
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.document-state-indicator .state-text {
+  white-space: nowrap;
+}
+
+.document-state-indicator.state-saving,
+.document-state-indicator.state-auto-saving {
+  color: var(--primary-color, #0366d6);
+}
+
+.document-state-indicator.state-saved {
+  color: var(--success-color, #28a745);
+}
+
+.document-state-indicator .state-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.document-state-indicator .state-check {
+  color: var(--success-color, #28a745);
+}
+
+/* Review Quotes button */
+.review-quotes-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.review-quotes-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.quote-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: var(--primary-color, #0366d6);
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 9px;
+}
+
+.review-quotes-toggle.active .quote-count-badge {
+  background: var(--bg-primary, white);
+  color: var(--primary-color, #0366d6);
+}
+
+/* Copied button state */
+.copied {
+  color: var(--success-color, #28a745) !important;
+  border-color: var(--success-color, #28a745) !important;
+}
+
+/* Save dropdown - mirrors the original SermonEditor styles */
+.save-dropdown {
+  position: relative;
+}
+
+.save-dropdown:hover .save-menu {
+  display: block;
+}
+
+.save-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: var(--bg-primary, white);
+  border: 1px solid var(--border-color, #e1e4e8);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  min-width: 160px;
+  z-index: 100;
+  overflow: hidden;
+}
+
+.save-menu button {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  text-align: left;
+  border: none;
+  background: none;
+  font-size: 13px;
+  color: var(--text-primary, #24292e);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.save-menu button:hover {
+  background: var(--bg-hover, #f6f8fa);
+}
+
+.save-menu button:active {
+  background: var(--bg-active, #e1e4e8);
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .unified-editor-actions {
+    background: var(--bg-secondary, #21262d);
+    border-bottom-color: var(--border-color, #30363d);
+  }
+
+  .action-divider {
+    background: var(--border-color, #30363d);
+  }
+
+  .save-menu {
+    background: var(--bg-primary, #0d1117);
+    border-color: var(--border-color, #30363d);
+  }
+
+  .save-menu button {
+    color: var(--text-primary, #c9d1d9);
+  }
+
+  .save-menu button:hover {
+    background: var(--bg-hover, #21262d);
+  }
+}
+
+/* Theme class support */
+.dark .unified-editor-actions {
+  background: var(--bg-secondary, #21262d);
+  border-bottom-color: var(--border-color, #30363d);
+}
+
+.dark .action-divider {
+  background: var(--border-color, #30363d);
+}
+
+.dark .save-menu {
+  background: var(--bg-primary, #0d1117);
+  border-color: var(--border-color, #30363d);
+}
+
+.dark .save-menu button {
+  color: var(--text-primary, #c9d1d9);
+}
+
+.dark .save-menu button:hover {
+  background: var(--bg-hover, #21262d);
+}

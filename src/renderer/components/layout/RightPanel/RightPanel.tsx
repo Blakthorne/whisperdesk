@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Edit3, Code2 } from 'lucide-react';
 import { OutputDisplay } from '../../../features/transcription';
 import { QuoteAwareSermonEditor } from '../../../features/transcription/components/SermonEditor/QuoteAwareSermonEditor';
 import { TranscriptionHistory } from '../../../features/history';
@@ -9,12 +10,13 @@ import {
   useQuoteReviewOptional,
   EditorActionsProvider,
 } from '../../../contexts';
-import { ResizablePanel } from '../../ui';
+import { ResizablePanel, SegmentedControl } from '../../ui';
 import { DEFAULT_PANEL_WIDTH } from '../../../types/quoteReview';
 import { QuoteReviewPanel } from '../../../features/quote-review/components/QuoteReviewPanel';
 import type { QuoteReviewItem } from '../../../types/quoteReview';
 import type { SermonDocument } from '../../../types';
 import { DevASTPanel } from '../../../features/dev/components/DevASTPanel/DevASTPanel';
+import { UnifiedEditorActions, type EditorMode } from './UnifiedEditorActions';
 import './RightPanel.css';
 
 /**
@@ -65,14 +67,16 @@ function extractQuotesFromDocument(doc: SermonDocument): QuoteReviewItem[] {
           // Extract text from quote children
           const text = extractTextFromChildren(node.children || []);
           const metadata = node.metadata || {};
-          const reference = metadata.reference as {
-            normalizedReference?: string;
-            book?: string;
-            chapter?: number;
-            verseStart?: number;
-            verseEnd?: number;
-            originalText?: string;
-          } | undefined;
+          const reference = metadata.reference as
+            | {
+                normalizedReference?: string;
+                book?: string;
+                chapter?: number;
+                verseStart?: number;
+                verseEnd?: number;
+                originalText?: string;
+              }
+            | undefined;
 
           // Build reference string with fallback logic
           let referenceStr = reference?.normalizedReference;
@@ -219,16 +223,92 @@ function RightPanel(): React.JSX.Element {
     handleSave,
     handleCopy,
     sermonDocument,
-    documentHtml,
-    setDocumentHtml,
-    saveEdits,
+    handleAstChange,
     documentSaveState,
     lastSavedAt,
     selectedFile,
     isDev,
+    handleUndo,
+    handleRedo,
+    canUndo,
+    canRedo,
   } = useAppTranscription();
 
-  const [activeTab, setActiveTab] = useState<'quotes' | 'ast'>('quotes');
+  // Track active editor mode (used for unified actions)
+  const [activeMode, setActiveMode] = useState<EditorMode>('editor');
+
+  // Keyboard shortcuts for tab switching (Cmd+1, Cmd+2)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.document || !isDev) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle Cmd/Ctrl + number shortcuts
+      if (!(e.metaKey || e.ctrlKey)) return;
+
+      // Cmd+1 - Switch to Editor view
+      if (e.key === '1') {
+        e.preventDefault();
+        setActiveMode('editor');
+      }
+
+      // Cmd+2 - Switch to Dev AST view (only in dev mode)
+      if (e.key === '2') {
+        e.preventDefault();
+        setActiveMode('ast');
+      }
+    };
+
+    window.document.addEventListener('keydown', handleKeyDown);
+    return () => window.document.removeEventListener('keydown', handleKeyDown);
+  }, [isDev]);
+
+  // Global keyboard shortcuts for undo/redo (AST-level)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.document || !sermonDocument) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const modifierKey = isMac ? e.metaKey : e.ctrlKey;
+
+      // Cmd/Ctrl+Z - Undo
+      if (modifierKey && e.key.toLowerCase() === 'z' && !e.shiftKey) {
+        // Only intercept if we have undo capability and not in a text input
+        const target = e.target as HTMLElement;
+        const isEditable =
+          target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable ||
+          target.closest('.ProseMirror') || // TipTap editor
+          target.closest('.monaco-editor'); // Monaco editor
+
+        // For TipTap, we let the editor handle its own undo first
+        // The AST-level undo is supplementary for cross-mode consistency
+        if (!isEditable && canUndo) {
+          e.preventDefault();
+          handleUndo();
+        }
+      }
+
+      // Cmd/Ctrl+Shift+Z - Redo
+      if (modifierKey && e.key.toLowerCase() === 'z' && e.shiftKey) {
+        const target = e.target as HTMLElement;
+        const isEditable =
+          target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable ||
+          target.closest('.ProseMirror') ||
+          target.closest('.monaco-editor');
+
+        if (!isEditable && canRedo) {
+          e.preventDefault();
+          handleRedo();
+        }
+      }
+    };
+
+    window.document.addEventListener('keydown', handleKeyDown);
+    return () => window.document.removeEventListener('keydown', handleKeyDown);
+  }, [sermonDocument, canUndo, canRedo, handleUndo, handleRedo]);
 
   // Generate a stable document ID to key the provider
   // This ensures state (reviewed quotes, panel width) persists for the same document
@@ -246,7 +326,10 @@ function RightPanel(): React.JSX.Element {
     }
     // 3. Fallback to filename (if available via selectedFile in context)
     if (selectedFile?.name) {
-      return `doc-${selectedFile.name.replace(/\.\w+$/, '').replace(/\s+/g, '-').toLowerCase()}`;
+      return `doc-${selectedFile.name
+        .replace(/\.\w+$/, '')
+        .replace(/\s+/g, '-')
+        .toLowerCase()}`;
     }
     // 4. Fallback to timestamp (memoized, so stable for this document instance)
     return `doc-${Date.now()}`;
@@ -266,6 +349,43 @@ function RightPanel(): React.JSX.Element {
     );
   }
 
+  // Calculate word count from AST or transcription
+  const wordCount = useMemo(() => {
+    if (sermonDocument?.documentState?.root) {
+      // Extract text from AST
+      let text = '';
+      function extractText(node: any): void {
+        if (node.type === 'text' && node.content) {
+          text += node.content + ' ';
+        }
+        if (node.children && Array.isArray(node.children)) {
+          node.children.forEach(extractText);
+        }
+      }
+      extractText(sermonDocument.documentState.root);
+      return text.trim() ? text.trim().split(/\s+/).length : 0;
+    }
+    return transcription.trim() ? transcription.trim().split(/\s+/).length : 0;
+  }, [sermonDocument, transcription]);
+
+  // Calculate quote count from AST
+  const quoteCount = useMemo(() => {
+    if (!sermonDocument?.documentState?.root) return 0;
+    let count = 0;
+    function countQuotes(node: any): void {
+      if (node.type === 'quote_block') {
+        count++;
+      }
+      if (node.children && Array.isArray(node.children)) {
+        node.children.forEach(countQuotes);
+      }
+    }
+    countQuotes(sermonDocument.documentState.root);
+    return count;
+  }, [sermonDocument]);
+
+  const hasContent = wordCount > 0 || transcription.length > 0;
+
   // Show SermonEditor if we have a sermon document
   // Wrap with QuoteReviewProvider and EditorActionsProvider for quote review functionality
   if (sermonDocument && documentId) {
@@ -274,35 +394,46 @@ function RightPanel(): React.JSX.Element {
         <QuoteReviewProvider documentId={documentId}>
           <RightPanelWithQuoteReview document={sermonDocument} key={documentId}>
             <div className="right-panel">
+              {/* Unified action bar - shared across editor modes */}
+              <UnifiedEditorActions
+                activeMode={activeMode}
+                wordCount={wordCount}
+                saveState={documentSaveState}
+                lastSaved={lastSavedAt}
+                hasContent={hasContent}
+                quoteCount={quoteCount}
+              />
+
               {isDev && (
-                <div className="right-panel-tabs">
-                  <button
-                    className={`right-panel-tab ${activeTab === 'quotes' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('quotes')}
-                  >
-                    Quotes
-                  </button>
-                  <button
-                    className={`right-panel-tab ${activeTab === 'ast' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('ast')}
-                  >
-                    Dev AST
-                  </button>
+                <div className="right-panel-view-switcher">
+                  <SegmentedControl
+                    options={[
+                      {
+                        value: 'editor',
+                        label: 'Editor',
+                        icon: <Edit3 size={12} />,
+                        tooltip: 'Editor View (⌘1)',
+                      },
+                      {
+                        value: 'ast',
+                        label: 'Dev AST',
+                        icon: <Code2 size={12} />,
+                        tooltip: 'AST Debug View (⌘2)',
+                      },
+                    ]}
+                    value={activeMode}
+                    onChange={(value) => setActiveMode(value as EditorMode)}
+                    size="sm"
+                    aria-label="Editor view selector"
+                  />
                 </div>
               )}
 
-              {activeTab === 'quotes' ? (
+              {activeMode === 'editor' ? (
                 <QuoteAwareSermonEditor
                   document={sermonDocument}
                   documentState={sermonDocument.documentState}
-                  initialHtml={documentHtml || undefined}
-                  onSave={handleSave}
-                  onCopy={handleCopy}
-                  copySuccess={copySuccess}
-                  onHtmlChange={setDocumentHtml}
-                  onSaveEdits={saveEdits}
-                  saveState={documentSaveState}
-                  lastSaved={lastSavedAt}
+                  onAstChange={handleAstChange}
                 />
               ) : (
                 <DevASTPanel />

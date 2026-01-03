@@ -40,15 +40,16 @@ export interface SaveToHistoryOptions {
 
 /**
  * Result from restoring history.
+ * 
+ * AST-ONLY ARCHITECTURE: The state field contains the DocumentState (AST).
+ * HTML is no longer stored; it can be generated on-demand from AST when needed.
  */
 export interface RestoreFromHistoryResult {
   success: boolean;
   state?: DocumentState;
   error?: string;
-  /** Whether the history item uses legacy format (no documentState) */
+  /** Whether the history item uses legacy format (deprecated) */
   isLegacy?: boolean;
-  /** HTML content for legacy items */
-  legacyHtml?: string;
 }
 
 // ============================================================================
@@ -82,6 +83,9 @@ export function createHistoryItemWithState(
 
 /**
  * Update an existing history item with new document state.
+ * 
+ * AST-ONLY ARCHITECTURE: The DocumentState is the single source of truth.
+ * HTML is no longer stored; it can be generated on-demand from AST when needed.
  */
 export function updateHistoryItemState(
   item: HistoryItem,
@@ -98,8 +102,6 @@ export function updateHistoryItemState(
   return {
     ...item,
     documentStateJson,
-    // Also update the HTML for backward compatibility
-    documentHtml: undefined, // Will be generated on demand
   };
 }
 
@@ -140,32 +142,26 @@ export function restoreFromHistoryItem(
     };
   }
 
-  // Fall back to legacy HTML format
-  if (item.documentHtml) {
-    return {
-      success: true,
-      isLegacy: true,
-      legacyHtml: item.documentHtml,
-    };
-  }
-
   // No document data available
+  // Note: Legacy documentHtml support removed in AST-only architecture
   return {
     success: false,
-    error: 'No document state or HTML available in history item',
-    isLegacy: true,
+    error: 'No document state available in history item',
+    isLegacy: false,
   };
 }
 
 /**
  * Check if a history item has document state.
+ * 
+ * AST-ONLY ARCHITECTURE: Only checks for DocumentState; 
+ * legacy documentHtml is no longer supported.
  */
 export function hasDocumentState(item: HistoryItem | HistoryItemWithState): boolean {
   const extendedItem = item as HistoryItemWithState;
   return !!(
     extendedItem.documentStateJson ||
-    item.sermonDocument?.documentState ||
-    item.documentHtml
+    item.sermonDocument?.documentState
   );
 }
 
@@ -178,31 +174,25 @@ export function hasNewFormatState(item: HistoryItem | HistoryItemWithState): boo
 }
 
 // ============================================================================
-// MIGRATION
+// MIGRATION (DEPRECATED)
 // ============================================================================
 
 /**
- * Migrate a legacy history item to use DocumentState.
- * Note: This requires converting HTML to AST, which may lose some formatting.
+ * @deprecated Legacy migration removed in AST-only architecture.
+ * History items without DocumentState are no longer supported.
+ * This function is kept for reference but simply returns the item unchanged
+ * if it already has DocumentState, or null if it doesn't.
  */
 export function migrateHistoryItem(
   item: HistoryItem,
-  convertHtmlToState: (html: string) => DocumentState | null
+  _convertHtmlToState: (html: string) => DocumentState | null
 ): HistoryItemWithState | null {
-  // Already has new format
+  // Already has new format - return as-is
   if (hasNewFormatState(item)) {
     return item as HistoryItemWithState;
   }
 
-  // Try to convert from HTML
-  if (item.documentHtml) {
-    const state = convertHtmlToState(item.documentHtml);
-    if (state) {
-      return updateHistoryItemState(item, state);
-    }
-  }
-
-  // Cannot migrate
+  // Cannot migrate - legacy items without DocumentState are not supported
   return null;
 }
 

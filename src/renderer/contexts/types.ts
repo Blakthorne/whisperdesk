@@ -8,9 +8,10 @@ import type {
 } from '../types';
 import type { Theme } from '../hooks';
 import type { PipelineProgress } from '../services/electronAPI';
+import type { DocumentRootNode } from '../../shared/documentModel';
 
 /** Document save state for UI indicators */
-export type DocumentSaveState = 'saved' | 'unsaved' | 'saving';
+export type DocumentSaveState = 'saved' | 'unsaved' | 'saving' | 'auto-saving';
 
 export interface ThemeContextValue {
   theme: Theme;
@@ -41,20 +42,28 @@ export interface TranscriptionStateContextValue {
   copySuccess: boolean;
   queue: QueueItem[];
   selectedQueueItemId: string | null;
-  /** Sermon document from sermon processing pipeline */
+  /** Sermon document from sermon processing pipeline (AST is the single source of truth) */
   sermonDocument: SermonDocument | null;
-  /** HTML content from WYSIWYG editor (for persistence) */
-  documentHtml: string | null;
+  /** Draft AST JSON from Monaco editor (for persistence across tab switches) */
+  draftAstJson: string | null;
   /** Pipeline progress for sermon processing */
   pipelineProgress: PipelineProgress | null;
   /** Current save state of the document */
   documentSaveState: DocumentSaveState;
   /** Timestamp of last successful save */
   lastSavedAt: Date | null;
+  /** Edit version counter - incremented on each AST change for dirty detection */
+  editVersion: number;
+  /** Saved version - the editVersion when document was last saved */
+  savedVersion: number;
   /** Whether the app is running in development mode */
   isDev: boolean;
   /** The ID of the node currently visible at the top of the viewport (for scroll sync) */
   visibleNodeId: string | null;
+  /** Whether undo is available (has snapshots in undo stack) */
+  canUndo: boolean;
+  /** Whether redo is available (has snapshots in redo stack) */
+  canRedo: boolean;
 }
 
 export interface TranscriptionActionsContextValue {
@@ -71,12 +80,23 @@ export interface TranscriptionActionsContextValue {
   selectQueueItem: (id: string) => void;
   /** Set sermon document from processing pipeline */
   setSermonDocument: (doc: SermonDocument | null) => void;
-  /** Update HTML content from editor */
-  setDocumentHtml: (html: string | null) => void;
-  /** Save current editor edits to history */
-  saveEdits: () => void;
+  /** Update draft AST JSON from Monaco editor */
+  setDraftAstJson: (json: string | null) => void;
+  /** Update document state (AST) from root node - triggers debounced autosave */
+  updateDocumentState: (newRoot: DocumentRootNode) => void;
+  /** 
+   * Handle AST changes from the editor (debounced) 
+   * This is called by the TipTap editor when content changes
+   */
+  handleAstChange: (newRoot: DocumentRootNode) => void;
   /** Set the ID of the currently visible node (for scroll sync) */
   setVisibleNodeId: (nodeId: string | null) => void;
+  /** Version counter for document state changes (for detecting external AST updates) */
+  documentStateVersion: number;
+  /** Undo the last AST change */
+  handleUndo: () => void;
+  /** Redo a previously undone AST change */
+  handleRedo: () => void;
 }
 
 export interface TranscriptionContextValue

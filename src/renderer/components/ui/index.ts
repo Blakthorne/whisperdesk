@@ -3,6 +3,8 @@ export type { ButtonProps } from './Button';
 export { ErrorBoundary } from './ErrorBoundary';
 export type { ErrorBoundaryProps } from './ErrorBoundary';
 export { ProgressBar } from './ProgressBar';
+export { SegmentedControl } from './SegmentedControl';
+export type { SegmentedControlProps, SegmentedControlOption } from './SegmentedControl';
 export { SystemWarning } from './SystemWarning';
 export { DebugLogsModal } from './DebugLogsModal';
 export type { DebugLogsModalProps } from './DebugLogsModal';

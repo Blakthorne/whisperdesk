@@ -415,6 +415,13 @@
   color: var(--accent);
 }
 
+/* Auto-saving state - similar to saving but slightly different visual cue */
+.document-state-indicator.state-auto-saving {
+  background: var(--accent-light);
+  color: var(--accent);
+  opacity: 0.9;
+}
+
 .document-state-indicator .state-spinner {
   animation: spin 1s linear infinite;
 }
@@ -429,7 +436,8 @@
 /* Save button state variations */
 
 
-.save-edits-btn.save-state-saving {
+.save-edits-btn.save-state-saving,
+.save-edits-btn.save-state-auto-saving {
   cursor: wait;
 }
 
