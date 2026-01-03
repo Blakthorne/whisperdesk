@@ -16,6 +16,16 @@
 }
 
 .right-panel-container-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.right-panel-content-wrapper {
+  position: relative;
   display: flex;
   flex-direction: row;
   flex: 1;
@@ -36,15 +46,15 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 /* View switcher container for SegmentedControl */
 .right-panel-view-switcher {
   display: flex;
   align-items: center;
-  padding: 8px 12px;
+  padding: 8px 0px;
   background-color: var(--bg-primary);
-  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 

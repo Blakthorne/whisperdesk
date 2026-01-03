@@ -2,9 +2,9 @@
 .sermon-editor-container {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   background: var(--background-secondary);
-  border-radius: 8px;
   overflow: hidden;
 }
 
@@ -42,6 +42,8 @@
 /* Editor Content Area */
 .sermon-editor-content {
   flex: 1;
+  min-height: 0;
+  max-height: 100%;
   overflow-y: auto;
   padding: 20px;
   background: var(--background-primary);

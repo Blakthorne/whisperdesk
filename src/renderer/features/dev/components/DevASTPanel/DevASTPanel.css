@@ -1,9 +1,11 @@
 .dev-ast-panel {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   background-color: var(--bg-primary);
   color: var(--text-primary);
+  overflow: hidden;
 }
 
 .dev-ast-panel.empty {
@@ -116,7 +118,7 @@
 .dev-ast-editor-container {
   flex: 1;
   min-height: 0;
-  margin: 12px 16px 16px;
+  margin: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   overflow: hidden;

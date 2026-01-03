@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Editor } from '@tiptap/react';
+import { type Editor, useEditorState } from '@tiptap/react';
 import './SermonToolbar.css';
 
 interface SermonToolbarProps {
@@ -10,9 +10,37 @@ interface SermonToolbarProps {
 
 /**
  * Toolbar for the sermon editor with formatting controls.
+ * Uses useEditorState to subscribe to editor state changes for proper re-rendering.
  */
 function SermonToolbar({ editor }: SermonToolbarProps): React.JSX.Element {
-  if (!editor) {
+  // Subscribe to editor state changes so toolbar re-renders when active states change
+  // This fixes the issue where buttons didn't show active state after formatting
+  const editorState = useEditorState({
+    editor,
+    selector: (ctx) => {
+      const ed = ctx.editor;
+      if (!ed) {
+        return null;
+      }
+      return {
+        isBold: ed.isActive('bold'),
+        isItalic: ed.isActive('italic'),
+        isUnderline: ed.isActive('underline'),
+        isHighlight: ed.isActive('highlight'),
+        isH1: ed.isActive('heading', { level: 1 }),
+        isH2: ed.isActive('heading', { level: 2 }),
+        isH3: ed.isActive('heading', { level: 3 }),
+        isBulletList: ed.isActive('bulletList'),
+        isOrderedList: ed.isActive('orderedList'),
+        isBlockquote: ed.isActive('blockquote'),
+        isAlignLeft: ed.isActive({ textAlign: 'left' }),
+        isAlignCenter: ed.isActive({ textAlign: 'center' }),
+        isAlignRight: ed.isActive({ textAlign: 'right' }),
+      };
+    },
+  });
+
+  if (!editor || !editorState) {
     return <div className="sermon-toolbar loading">Loading editor...</div>;
   }
 
@@ -22,7 +50,7 @@ function SermonToolbar({ editor }: SermonToolbarProps): React.JSX.Element {
       <div className="toolbar-group">
         <button
           onClick={() => editor.chain().focus().toggleBold().run()}
-          className={`toolbar-btn ${editor.isActive('bold') ? 'active' : ''}`}
+          className={`toolbar-btn ${editorState.isBold ? 'active' : ''}`}
           title="Bold (⌘B)"
           type="button"
         >
@@ -42,7 +70,7 @@ function SermonToolbar({ editor }: SermonToolbarProps): React.JSX.Element {
         </button>
         <button
           onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={`toolbar-btn ${editor.isActive('italic') ? 'active' : ''}`}
+          className={`toolbar-btn ${editorState.isItalic ? 'active' : ''}`}
           title="Italic (⌘I)"
           type="button"
         >
@@ -63,7 +91,7 @@ function SermonToolbar({ editor }: SermonToolbarProps): React.JSX.Element {
         </button>
         <button
           onClick={() => editor.chain().focus().toggleUnderline().run()}
-          className={`toolbar-btn ${editor.isActive('underline') ? 'active' : ''}`}
+          className={`toolbar-btn ${editorState.isUnderline ? 'active' : ''}`}
           title="Underline (⌘U)"
           type="button"
         >
@@ -83,7 +111,7 @@ function SermonToolbar({ editor }: SermonToolbarProps): React.JSX.Element {
         </button>
         <button
           onClick={() => editor.chain().focus().toggleHighlight().run()}
-          className={`toolbar-btn ${editor.isActive('highlight') ? 'active' : ''}`}
+          className={`toolbar-btn ${editorState.isHighlight ? 'active' : ''}`}
           title="Highlight"
           type="button"
         >
@@ -109,7 +137,7 @@ function SermonToolbar({ editor }: SermonToolbarProps): React.JSX.Element {
       <div className="toolbar-group">
         <button
           onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-          className={`toolbar-btn ${editor.isActive('heading', { level: 1 }) ? 'active' : ''}`}
+          className={`toolbar-btn ${editorState.isH1 ? 'active' : ''}`}
           title="Heading 1"
           type="button"
         >
@@ -117,7 +145,7 @@ function SermonToolbar({ editor }: SermonToolbarProps): React.JSX.Element {
         </button>
         <button
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          className={`toolbar-btn ${editor.isActive('heading', { level: 2 }) ? 'active' : ''}`}
+          className={`toolbar-btn ${editorState.isH2 ? 'active' : ''}`}
           title="Heading 2"
           type="button"
         >
@@ -125,7 +153,7 @@ function SermonToolbar({ editor }: SermonToolbarProps): React.JSX.Element {
         </button>
         <button
           onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          className={`toolbar-btn ${editor.isActive('heading', { level: 3 }) ? 'active' : ''}`}
+          className={`toolbar-btn ${editorState.isH3 ? 'active' : ''}`}
           title="Heading 3"
           type="button"
         >
@@ -139,7 +167,7 @@ function SermonToolbar({ editor }: SermonToolbarProps): React.JSX.Element {
       <div className="toolbar-group">
         <button
           onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={`toolbar-btn ${editor.isActive('bulletList') ? 'active' : ''}`}
+          className={`toolbar-btn ${editorState.isBulletList ? 'active' : ''}`}
           title="Bullet List"
           type="button"
         >
@@ -163,7 +191,7 @@ function SermonToolbar({ editor }: SermonToolbarProps): React.JSX.Element {
         </button>
         <button
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={`toolbar-btn ${editor.isActive('orderedList') ? 'active' : ''}`}
+          className={`toolbar-btn ${editorState.isOrderedList ? 'active' : ''}`}
           title="Numbered List"
           type="button"
         >
@@ -193,7 +221,7 @@ function SermonToolbar({ editor }: SermonToolbarProps): React.JSX.Element {
         </button>
         <button
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          className={`toolbar-btn ${editor.isActive('blockquote') ? 'active' : ''}`}
+          className={`toolbar-btn ${editorState.isBlockquote ? 'active' : ''}`}
           title="Blockquote"
           type="button"
         >
@@ -219,7 +247,7 @@ function SermonToolbar({ editor }: SermonToolbarProps): React.JSX.Element {
       <div className="toolbar-group">
         <button
           onClick={() => editor.chain().focus().setTextAlign('left').run()}
-          className={`toolbar-btn ${editor.isActive({ textAlign: 'left' }) ? 'active' : ''}`}
+          className={`toolbar-btn ${editorState.isAlignLeft ? 'active' : ''}`}
           title="Align Left"
           type="button"
         >
@@ -240,7 +268,7 @@ function SermonToolbar({ editor }: SermonToolbarProps): React.JSX.Element {
         </button>
         <button
           onClick={() => editor.chain().focus().setTextAlign('center').run()}
-          className={`toolbar-btn ${editor.isActive({ textAlign: 'center' }) ? 'active' : ''}`}
+          className={`toolbar-btn ${editorState.isAlignCenter ? 'active' : ''}`}
           title="Align Center"
           type="button"
         >
@@ -261,7 +289,7 @@ function SermonToolbar({ editor }: SermonToolbarProps): React.JSX.Element {
         </button>
         <button
           onClick={() => editor.chain().focus().setTextAlign('right').run()}
-          className={`toolbar-btn ${editor.isActive({ textAlign: 'right' }) ? 'active' : ''}`}
+          className={`toolbar-btn ${editorState.isAlignRight ? 'active' : ''}`}
           title="Align Right"
           type="button"
         >

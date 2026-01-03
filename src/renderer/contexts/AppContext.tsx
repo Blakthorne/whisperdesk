@@ -73,6 +73,9 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
   const [currentHistoryItemId, setCurrentHistoryItemId] = useState<string | null>(null);
   // Version counter to track AST updates (used for sync detection between editors)
   const [documentStateVersion, setDocumentStateVersion] = useState<number>(0);
+  // Version counter for EXTERNAL AST changes only (DevASTPanel, undo/redo)
+  // TipTap watches this to know when to sync AST→TipTap (not for its own edits)
+  const [externalAstVersion, setExternalAstVersion] = useState<number>(0);
   const [documentSaveState, setDocumentSaveState] = useState<DocumentSaveState>('saved');
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [isDev, setIsDev] = useState<boolean>(false);
@@ -326,7 +329,7 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
   /**
    * Update document state (AST) directly from the root node.
    * Used by DevASTPanel when JSON changes are made.
-   * This now uses the same debounced autosave as TipTap.
+   * This triggers sync back to TipTap via externalAstVersion.
    */
   const updateDocumentState = useCallback(
     (newRoot: DocumentRootNode): void => {
@@ -338,9 +341,11 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
         clearTimeout(astSyncTimerRef.current);
       }
 
-      // Set new debounced timer (same as TipTap)
+      // Set new debounced timer (same as TipTap, but also bumps external version)
       astSyncTimerRef.current = setTimeout(() => {
         applyPendingAstChanges();
+        // Bump external version AFTER applying changes - this tells TipTap to sync
+        setExternalAstVersion((v) => v + 1);
         astSyncTimerRef.current = null;
       }, AST_SYNC_DEBOUNCE);
     },
@@ -379,6 +384,8 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
 
       setSermonDocument(updatedSermonDocument);
       setDocumentStateVersion((v) => v + 1);
+      // Bump external version to trigger TipTap sync
+      setExternalAstVersion((v) => v + 1);
       // Trigger autosave for undo
       setEditVersion((v) => v + 1);
       // Clear any draft AST to sync DevASTPanel
@@ -420,6 +427,8 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
 
       setSermonDocument(updatedSermonDocument);
       setDocumentStateVersion((v) => v + 1);
+      // Bump external version to trigger TipTap sync
+      setExternalAstVersion((v) => v + 1);
       // Trigger autosave for redo
       setEditVersion((v) => v + 1);
       // Clear any draft AST to sync DevASTPanel
@@ -653,6 +662,7 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
       handleAstChange,
       setVisibleNodeId,
       documentStateVersion,
+      externalAstVersion,
       handleUndo,
       handleRedo,
     }),
@@ -672,6 +682,7 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
       handleAstChange,
       setVisibleNodeId,
       documentStateVersion,
+      externalAstVersion,
       handleUndo,
       handleRedo,
     ]

@@ -49,12 +49,13 @@ function SermonEditor({
   documentState,
   onAstChange,
 }: SermonEditorProps): React.JSX.Element {
-  const { visibleNodeId, setVisibleNodeId, documentStateVersion, sermonDocument } =
+  const { visibleNodeId, setVisibleNodeId, externalAstVersion, sermonDocument } =
     useAppTranscription();
   const isSelfScrollingRef = React.useRef(false);
 
-  // Track the last AST version we've synced to TipTap
-  const lastSyncedAstVersionRef = useRef<number>(documentStateVersion);
+  // Track the last EXTERNAL AST version we've synced to TipTap
+  // (We only sync back when external changes occur, not from our own TipTap edits)
+  const lastSyncedExternalVersionRef = useRef<number>(externalAstVersion);
 
   // Track whether we're syncing from AST to TipTap (to avoid triggering onAstChange)
   const isSyncingFromAstRef = useRef<boolean>(false);
@@ -65,10 +66,12 @@ function SermonEditor({
       StarterKit.configure({
         heading: false, // Disable built-in heading as we override it
         paragraph: false, // Disable built-in paragraph as we override it
+        undoRedo: false, // Disable TipTap's undo/redo to use our AST-based system
       }),
       Paragraph.extend({
         addAttributes() {
           return {
+            ...this.parent?.(),
             nodeId: {
               default: null,
               parseHTML: (element) => element.getAttribute('data-node-id'),
@@ -83,6 +86,7 @@ function SermonEditor({
       Heading.extend({
         addAttributes() {
           return {
+            ...this.parent?.(),
             nodeId: {
               default: null,
               parseHTML: (element) => element.getAttribute('data-node-id'),
@@ -205,12 +209,15 @@ function SermonEditor({
       // The parent (Context) will debounce this update
       if (onAstChange) {
         const tipTapJson = editorInstance.getJSON() as TipTapDocument;
+
         // Pass the existing documentState root for ID preservation hints
         const existingRoot = documentState?.root;
         const result = tipTapJsonToAst(tipTapJson, {}, existingRoot);
 
         if (result.success && result.data) {
           onAstChange(result.data);
+        } else {
+          console.error('[SermonEditor] AST conversion failed:', result.error);
         }
       }
     },
@@ -231,9 +238,23 @@ function SermonEditor({
     };
   }, [editor, editorActions]);
 
-  // Update content when document changes (initial load or document switch)
+  // Track the document root ID to detect when we switch to a different document
+  // Using root ID instead of object reference because the document object may be
+  // recreated on each render even when it represents the same document
+  const lastRootIdRef = useRef<string | null>(null);
+
+  // Update content when DOCUMENT IDENTITY changes (switching to different sermon)
+  // NOTE: We compare document ROOT ID to detect actual document switches.
+  // Internal edits flow TipTap → AST → context, but should NOT trigger
+  // content replacement (that would cause infinite loops and lost state).
   useEffect(() => {
-    if (editor && document) {
+    // Use the root ID as the stable document identifier
+    const currentRootId = documentState?.root?.id || null;
+    const isNewDocument = currentRootId !== lastRootIdRef.current && currentRootId !== null;
+
+    if (editor && document && documentState?.root && isNewDocument) {
+      lastRootIdRef.current = currentRootId;
+
       // Set the flag to prevent onUpdate from triggering onAstChange
       isSyncingFromAstRef.current = true;
       editor.commands.setContent(defaultContent);
@@ -242,23 +263,24 @@ function SermonEditor({
         isSyncingFromAstRef.current = false;
       });
     }
-  }, [document, editor, defaultContent]);
+  }, [documentState?.root?.id, editor, defaultContent, document]); // Use root ID in deps instead of document reference
 
-  // Sync AST changes to TipTap (AST → TipTap)
-  // This triggers when documentStateVersion changes, indicating an external AST update
-  // (e.g., from DevASTPanel applying changes, or Context updating the AST)
+  // Sync EXTERNAL AST changes to TipTap (AST → TipTap)
+  // This ONLY triggers when externalAstVersion changes, indicating an external AST update
+  // (e.g., from DevASTPanel applying changes, undo/redo operations)
+  // Changes from TipTap itself do NOT trigger this sync (avoids infinite loop and lost formatting)
   // IMPORTANT: We use sermonDocument.documentState from CONTEXT (not documentState prop)
   // to ensure we get the latest AST that corresponds to the updated version number.
   useEffect(() => {
-    // Skip if this is the initial mount or version hasn't changed
-    if (lastSyncedAstVersionRef.current === documentStateVersion) {
+    // Skip if this is the initial mount or external version hasn't changed
+    if (lastSyncedExternalVersionRef.current === externalAstVersion) {
       return;
     }
 
     // Get the documentState from context (not props) to ensure it's in sync with version
     const contextDocumentState = sermonDocument?.documentState;
 
-    // AST change detected - sync to TipTap
+    // External AST change detected - sync to TipTap
     if (editor && contextDocumentState?.root) {
       const result = astToTipTapJson(contextDocumentState.root, {
         preserveIds: true,
@@ -277,9 +299,9 @@ function SermonEditor({
       }
     }
 
-    // Track that we've processed this version
-    lastSyncedAstVersionRef.current = documentStateVersion;
-  }, [documentStateVersion, sermonDocument, editor]);
+    // Track that we've processed this external version
+    lastSyncedExternalVersionRef.current = externalAstVersion;
+  }, [externalAstVersion, sermonDocument, editor]);
 
   // Sync scroll from AST panel (visibleNodeId) to TipTap
   // Tracks which ID we last successfully scrolled to

@@ -93,6 +93,12 @@ export interface TranscriptionActionsContextValue {
   setVisibleNodeId: (nodeId: string | null) => void;
   /** Version counter for document state changes (for detecting external AST updates) */
   documentStateVersion: number;
+  /** 
+   * Version counter for EXTERNAL AST changes only (DevASTPanel, undo/redo).
+   * TipTap watches this to know when to sync AST→TipTap.
+   * Changes from TipTap itself do NOT bump this counter.
+   */
+  externalAstVersion: number;
   /** Undo the last AST change */
   handleUndo: () => void;
   /** Redo a previously undone AST change */

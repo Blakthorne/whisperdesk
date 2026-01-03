@@ -174,16 +174,97 @@ function RightPanelWithQuoteReview({
   children: React.ReactNode;
   document: SermonDocument;
 }): React.JSX.Element {
-  const quoteReview = useQuoteReviewOptional();
-  const [panelWidth, setPanelWidth] = useState(DEFAULT_PANEL_WIDTH);
-
-  const isPanelOpen = quoteReview?.review.panelOpen ?? false;
-
   return (
     <div className="right-panel-container">
       <QuoteSyncAndAutoOpen document={document} />
-      <div className="right-panel-container-inner">
-        <div className="right-panel-main-content">{children}</div>
+      {children}
+    </div>
+  );
+}
+
+/**
+ * Inner component that has access to QuoteReviewProvider context
+ */
+function SermonEditorLayout({
+  sermonDocument,
+  documentSaveState,
+  lastSavedAt,
+  handleAstChange,
+  activeMode,
+  setActiveMode,
+  isDev,
+  wordCount,
+  quoteCount,
+}: {
+  sermonDocument: SermonDocument;
+  documentSaveState: any;
+  lastSavedAt: Date | null;
+  handleAstChange: any;
+  activeMode: EditorMode;
+  setActiveMode: (mode: EditorMode) => void;
+  isDev: boolean;
+  wordCount: number;
+  quoteCount: number;
+}): React.JSX.Element {
+  // Access quote review context
+  const quoteReview = useQuoteReviewOptional();
+  const isPanelOpen = quoteReview?.review.panelOpen ?? false;
+  const [panelWidth, setPanelWidth] = useState(DEFAULT_PANEL_WIDTH);
+
+  const hasContent = wordCount > 0;
+
+  return (
+    <div className="right-panel-container-inner">
+      {/* Unified action bar - shared across editor modes */}
+      <UnifiedEditorActions
+        activeMode={activeMode}
+        wordCount={wordCount}
+        saveState={documentSaveState}
+        lastSaved={lastSavedAt}
+        hasContent={hasContent}
+        quoteCount={quoteCount}
+      />
+
+      <div className="right-panel-content-wrapper">
+        <div className="right-panel-main-content">
+          <div className="right-panel">
+            {isDev && (
+              <div className="right-panel-view-switcher">
+                <SegmentedControl
+                  options={[
+                    {
+                      value: 'editor',
+                      label: 'Editor',
+                      icon: <Edit3 size={12} />,
+                      tooltip: 'Editor View (⌘1)',
+                    },
+                    {
+                      value: 'ast',
+                      label: 'Dev AST',
+                      icon: <Code2 size={12} />,
+                      tooltip: 'AST Debug View (⌘2)',
+                    },
+                  ]}
+                  value={activeMode}
+                  onChange={(value) => setActiveMode(value as EditorMode)}
+                  size="sm"
+                  aria-label="Editor view selector"
+                />
+              </div>
+            )}
+
+            {activeMode === 'editor' ? (
+              <QuoteAwareSermonEditor
+                document={sermonDocument}
+                documentState={sermonDocument.documentState}
+                onAstChange={handleAstChange}
+              />
+            ) : (
+              <DevASTPanel />
+            )}
+          </div>
+        </div>
+
         {isPanelOpen && (
           <ResizablePanel
             position="right"
@@ -335,21 +416,8 @@ function RightPanel(): React.JSX.Element {
     return `doc-${Date.now()}`;
   }, [sermonDocument, selectedFile]);
 
-  if (showHistory) {
-    return (
-      <div className="right-panel">
-        <TranscriptionHistory
-          history={history}
-          onClear={clearHistory}
-          onClose={() => setShowHistory(false)}
-          onSelect={selectHistoryItem}
-          onDelete={removeHistoryItem}
-        />
-      </div>
-    );
-  }
-
   // Calculate word count from AST or transcription
+  // NOTE: Must be called unconditionally before any returns (Rules of Hooks)
   const wordCount = useMemo(() => {
     if (sermonDocument?.documentState?.root) {
       // Extract text from AST
@@ -369,6 +437,7 @@ function RightPanel(): React.JSX.Element {
   }, [sermonDocument, transcription]);
 
   // Calculate quote count from AST
+  // NOTE: Must be called unconditionally before any returns (Rules of Hooks)
   const quoteCount = useMemo(() => {
     if (!sermonDocument?.documentState?.root) return 0;
     let count = 0;
@@ -384,7 +453,19 @@ function RightPanel(): React.JSX.Element {
     return count;
   }, [sermonDocument]);
 
-  const hasContent = wordCount > 0 || transcription.length > 0;
+  if (showHistory) {
+    return (
+      <div className="right-panel">
+        <TranscriptionHistory
+          history={history}
+          onClear={clearHistory}
+          onClose={() => setShowHistory(false)}
+          onSelect={selectHistoryItem}
+          onDelete={removeHistoryItem}
+        />
+      </div>
+    );
+  }
 
   // Show SermonEditor if we have a sermon document
   // Wrap with QuoteReviewProvider and EditorActionsProvider for quote review functionality
@@ -393,52 +474,17 @@ function RightPanel(): React.JSX.Element {
       <EditorActionsProvider>
         <QuoteReviewProvider documentId={documentId}>
           <RightPanelWithQuoteReview document={sermonDocument} key={documentId}>
-            <div className="right-panel">
-              {/* Unified action bar - shared across editor modes */}
-              <UnifiedEditorActions
-                activeMode={activeMode}
-                wordCount={wordCount}
-                saveState={documentSaveState}
-                lastSaved={lastSavedAt}
-                hasContent={hasContent}
-                quoteCount={quoteCount}
-              />
-
-              {isDev && (
-                <div className="right-panel-view-switcher">
-                  <SegmentedControl
-                    options={[
-                      {
-                        value: 'editor',
-                        label: 'Editor',
-                        icon: <Edit3 size={12} />,
-                        tooltip: 'Editor View (⌘1)',
-                      },
-                      {
-                        value: 'ast',
-                        label: 'Dev AST',
-                        icon: <Code2 size={12} />,
-                        tooltip: 'AST Debug View (⌘2)',
-                      },
-                    ]}
-                    value={activeMode}
-                    onChange={(value) => setActiveMode(value as EditorMode)}
-                    size="sm"
-                    aria-label="Editor view selector"
-                  />
-                </div>
-              )}
-
-              {activeMode === 'editor' ? (
-                <QuoteAwareSermonEditor
-                  document={sermonDocument}
-                  documentState={sermonDocument.documentState}
-                  onAstChange={handleAstChange}
-                />
-              ) : (
-                <DevASTPanel />
-              )}
-            </div>
+            <SermonEditorLayout
+              sermonDocument={sermonDocument}
+              documentSaveState={documentSaveState}
+              lastSavedAt={lastSavedAt}
+              handleAstChange={handleAstChange}
+              activeMode={activeMode}
+              setActiveMode={setActiveMode}
+              isDev={isDev}
+              wordCount={wordCount}
+              quoteCount={quoteCount}
+            />
           </RightPanelWithQuoteReview>
         </QuoteReviewProvider>
       </EditorActionsProvider>

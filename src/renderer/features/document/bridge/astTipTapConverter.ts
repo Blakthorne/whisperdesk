@@ -203,7 +203,20 @@ function convertNodeToTipTap(
   }
 
   if (isTextNode(node)) {
-    return { type: 'text', text: node.content };
+    // Skip empty text nodes - ProseMirror doesn't allow them
+    // This prevents the "Empty text nodes are not allowed" error
+    if (!node.content) {
+      return null;
+    }
+    // Preserve marks (bold, italic, etc.) if they exist
+    const result: TipTapNode = { type: 'text', text: node.content };
+    if (node.marks && node.marks.length > 0) {
+      result.marks = node.marks.map(mark => ({
+        type: mark.type,
+        attrs: mark.attrs,
+      }));
+    }
+    return result;
   }
 
   if (isInterjectionNode(node) && includeInterjections) {
@@ -243,7 +256,8 @@ function convertParagraphToTipTap(
   return {
     type: 'paragraph',
     attrs: preserveIds ? { nodeId: node.id } : undefined,
-    content: content.length > 0 ? content : [{ type: 'text', text: '' }],
+    // Use empty array for empty paragraphs - ProseMirror doesn't allow empty text nodes
+    content: content.length > 0 ? content : [],
   };
 }
 
@@ -318,13 +332,17 @@ function convertHeadingToTipTap(
     }
   }
 
+  // Use empty array for empty headings - ProseMirror doesn't allow empty text nodes
+  // Empty content arrays are valid in TipTap/ProseMirror
+  const finalContent = content.length > 0 ? content : [];
+
   return {
     type: 'heading',
     attrs: {
       level: node.level,
       ...(preserveIds ? { nodeId: node.id } : {}),
     },
-    content,
+    content: finalContent,
   };
 }
 
@@ -356,13 +374,48 @@ export function tipTapJsonToAst(
     let title: string | undefined;
     let biblePassage: string | undefined;
     let speaker: string | undefined;
+    let isFirstNode = true;  // Track if we're processing the first node
+
+    // Safety check for empty or invalid document content
+    if (!doc.content || !Array.isArray(doc.content)) {
+      console.warn('[tipTapJsonToAst] Invalid document content:', doc.content);
+      // Return empty document with preserved metadata from existing root
+      const rootId = preserveIds 
+        ? (existingRoot?.id || 'root-1' as NodeId)
+        : createNodeId();
+      
+      return {
+        success: true,
+        data: {
+          id: rootId,
+          type: 'document',
+          version: 1,
+          updatedAt: createTimestamp(),
+          title: existingRoot?.title,
+          biblePassage: existingRoot?.biblePassage,
+          speaker: existingRoot?.speaker,
+          children: [],
+        },
+        warnings: ['Document content was empty or invalid'],
+      };
+    }
 
     for (const node of doc.content) {
-      // Extract title from H1
-      if (node.type === 'heading' && node.attrs?.level === 1 && !title) {
+      // Extract title from FIRST H1 ONLY if it's centered (auto-generated title format)
+      // User-created H1s (not centered) should be preserved as HeadingNodes in content
+      if (
+        node.type === 'heading' && 
+        node.attrs?.level === 1 && 
+        !title && 
+        isFirstNode &&
+        node.attrs?.textAlign === 'center'  // Only treat centered H1 as title
+      ) {
         title = extractText(node);
+        isFirstNode = false;
         continue;
       }
+      
+      isFirstNode = false;
 
       // Extract Bible passage from metadata paragraph
       if (node.type === 'paragraph') {
@@ -440,12 +493,16 @@ function convertTipTapToNode(
     case 'heading':
       return convertTipTapHeading(node, options);
 
-    case 'text':
+    case 'text': {
       // Check for interjection mark
       if (node.marks?.some((m) => m.type === 'interjection')) {
         return convertTipTapInterjection(node);
       }
-      return {
+      
+      // Filter out interjection marks and preserve all other marks (bold, italic, etc.)
+      const otherMarks = node.marks?.filter((m) => m.type !== 'interjection');
+      
+      const textNode: TextNode = {
         id: preserveIds && node.attrs?.nodeId
           ? (node.attrs.nodeId as NodeId)
           : createNodeId(),
@@ -454,6 +511,17 @@ function convertTipTapToNode(
         updatedAt: createTimestamp(),
         content: node.text || '',
       };
+      
+      // Preserve formatting marks if present
+      if (otherMarks && otherMarks.length > 0) {
+        textNode.marks = otherMarks.map(mark => ({
+          type: mark.type,
+          attrs: mark.attrs as Record<string, unknown> | undefined,
+        }));
+      }
+      
+      return textNode;
+    }
 
     default:
       return null;
@@ -599,6 +667,17 @@ function convertTipTapHeading(
         children.push(converted);
       }
     }
+  }
+
+  // Ensure at least one text node (same as paragraph)
+  if (children.length === 0) {
+    children.push({
+      id: createNodeId(),
+      type: 'text',
+      version: 1,
+      updatedAt: createTimestamp(),
+      content: '',
+    });
   }
 
   return {

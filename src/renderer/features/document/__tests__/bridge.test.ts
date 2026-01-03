@@ -17,7 +17,7 @@ import {
   htmlToAst,
   type TipTapDocument,
 } from '../bridge/astTipTapConverter';
-import type { DocumentRootNode, QuoteBlockNode, ParagraphNode, TextNode, NodeId } from '../../../../shared/documentModel';
+import type { DocumentRootNode, QuoteBlockNode, ParagraphNode, TextNode, HeadingNode, NodeId } from '../../../../shared/documentModel';
 
 // ============================================================================
 // TEST HELPER FUNCTIONS (Local Definitions)
@@ -81,7 +81,7 @@ function createQuoteBlockNode(
 }
 
 function createDocumentRootNode(
-  children: (ParagraphNode | QuoteBlockNode)[],
+  children: (ParagraphNode | QuoteBlockNode | HeadingNode)[],
   options: { title?: string; biblePassage?: string } = {}
 ): DocumentRootNode {
   return {
@@ -143,7 +143,7 @@ function createTipTapDocWithBlockquote(): TipTapDocument {
     content: [
       {
         type: 'heading',
-        attrs: { level: 1 },
+        attrs: { level: 1, textAlign: 'center' },
         content: [{ type: 'text', text: 'Test Title' }],
       },
       {
@@ -293,6 +293,35 @@ describe('TipTap to AST Conversion', () => {
     expect(result.data?.title).toBe('Test Title');
   });
 
+  it('should NOT extract title from non-centered H1 (user-created)', () => {
+    // User-created H1s don't have textAlign: 'center', so they should become HeadingNodes
+    const doc: TipTapDocument = {
+      type: 'doc',
+      content: [
+        {
+          type: 'heading',
+          attrs: { level: 1 }, // No textAlign: 'center'
+          content: [{ type: 'text', text: 'User Created Heading' }],
+        },
+        {
+          type: 'paragraph',
+          content: [{ type: 'text', text: 'Some content.' }],
+        },
+      ],
+    };
+    const result = tipTapJsonToAst(doc);
+
+    expect(result.success).toBe(true);
+    // Title should NOT be extracted from non-centered H1
+    expect(result.data?.title).toBeUndefined();
+    // The H1 should become a HeadingNode in children instead
+    expect(result.data?.children.length).toBe(2);
+    const heading = result.data?.children[0] as HeadingNode;
+    expect(heading.type).toBe('heading');
+    expect(heading.level).toBe(1);
+    expect((heading.children[0] as TextNode).content).toBe('User Created Heading');
+  });
+
   it('should extract Bible passage from metadata paragraph', () => {
     const doc = createTipTapDocWithBlockquote();
     const result = tipTapJsonToAst(doc);
@@ -374,6 +403,179 @@ describe('TipTap to AST Conversion', () => {
     expect(result.success).toBe(true);
     const quote = result.data?.children[0] as QuoteBlockNode;
     expect(quote.type).toBe('quote_block');
+  });
+
+  it('should preserve formatting marks (bold, italic) on text nodes', () => {
+    const doc: TipTapDocument = {
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            { type: 'text', text: 'Normal text ' },
+            { type: 'text', text: 'bold text', marks: [{ type: 'bold' }] },
+            { type: 'text', text: ' and ' },
+            { type: 'text', text: 'italic text', marks: [{ type: 'italic' }] },
+            { type: 'text', text: ' and ' },
+            { type: 'text', text: 'bold italic', marks: [{ type: 'bold' }, { type: 'italic' }] },
+          ],
+        },
+      ],
+    };
+    const result = tipTapJsonToAst(doc);
+
+    expect(result.success).toBe(true);
+    const paragraph = result.data?.children[0] as ParagraphNode;
+    expect(paragraph.type).toBe('paragraph');
+    
+    // Check that marks are preserved
+    const children = paragraph.children as TextNode[];
+    expect(children.length).toBe(6);
+    
+    // First text should have no marks
+    expect(children[0]!.marks).toBeUndefined();
+    
+    // Second text should have bold mark
+    expect(children[1]!.marks).toHaveLength(1);
+    expect(children[1]!.marks![0]!.type).toBe('bold');
+    
+    // Fourth text should have italic mark
+    expect(children[3]!.marks).toHaveLength(1);
+    expect(children[3]!.marks![0]!.type).toBe('italic');
+    
+    // Sixth text should have both bold and italic marks
+    expect(children[5]!.marks).toHaveLength(2);
+    const markTypes = children[5]!.marks!.map(m => m.type).sort();
+    expect(markTypes).toEqual(['bold', 'italic']);
+  });
+
+  it('should preserve mark attributes (like link href)', () => {
+    const doc: TipTapDocument = {
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            { 
+              type: 'text', 
+              text: 'Click here', 
+              marks: [{ type: 'link', attrs: { href: 'https://example.com', target: '_blank' } }] 
+            },
+          ],
+        },
+      ],
+    };
+    const result = tipTapJsonToAst(doc);
+
+    expect(result.success).toBe(true);
+    const paragraph = result.data?.children[0] as ParagraphNode;
+    const textNode = paragraph.children[0] as TextNode;
+    
+    expect(textNode.marks).toHaveLength(1);
+    expect(textNode.marks![0]!.type).toBe('link');
+    expect(textNode.marks![0]!.attrs?.href).toBe('https://example.com');
+    expect(textNode.marks![0]!.attrs?.target).toBe('_blank');
+  });
+});
+
+// ============================================================================
+// MARKS ROUND-TRIP TESTS
+// ============================================================================
+
+describe('Marks Round-Trip Conversion', () => {
+  it('should preserve formatting marks through AST → TipTap → AST round-trip', () => {
+    // Create AST with marks
+    const textNodeWithMarks: TextNode = {
+      id: 'text-1' as NodeId,
+      type: 'text',
+      version: 1,
+      updatedAt: new Date().toISOString(),
+      content: 'Bold text',
+      marks: [{ type: 'bold' }],
+    };
+    const paragraph = createParagraphNode('para-1', [textNodeWithMarks]);
+    const root = createDocumentRootNode([paragraph], { title: 'Test' });
+
+    // Convert AST → TipTap
+    const tipTapResult = astToTipTapJson(root);
+    expect(tipTapResult.success).toBe(true);
+    
+    // Check TipTap has marks
+    const tipTapParagraph = tipTapResult.data?.content.find(n => n.type === 'paragraph');
+    expect(tipTapParagraph?.content?.[0]?.marks).toHaveLength(1);
+    expect(tipTapParagraph!.content![0]!.marks![0]!.type).toBe('bold');
+
+    // Convert TipTap → AST
+    const astResult = tipTapJsonToAst(tipTapResult.data!);
+    expect(astResult.success).toBe(true);
+    
+    // Find the paragraph (skip title heading)
+    const resultParagraph = astResult.data?.children.find(n => n.type === 'paragraph') as ParagraphNode;
+    const resultText = resultParagraph.children[0] as TextNode;
+    
+    expect(resultText.content).toBe('Bold text');
+    expect(resultText.marks).toHaveLength(1);
+    expect(resultText.marks![0]!.type).toBe('bold');
+  });
+
+  it('should preserve multiple marks through round-trip', () => {
+    // Create AST with multiple marks on same text
+    const textNodeWithMarks: TextNode = {
+      id: 'text-1' as NodeId,
+      type: 'text',
+      version: 1,
+      updatedAt: new Date().toISOString(),
+      content: 'Bold and italic',
+      marks: [{ type: 'bold' }, { type: 'italic' }, { type: 'underline' }],
+    };
+    const paragraph = createParagraphNode('para-1', [textNodeWithMarks]);
+    const root = createDocumentRootNode([paragraph]);
+
+    // Round trip
+    const tipTapResult = astToTipTapJson(root);
+    expect(tipTapResult.success).toBe(true);
+    
+    const astResult = tipTapJsonToAst(tipTapResult.data!);
+    expect(astResult.success).toBe(true);
+    
+    const resultParagraph = astResult.data?.children[0] as ParagraphNode;
+    const resultText = resultParagraph.children[0] as TextNode;
+    
+    expect(resultText.marks).toHaveLength(3);
+    const markTypes = resultText.marks!.map(m => m.type).sort();
+    expect(markTypes).toEqual(['bold', 'italic', 'underline']);
+  });
+
+  it('should preserve highlight mark with color attribute through round-trip', () => {
+    const textNodeWithHighlight: TextNode = {
+      id: 'text-1' as NodeId,
+      type: 'text',
+      version: 1,
+      updatedAt: new Date().toISOString(),
+      content: 'Highlighted text',
+      marks: [{ type: 'highlight', attrs: { color: '#ffff00' } }],
+    };
+    const paragraph = createParagraphNode('para-1', [textNodeWithHighlight]);
+    const root = createDocumentRootNode([paragraph]);
+
+    // Round trip
+    const tipTapResult = astToTipTapJson(root);
+    expect(tipTapResult.success).toBe(true);
+    
+    // Check TipTap has highlight with attrs
+    const tipTapParagraph = tipTapResult.data?.content.find(n => n.type === 'paragraph');
+    expect(tipTapParagraph!.content![0]!.marks![0]!.type).toBe('highlight');
+    expect(tipTapParagraph!.content![0]!.marks![0]!.attrs?.color).toBe('#ffff00');
+
+    const astResult = tipTapJsonToAst(tipTapResult.data!);
+    expect(astResult.success).toBe(true);
+    
+    const resultParagraph = astResult.data?.children[0] as ParagraphNode;
+    const resultText = resultParagraph.children[0] as TextNode;
+    
+    expect(resultText.marks).toHaveLength(1);
+    expect(resultText.marks![0]!.type).toBe('highlight');
+    expect(resultText.marks![0]!.attrs?.color).toBe('#ffff00');
   });
 });
 
@@ -620,6 +822,29 @@ describe('Edge Cases', () => {
     expect(result.success).toBe(true);
     const paragraph = result.data?.children[0] as ParagraphNode;
     expect(paragraph.children.length).toBeGreaterThan(0); // Should have empty text node
+  });
+
+  it('should handle empty heading in AST to TipTap', () => {
+    // Create a heading with no children (edge case)
+    const heading: HeadingNode = {
+      id: 'heading-empty' as NodeId,
+      type: 'heading',
+      version: 1,
+      updatedAt: new Date().toISOString(),
+      level: 2,
+      children: [],
+    };
+    const root = createDocumentRootNode([heading], {});
+    const result = astToTipTapJson(root);
+
+    expect(result.success).toBe(true);
+    const h2 = result.data?.content.find((n) => n.type === 'heading');
+    expect(h2).toBeDefined();
+    // Empty content array is valid in TipTap/ProseMirror
+    // Note: We use empty array instead of empty text node because
+    // ProseMirror throws "Empty text nodes are not allowed" for { type: 'text', text: '' }
+    expect(h2?.content).toBeDefined();
+    expect(h2?.content?.length).toBe(0); // Empty array is valid
   });
 });
 

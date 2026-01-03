@@ -45,6 +45,8 @@
   overflow-x: auto;
   white-space: pre-wrap;
   word-break: break-word;
+  user-select: text;
+  cursor: text;
 }
 
 .error-boundary-actions {

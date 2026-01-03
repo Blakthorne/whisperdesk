@@ -70,12 +70,24 @@ export interface BaseNode {
 }
 
 /**
+ * Inline formatting mark type (compatible with TipTap/ProseMirror marks).
+ */
+export interface TextMark {
+  /** Mark type: bold, italic, underline, highlight, link, strike, code, etc. */
+  type: string;
+  /** Optional attributes for marks that need them (e.g., link href, highlight color) */
+  attrs?: Record<string, unknown>;
+}
+
+/**
  * Plain text node - leaf node containing actual text content.
  */
 export interface TextNode extends BaseNode {
   type: 'text';
   /** The actual text content */
   content: string;
+  /** Optional inline formatting marks (bold, italic, etc.) */
+  marks?: TextMark[];
 }
 
 /**

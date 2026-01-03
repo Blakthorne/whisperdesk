@@ -101,7 +101,7 @@
 }
 
 .right-panel {
-  padding: 20px;
+  padding: 0px 8px 8px 8px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
