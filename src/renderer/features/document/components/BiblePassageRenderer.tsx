@@ -1,5 +1,5 @@
 /**
- * QuoteBlockRenderer - Renders a QuoteBlockNode
+ * BiblePassageRenderer - Renders a BiblePassageNode
  *
  * Renders Bible quotes with:
  * - Confidence-based styling
@@ -9,14 +9,14 @@
  */
 
 import React from 'react';
-import type { QuoteBlockNode, ConfidenceLevel } from '../../../../shared/documentModel';
+import type { BiblePassageNode, ConfidenceLevel } from '../../../../shared/documentModel';
 import { isTextNode, isInterjectionNode } from '../../../../shared/documentModel';
 import { TextRenderer } from './TextRenderer';
 import { InterjectionRenderer } from './InterjectionRenderer';
 
-export interface QuoteBlockRendererProps {
+export interface BiblePassageRendererProps {
   /** The quote block node to render */
-  node: QuoteBlockNode;
+  node: BiblePassageNode;
   /** Optional className for styling */
   className?: string;
   /** Whether to show the reference attribution (default: true) */
@@ -48,14 +48,14 @@ function getConfidenceClass(level: ConfidenceLevel): string {
 }
 
 /**
- * Renders a QuoteBlockNode as a blockquote element.
+ * Renders a BiblePassageNode as a blockquote element.
  */
-export function QuoteBlockRenderer({
+export function BiblePassageRenderer({
   node,
   className,
   showConfidence = true,
   showVerification = true,
-}: QuoteBlockRendererProps): React.JSX.Element {
+}: BiblePassageRendererProps): React.JSX.Element {
   const { metadata } = node;
   const { detection, userVerified } = metadata;
 
@@ -97,4 +97,4 @@ export function QuoteBlockRenderer({
   );
 }
 
-export default QuoteBlockRenderer;
+export default BiblePassageRenderer;

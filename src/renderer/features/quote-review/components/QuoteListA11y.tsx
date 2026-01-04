@@ -98,15 +98,15 @@ export function QuoteListA11y({
   }, [focusedQuoteId]);
 
   const listLabel = isReviewModeActive
-    ? `Quote review list. ${progress.reviewed} of ${progress.total} verified.`
-    : 'Quote list';
+    ? `Passage review list. ${progress.reviewed} of ${progress.total} verified.`
+    : 'Passage list';
 
   return (
     <div
       ref={containerRef}
       className={`quote-list-a11y ${className}`}
       role="region"
-      aria-label="Quote Review Panel"
+      aria-label="Passage Review Panel"
     >
       {/* Live region for announcements */}
       <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
@@ -115,8 +115,8 @@ export function QuoteListA11y({
 
       {/* Instructions for screen readers */}
       <div id={`${id}-instructions`} className="sr-only">
-        Use arrow keys to navigate between quotes. Press Enter or Space to toggle verification.
-        Press E to edit boundaries. Press N to jump to next unverified quote.
+        Use arrow keys to navigate between passages. Press Enter or Space to toggle verification.
+        Press E to edit boundaries. Press N to jump to next unverified passage.
       </div>
 
       {/* The actual list */}

@@ -5,7 +5,7 @@
  * - document (DocumentRenderer)
  * - paragraph (ParagraphRenderer - also handles headingLevel/listStyle formatting)
  * - text (TextRenderer)
- * - quote (QuoteBlockRenderer)
+ * - quote (BiblePassageRenderer)
  * - interjection (InterjectionRenderer)
  */
 
@@ -21,8 +21,8 @@ export type { ParagraphRendererProps } from './ParagraphRenderer';
 export { TextRenderer } from './TextRenderer';
 export type { TextRendererProps } from './TextRenderer';
 
-export { QuoteBlockRenderer } from './QuoteBlockRenderer';
-export type { QuoteBlockRendererProps } from './QuoteBlockRenderer';
+export { BiblePassageRenderer } from './BiblePassageRenderer';
+export type { BiblePassageRendererProps } from './BiblePassageRenderer';
 
 export { InterjectionRenderer } from './InterjectionRenderer';
 export type { InterjectionRendererProps } from './InterjectionRenderer';

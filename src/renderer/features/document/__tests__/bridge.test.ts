@@ -157,7 +157,7 @@ function createSimpleTipTapDoc(): TipTapDocument {
   };
 }
 
-function createTipTapDocWithBlockquote(): TipTapDocument {
+function createTipTapDocWithBiblePassage(): TipTapDocument {
   return {
     type: 'doc',
     content: [
@@ -175,7 +175,8 @@ function createTipTapDocWithBlockquote(): TipTapDocument {
         content: [{ type: 'text', text: 'Some content.' }],
       },
       {
-        type: 'blockquote',
+        // Bible passages use bible_passage (BiblePassageExtension), NOT blockquote
+        type: 'bible_passage',
         attrs: {
           reference: 'John 3:16',
           book: 'John',
@@ -239,16 +240,17 @@ describe('AST to TipTap Conversion', () => {
     expect(paragraphs?.length).toBeGreaterThan(0);
   });
 
-  it('should convert blockquote with metadata', () => {
+  it('should convert passage to bible_passage', () => {
     const root = createDocumentWithPassage();
     const result = astToTipTapJson(root);
 
     expect(result.success).toBe(true);
-    const blockquote = result.data?.content.find((n) => n.type === 'blockquote');
-    expect(blockquote).toBeDefined();
-    expect(blockquote?.attrs?.reference).toBe('John 3:16');
-    expect(blockquote?.attrs?.book).toBe('John');
-    expect(blockquote?.attrs?.userVerified).toBe(true);
+    // PassageNode → bible_passage (NOT blockquote!)
+    const biblePassage = result.data?.content.find((n) => n.type === 'bible_passage');
+    expect(biblePassage).toBeDefined();
+    expect(biblePassage?.attrs?.reference).toBe('John 3:16');
+    expect(biblePassage?.attrs?.book).toBe('John');
+    expect(biblePassage?.attrs?.userVerified).toBe(true);
   });
 
   it('should preserve node IDs when option enabled', () => {
@@ -287,9 +289,10 @@ describe('AST to TipTap Conversion', () => {
     const result = astToTipTapJson(root, { includeMetadata: false });
 
     expect(result.success).toBe(true);
-    const blockquote = result.data?.content.find((n) => n.type === 'blockquote');
-    expect(blockquote?.attrs?.reference).toBeUndefined();
-    expect(blockquote?.attrs?.book).toBeUndefined();
+    // Passage → bible_passage even without metadata
+    const biblePassage = result.data?.content.find((n) => n.type === 'bible_passage');
+    expect(biblePassage?.attrs?.reference).toBeUndefined();
+    expect(biblePassage?.attrs?.book).toBeUndefined();
   });
 
   it('should ensure at least one paragraph in empty document', () => {
@@ -318,9 +321,9 @@ describe('AST to TipTap Conversion', () => {
     const blockquote = result.data?.content.find((n) => n.type === 'blockquote');
     expect(blockquote).toBeDefined();
     // Visual block quotes should NOT have Bible metadata
+    // (Bible passages use bible_passage, not blockquote)
     expect(blockquote?.attrs?.reference).toBeUndefined();
     expect(blockquote?.attrs?.book).toBeUndefined();
-    expect(blockquote?.attrs?.isBiblePassage).toBeUndefined();
     // Should preserve nodeId
     expect(blockquote?.attrs?.nodeId).toBe('blockquote-1');
   });
@@ -361,7 +364,7 @@ describe('TipTap to AST Conversion', () => {
   });
 
   it('should extract title from H1', () => {
-    const doc = createTipTapDocWithBlockquote();
+    const doc = createTipTapDocWithBiblePassage();
     const result = tipTapJsonToAst(doc);
 
     expect(result.success).toBe(true);
@@ -398,7 +401,7 @@ describe('TipTap to AST Conversion', () => {
   });
 
   it('should extract Bible passage from metadata paragraph', () => {
-    const doc = createTipTapDocWithBlockquote();
+    const doc = createTipTapDocWithBiblePassage();
     const result = tipTapJsonToAst(doc);
 
     expect(result.success).toBe(true);
@@ -415,8 +418,8 @@ describe('TipTap to AST Conversion', () => {
     expect(paragraph.children.length).toBeGreaterThan(0);
   });
 
-  it('should convert blockquote with metadata', () => {
-    const doc = createTipTapDocWithBlockquote();
+  it('should convert bible_passage to PassageNode', () => {
+    const doc = createTipTapDocWithBiblePassage();
     const result = tipTapJsonToAst(doc);
 
     expect(result.success).toBe(true);
@@ -491,20 +494,21 @@ describe('TipTap to AST Conversion', () => {
     expect(textNode.content).toBe('This is a visual block quote for emphasis.');
   });
 
-  it('should distinguish between Bible passage blockquote and visual blockquote', () => {
-    // Blockquote WITH Bible metadata = PassageNode
+  it('should distinguish between bible_passage (Bible passage) and blockquote (visual)', () => {
+    // bible_passage = Bible passage (semantic content with scripture reference)
+    // blockquote = Visual formatting only
     const doc: TipTapDocument = {
       type: 'doc',
       content: [
         {
-          type: 'blockquote',
+          // Bible passage uses bible_passage (BiblePassageExtension)
+          type: 'bible_passage',
           attrs: {
             nodeId: 'bible-passage-1',
             reference: 'John 3:16',
             book: 'John',
             chapter: 3,
             verseStart: 16,
-            isBiblePassage: true,
           },
           content: [
             {
@@ -514,6 +518,7 @@ describe('TipTap to AST Conversion', () => {
           ],
         },
         {
+          // Visual blockquote - formatting only, no Bible metadata
           type: 'blockquote',
           attrs: { nodeId: 'visual-quote-1' },
           content: [
@@ -530,23 +535,23 @@ describe('TipTap to AST Conversion', () => {
     expect(result.success).toBe(true);
     expect(result.data?.children.length).toBe(2);
     
-    // First should be PassageNode (has Bible metadata)
+    // First should be PassageNode (from bible_passage)
     const passage = result.data?.children[0] as PassageNode;
     expect(passage.type).toBe('passage');
     expect(passage.metadata.reference?.book).toBe('John');
     
-    // Second should be ParagraphNode with isBlockQuote (no Bible metadata)
+    // Second should be ParagraphNode with isBlockQuote (from visual blockquote)
     const visualQuote = result.data?.children[1] as ParagraphNode;
     expect(visualQuote.type).toBe('paragraph');
     expect(visualQuote.isBlockQuote).toBe(true);
   });
 
-  it('should handle empty blockquote', () => {
+  it('should handle empty bible_passage', () => {
     const doc: TipTapDocument = {
       type: 'doc',
       content: [
         {
-          type: 'blockquote',
+          type: 'bible_passage',
           attrs: { reference: 'John 3:16' },
           content: [],
         },
@@ -987,15 +992,15 @@ describe('Edge Cases', () => {
     const result = astToTipTapJson(root);
     expect(result.success).toBe(true);
 
-    // Should have: H1 (title), paragraph, blockquote, paragraph
+    // Should have: H1 (title), paragraph, bible_passage (passage), paragraph
     const content = result.data?.content || [];
     const h1s = content.filter((n) => n.type === 'heading');
     const paras = content.filter((n) => n.type === 'paragraph');
-    const quotes = content.filter((n) => n.type === 'blockquote');
+    const biblePassages = content.filter((n) => n.type === 'bible_passage');
 
     expect(h1s.length).toBe(1);
     expect(paras.length).toBe(2);
-    expect(quotes.length).toBe(1);
+    expect(biblePassages.length).toBe(1);
   });
 
   it('should handle empty paragraph in TipTap', () => {

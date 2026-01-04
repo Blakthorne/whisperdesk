@@ -18,7 +18,7 @@ import {
 } from '../../../../shared/documentModel';
 import { TextRenderer } from './TextRenderer';
 import { ParagraphRenderer } from './ParagraphRenderer';
-import { QuoteBlockRenderer } from './QuoteBlockRenderer';
+import { BiblePassageRenderer } from './BiblePassageRenderer';
 import { InterjectionRenderer } from './InterjectionRenderer';
 
 export interface NodeRendererProps {
@@ -27,7 +27,7 @@ export interface NodeRendererProps {
   /** Optional className for styling */
   className?: string;
   /** Options for quote rendering */
-  quoteOptions?: Omit<React.ComponentProps<typeof QuoteBlockRenderer>, 'node' | 'className'>;
+  quoteOptions?: Omit<React.ComponentProps<typeof BiblePassageRenderer>, 'node' | 'className'>;
 }
 
 /**
@@ -55,7 +55,7 @@ export function NodeRenderer({
   }
 
   if (isPassageNode(node)) {
-    return <QuoteBlockRenderer node={node} className={className} {...quoteOptions} />;
+    return <BiblePassageRenderer node={node} className={className} {...quoteOptions} />;
   }
 
   if (isInterjectionNode(node)) {

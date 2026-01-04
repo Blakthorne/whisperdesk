@@ -335,7 +335,7 @@ export function htmlToPlainText(html: string): string {
   let text = html;
 
   // Handle Bible quotes specifically (add quotes)
-  text = text.replace(/<(blockquote|div)[^>]*class="[^"]*(quote-block|bible-quote)[^"]*"[^>]*>(.*?)<\/\1>/gis, (_, _tag, _class, content) => {
+  text = text.replace(/<(blockquote|div)[^>]*class="[^"]*(bible-passage|bible-passage)[^"]*"[^>]*>(.*?)<\/\1>/gis, (_, _tag, _class, content) => {
     return `"${content.replace(/<[^>]+>/g, '').trim()}"`;
   });
 
@@ -387,7 +387,7 @@ export function htmlToSermonPlainText(html: string): string {
   let text = html;
 
   // Handle Bible quotes specifically (add quotes)
-  text = text.replace(/<(blockquote|div)[^>]*class="[^"]*(quote-block|bible-quote)[^"]*"[^>]*>(.*?)<\/\1>/gis, (_, _tag, _class, content) => {
+  text = text.replace(/<(blockquote|div)[^>]*class="[^"]*(bible-passage|bible-passage)[^"]*"[^>]*>(.*?)<\/\1>/gis, (_, _tag, _class, content) => {
     return `"${content.replace(/<[^>]+>/g, '').trim()}"`;
   });
 
@@ -452,7 +452,7 @@ export function htmlToMarkdown(html: string): string {
   md = md.replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/gi, '[$2]($1)');
 
   // Blockquotes (keep as block but remove markdown prefix, add quotes)
-  md = md.replace(/<(blockquote|div)[^>]*class="[^"]*(quote-block|bible-quote)[^"]*"[^>]*>(.*?)<\/\1>/gis, (_, _tag, _class, content) => {
+  md = md.replace(/<(blockquote|div)[^>]*class="[^"]*(bible-passage|bible-passage)[^"]*"[^>]*>(.*?)<\/\1>/gis, (_, _tag, _class, content) => {
     return `"${content.replace(/<[^>]+>/g, '').trim()}"\n\n`;
   });
 

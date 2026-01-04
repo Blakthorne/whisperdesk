@@ -45,7 +45,7 @@ interface ParagraphNode extends BaseNode {
 }
 
 interface QuoteBlockNode extends BaseNode {
-  type: 'quote_block';
+  type: 'bible_passage';
   reference: string; // e.g., "John 3:16"
   book: string; // e.g., "John"
   confidence: number; // 0-1 detection confidence

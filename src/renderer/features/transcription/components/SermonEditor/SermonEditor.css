@@ -526,7 +526,7 @@
 
 /* ============================================
    QUOTE BLOCK NODE STYLES
-   Custom styling for quote_block nodes in editor
+   Custom styling for bible_passage nodes in editor
    ============================================ */
 
 /* Quote Block Node Styles - Reset to look like normal text */
@@ -542,7 +542,7 @@
   transition: none;
 }
 
-.sermon-editor-content .ProseMirror .bible-quote {
+.sermon-editor-content .ProseMirror .bible-passage {
   position: static;
   margin: 1em 0;
   padding: 0;
@@ -554,13 +554,13 @@
   transition: none;
 }
 
-.sermon-editor-content .ProseMirror .bible-quote::before {
+.sermon-editor-content .ProseMirror .bible-passage::before {
   content: '“';
   color: var(--text-secondary);
   opacity: 0.6;
 }
 
-.sermon-editor-content .ProseMirror .bible-quote::after {
+.sermon-editor-content .ProseMirror .bible-passage::after {
   content: '”';
   color: var(--text-secondary);
   opacity: 0.6;

@@ -12,7 +12,7 @@ import type { ParagraphNode, DocumentNode } from '../../../../shared/documentMod
 import { isTextNode, isInterjectionNode, isQuoteNode } from '../../../../shared/documentModel';
 import { TextRenderer } from './TextRenderer';
 import { InterjectionRenderer } from './InterjectionRenderer';
-import { QuoteBlockRenderer } from './QuoteBlockRenderer';
+import { BiblePassageRenderer } from './BiblePassageRenderer';
 
 export interface ParagraphRendererProps {
   /** The paragraph node to render */
@@ -20,7 +20,7 @@ export interface ParagraphRendererProps {
   /** Optional className for styling */
   className?: string;
   /** Options passed to child renderers */
-  quoteOptions?: Omit<React.ComponentProps<typeof QuoteBlockRenderer>, 'node' | 'className'>;
+  quoteOptions?: Omit<React.ComponentProps<typeof BiblePassageRenderer>, 'node' | 'className'>;
 }
 
 /**
@@ -39,7 +39,7 @@ function renderChild(
   }
 
   if (isQuoteNode(child)) {
-    return <QuoteBlockRenderer key={child.id} node={child} {...quoteOptions} />;
+    return <BiblePassageRenderer key={child.id} node={child} {...quoteOptions} />;
   }
 
   // Unknown node type - render nothing but log warning

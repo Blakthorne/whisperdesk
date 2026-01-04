@@ -17,7 +17,7 @@ import {
 } from '../../../document/bridge/astTipTapConverter';
 import { SermonToolbar } from './SermonToolbar';
 import { useEditorActionsOptional, useAppTranscription } from '../../../../contexts';
-import { QuoteBlockExtension } from './extensions/QuoteBlockExtension';
+import { BiblePassageExtension } from './extensions/BiblePassageExtension';
 import { InterjectionMark } from './extensions/InterjectionMark';
 import './SermonEditor.css';
 
@@ -102,10 +102,21 @@ function SermonEditor({
       }).configure({
         levels: [1, 2, 3],
       }),
+      /**
+       * Blockquote Extension for VISUAL FORMATTING ONLY
+       *
+       * This extension handles visual blockquote styling (indented text).
+       * It is COMPLETELY SEPARATE from Bible passages (which use BiblePassageExtension).
+       *
+       * IMPORTANT: Do NOT add any Bible-related attributes here!
+       * - Visual blockquote = ParagraphNode with isBlockQuote=true in AST
+       * - Bible passage = PassageNode in AST → bible_passage in TipTap
+       */
       Blockquote.extend({
         addAttributes() {
           return {
             ...this.parent?.(),
+            // Only nodeId and textAlign - NO Bible passage attributes
             nodeId: {
               default: null,
               parseHTML: (element) => element.getAttribute('data-node-id'),
@@ -114,8 +125,18 @@ function SermonEditor({
                 return { 'data-node-id': attrs.nodeId };
               },
             },
+            textAlign: {
+              default: null,
+              parseHTML: (element) => element.getAttribute('data-text-align'),
+              renderHTML: (attrs) => {
+                if (!attrs.textAlign) return {};
+                return { 'data-text-align': attrs.textAlign };
+              },
+            },
           };
         },
+        // No custom commands - use default TipTap blockquote behavior
+        // Visual formatting should work on ANY content
       }).configure({
         HTMLAttributes: {
           class: 'visual-blockquote',
@@ -137,7 +158,7 @@ function SermonEditor({
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
-      QuoteBlockExtension,
+      BiblePassageExtension,
       InterjectionMark,
     ],
     []

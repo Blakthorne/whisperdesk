@@ -13,7 +13,7 @@ import { DocumentProvider } from '../DocumentContext';
 import { DocumentRenderer } from '../components/DocumentRenderer';
 import { TextRenderer } from '../components/TextRenderer';
 import { InterjectionRenderer } from '../components/InterjectionRenderer';
-import { QuoteBlockRenderer } from '../components/QuoteBlockRenderer';
+import { BiblePassageRenderer } from '../components/BiblePassageRenderer';
 import { ParagraphRenderer } from '../components/ParagraphRenderer';
 import { NodeRenderer } from '../components/NodeRenderer';
 import type {
@@ -253,10 +253,10 @@ describe('InterjectionRenderer', () => {
 });
 
 // ============================================================================
-// QuoteBlockRenderer TESTS
+// BiblePassageRenderer TESTS
 // ============================================================================
 
-describe('QuoteBlockRenderer', () => {
+describe('BiblePassageRenderer', () => {
   it('should render passage content', () => {
     const passage = createPassageNode(
       'passage-1',
@@ -264,7 +264,7 @@ describe('QuoteBlockRenderer', () => {
       'John 3:16',
       'John'
     );
-    render(<QuoteBlockRenderer node={passage} />);
+    render(<BiblePassageRenderer node={passage} />);
 
     expect(screen.getByText('For God so loved the world.')).toBeInTheDocument();
   });
@@ -276,7 +276,7 @@ describe('QuoteBlockRenderer', () => {
       'John 3:16',
       'John'
     );
-    const { container } = render(<QuoteBlockRenderer node={passage} />);
+    const { container } = render(<BiblePassageRenderer node={passage} />);
 
     const passageContent = container.querySelector('.document-quote-content');
     expect(passageContent).toBeInTheDocument();
@@ -292,7 +292,7 @@ describe('QuoteBlockRenderer', () => {
       'John',
       0.92
     );
-    const { container } = render(<QuoteBlockRenderer node={passage} />);
+    const { container } = render(<BiblePassageRenderer node={passage} />);
 
     const passageDiv = container.querySelector('.document-quote-block');
     expect(passageDiv).toHaveClass('document-quote-block--high-confidence');
@@ -300,7 +300,7 @@ describe('QuoteBlockRenderer', () => {
 
   it('should apply medium confidence class', () => {
     const passage = createPassageNode('passage-1', 'Text', 'John 3:16', 'John', 0.7);
-    const { container } = render(<QuoteBlockRenderer node={passage} />);
+    const { container } = render(<BiblePassageRenderer node={passage} />);
 
     const passageDiv = container.querySelector('.document-quote-block');
     expect(passageDiv).toHaveClass('document-quote-block--medium-confidence');
@@ -308,7 +308,7 @@ describe('QuoteBlockRenderer', () => {
 
   it('should apply low confidence class', () => {
     const passage = createPassageNode('passage-1', 'Text', 'John 3:16', 'John', 0.5);
-    const { container } = render(<QuoteBlockRenderer node={passage} />);
+    const { container } = render(<BiblePassageRenderer node={passage} />);
 
     const passageDiv = container.querySelector('.document-quote-block');
     expect(passageDiv).toHaveClass('document-quote-block--low-confidence');
@@ -316,7 +316,7 @@ describe('QuoteBlockRenderer', () => {
 
   it('should have data attributes', () => {
     const passage = createPassageNode('passage-1', 'Text', 'John 3:16', 'John', 0.85);
-    const { container } = render(<QuoteBlockRenderer node={passage} />);
+    const { container } = render(<BiblePassageRenderer node={passage} />);
 
     const passageDiv = container.querySelector('.document-quote-block');
     expect(passageDiv).toHaveAttribute('data-node-id', 'passage-1');

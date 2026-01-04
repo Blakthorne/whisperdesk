@@ -15,16 +15,22 @@
  * - Text nodes: Regenerate IDs (they change frequently during editing)
  * - This balances stability with simplicity
  *
- * ## IMPORTANT: Passages vs Block Quotes
+ * ## CRITICAL: Passages vs Block Quotes (Completely Separate Concepts!)
  * - PassageNode = Bible passage (semantic content with scripture reference)
+ *   → Renders as TipTap 'bible_passage' node (BiblePassageExtension)
  * - ParagraphNode with isBlockQuote = Visual formatting (indented text)
- * These are DISTINCT concepts and should not be confused!
+ *   → Renders as TipTap 'blockquote' node (visual styling only)
+ *
+ * These are COMPLETELY SEPARATE and should NEVER be conflated:
+ * - Visual blockquote toggle should NEVER affect Bible passages
+ * - Applying visual formatting should NEVER change node types
  *
  * ## Node Mapping (AST has 5 semantic types):
  * - DocumentRootNode → TipTap doc
- * - ParagraphNode → TipTap paragraph, heading, bulletList/orderedList item, or blockquote (visual)
+ * - ParagraphNode → TipTap paragraph, heading, bulletList/orderedList item
+ * - ParagraphNode (with isBlockQuote=true) → TipTap blockquote (VISUAL ONLY)
  * - TextNode → TipTap text
- * - PassageNode → TipTap custom 'biblePassage' node (NOT blockquote!)
+ * - PassageNode → TipTap 'bible_passage' (BiblePassageExtension - SEMANTIC)
  * - InterjectionNode → TipTap text with interjection mark
  *
  * ## Formatting as Properties:
@@ -33,7 +39,7 @@
  * - TipTap blockquote (visual) → ParagraphNode with isBlockQuote=true
  *
  * ## Metadata Preservation:
- * Passage metadata is stored in TipTap's `attrs` system.
+ * Passage metadata is stored in TipTap's `attrs` system on bible_passage nodes.
  */
 
 import type {
@@ -405,8 +411,11 @@ function convertBlockQuoteParagraphToTipTap(
 
 /**
  * Convert Bible passage to TipTap.
- * Uses blockquote with isBiblePassage=true to distinguish from visual block quotes.
- * This keeps Bible passages semantically distinct from visual block quotes.
+ * Uses the dedicated 'bible_passage' node type (BiblePassageExtension).
+ * This is completely separate from visual blockquotes (formatting only).
+ *
+ * IMPORTANT: Bible passages (PassageNode) → TipTap bible_passage
+ *            Visual block quotes (ParagraphNode with isBlockQuote) → TipTap blockquote
  */
 function convertPassageToTipTap(
   node: PassageNode,
@@ -431,10 +440,8 @@ function convertPassageToTipTap(
     }
   }
 
-  // Build attrs with metadata - ALWAYS mark as Bible passage
-  const attrs: Record<string, unknown> = {
-    isBiblePassage: true, // Key differentiator from visual blockquote
-  };
+  // Build attrs with metadata for bible_passage extension
+  const attrs: Record<string, unknown> = {};
   if (preserveIds) {
     attrs.nodeId = node.id;
   }
@@ -454,8 +461,10 @@ function convertPassageToTipTap(
     attrs.userVerified = node.metadata.userVerified;
   }
 
+  // Use bible_passage (BiblePassageExtension) for Bible passages
+  // This is a SEPARATE node type from blockquote (visual formatting)
   return {
-    type: 'blockquote',
+    type: 'bible_passage',
     attrs,
     content: content.length > 0 ? content : [{ type: 'paragraph', content: [] }],
   };
@@ -593,9 +602,12 @@ export function tipTapJsonToAst(
  *
  * TipTap headings become ParagraphNode with headingLevel.
  * TipTap lists become ParagraphNode with listStyle.
- * TipTap blockquotes are distinguished:
- *   - With isBiblePassage=true or Bible metadata → PassageNode
- *   - Without Bible metadata → ParagraphNode with isBlockQuote=true (VISUAL formatting)
+ * TipTap bible_passage (BiblePassageExtension) → PassageNode (Bible passage)
+ * TipTap blockquote → ParagraphNode with isBlockQuote=true (VISUAL formatting only)
+ *
+ * IMPORTANT: These are completely separate concepts:
+ * - bible_passage = Bible passage (semantic content with scripture reference)
+ * - blockquote = Visual formatting (indented text styling)
  */
 function convertTipTapToNode(
   node: TipTapNode,
@@ -607,9 +619,13 @@ function convertTipTapToNode(
     case 'paragraph':
       return convertTipTapParagraph(node, options);
 
+    case 'bible_passage':
+      // bible_passage (BiblePassageExtension) = Bible passage (semantic content)
+      return convertTipTapBiblePassageToPassage(node, options);
+
     case 'blockquote':
-      // CRITICAL: Distinguish between Bible passages and visual block quotes
-      return convertTipTapBlockquoteOrPassage(node, options);
+      // blockquote = VISUAL formatting only (never a Bible passage)
+      return convertTipTapBlockquoteToVisualQuote(node, options);
 
     case 'heading':
       // Headings become paragraphs with headingLevel
@@ -708,37 +724,13 @@ function convertTipTapParagraph(
 }
 
 /**
- * Convert TipTap blockquote to either PassageNode (Bible passage) or
- * ParagraphNode with isBlockQuote=true (visual formatting).
- * 
- * CRITICAL: This function distinguishes between:
- * 1. Bible passages (have isBiblePassage=true or reference/book metadata)
- * 2. Visual block quotes (no Bible metadata - just indented text)
+ * Convert TipTap bible_passage (BiblePassageExtension) to PassageNode.
+ * This handles Bible passages (semantic content with scripture reference).
+ *
+ * IMPORTANT: This is for bible_passage nodes ONLY (from BiblePassageExtension).
+ * Visual blockquotes use convertTipTapBlockquoteToVisualQuote instead.
  */
-function convertTipTapBlockquoteOrPassage(
-  node: TipTapNode,
-  options: ConversionOptions
-): PassageNode | ParagraphNode {
-  const attrs = node.attrs || {};
-  
-  // Check if this is a Bible passage (has Bible-specific metadata)
-  const isBiblePassage = 
-    attrs.isBiblePassage === true ||
-    attrs.reference !== undefined ||
-    attrs.book !== undefined;
-  
-  if (isBiblePassage) {
-    return convertTipTapToPassage(node, options);
-  } else {
-    // This is a VISUAL block quote (formatting only)
-    return convertTipTapToBlockQuoteParagraph(node, options);
-  }
-}
-
-/**
- * Convert TipTap blockquote to PassageNode (Bible passage with metadata).
- */
-function convertTipTapToPassage(
+function convertTipTapBiblePassageToPassage(
   node: TipTapNode,
   options: ConversionOptions
 ): PassageNode {
@@ -746,7 +738,7 @@ function convertTipTapToPassage(
   const attrs = node.attrs || {};
   const children: (TextNode | InterjectionNode)[] = [];
 
-  // Extract text from blockquote content
+  // Extract text from bible_passage content
   if (node.content) {
     for (const child of node.content) {
       if (child.type === 'paragraph' && child.content) {
@@ -816,10 +808,13 @@ function convertTipTapToPassage(
 }
 
 /**
- * Convert TipTap blockquote to ParagraphNode with isBlockQuote=true (visual formatting).
- * This is for user-created visual block quotes, NOT Bible passages.
+ * Convert TipTap blockquote to ParagraphNode with isBlockQuote=true.
+ * This handles VISUAL formatting only (indented text styling).
+ *
+ * IMPORTANT: This is for visual blockquotes ONLY (formatting).
+ * Bible passages use convertTipTapBiblePassageToPassage instead.
  */
-function convertTipTapToBlockQuoteParagraph(
+function convertTipTapBlockquoteToVisualQuote(
   node: TipTapNode,
   options: ConversionOptions
 ): ParagraphNode {

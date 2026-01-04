@@ -18,8 +18,8 @@ describe('QuoteReviewPanel', () => {
     it('should render empty state when no quotes', () => {
       renderWithProvider(<QuoteReviewPanel />);
 
-      expect(screen.getByText('No Quotes to Review')).toBeInTheDocument();
-      expect(screen.getByText(/No Bible quotes have been detected/)).toBeInTheDocument();
+      expect(screen.getByText('No Passages to Review')).toBeInTheDocument();
+      expect(screen.getByText(/No Bible passages have been detected/)).toBeInTheDocument();
     });
   });
 

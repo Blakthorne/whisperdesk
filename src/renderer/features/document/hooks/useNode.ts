@@ -87,7 +87,7 @@ export interface UseNodeResult<T extends DocumentNode = DocumentNode> {
  *     <div>
  *       <p>Type: {node.type}</p>
  *       <p>Text: {text}</p>
- *       {isPassageBlock && <QuoteDetails quote={node as QuoteBlockNode} />}
+ *       {isPassageBlock && <QuoteDetails quote={node as BiblePassageNode} />}
  *     </div>
  *   );
  * }
@@ -170,9 +170,9 @@ export function useNode<T extends DocumentNode = DocumentNode>(
  * function NodeSearch() {
  *   const { findByType, findByPredicate, traverse } = useNodeTraversal();
  *
- *   const allQuotes = findByType('quote_block');
+ *   const allQuotes = findByType('bible_passage');
  *   const highConfidenceQuotes = findByPredicate(
- *     (node) => node.type === 'quote_block' &&
+ *     (node) => node.type === 'bible_passage' &&
  *               node.metadata.detection.confidence > 0.8
  *   );
  * }

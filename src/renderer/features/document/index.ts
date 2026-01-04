@@ -98,7 +98,7 @@ export {
   NodeRenderer,
   ParagraphRenderer,
   TextRenderer,
-  QuoteBlockRenderer,
+  BiblePassageRenderer,
   InterjectionRenderer,
 } from './components';
 export type {
@@ -106,7 +106,7 @@ export type {
   NodeRendererProps,
   ParagraphRendererProps,
   TextRendererProps,
-  QuoteBlockRendererProps,
+  BiblePassageRendererProps,
   InterjectionRendererProps,
 } from './components';
 

@@ -1,7 +1,7 @@
 /**
- * Quote Block TipTap Extension
+ * Bible Passage TipTap Extension
  *
- * Custom extension for rendering and editing quote_block nodes in the editor.
+ * Custom extension for rendering and editing bible_passage nodes in the editor.
  * Preserves quote metadata (reference, verification status, etc.) while
  * providing interactive features like drag-to-edit boundaries, quick actions, etc.
  *
@@ -11,7 +11,7 @@
 
 import { Node as TipTapNode, mergeAttributes } from '@tiptap/core';
 
-export interface QuoteBlockAttrs {
+export interface BiblePassageAttrs {
   /** Unique identifier from the AST */
   nodeId?: string;
   /** Bible reference (e.g., "John 3:16") */
@@ -49,10 +49,10 @@ export interface QuoteBlockAttrs {
 // Augment TipTap's Commands interface to include our custom commands
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
-    quote_block: {
-      createQuoteBlock: (attrs: Partial<QuoteBlockAttrs>) => ReturnType;
-      toggleQuoteBlock: () => ReturnType;
-      updateQuoteAttrs: (attrs: Partial<QuoteBlockAttrs>) => ReturnType;
+    bible_passage: {
+      createBiblePassage: (attrs: Partial<BiblePassageAttrs>) => ReturnType;
+      toggleBiblePassage: () => ReturnType;
+      updateQuoteAttrs: (attrs: Partial<BiblePassageAttrs>) => ReturnType;
       verifyQuote: () => ReturnType;
       unverifyQuote: () => ReturnType;
       markNonBiblical: () => ReturnType;
@@ -68,8 +68,8 @@ declare module '@tiptap/core' {
  * Metadata is stored in node.attrs and used by interactive overlays
  * (SelectionAdder, QuoteBoundaryEditor, FloatingEditBar).
  */
-export const QuoteBlockExtension = TipTapNode.create({
-  name: 'quote_block',
+export const BiblePassageExtension = TipTapNode.create({
+  name: 'bible_passage',
 
   group: 'block',
 
@@ -89,7 +89,7 @@ export const QuoteBlockExtension = TipTapNode.create({
   addOptions() {
     return {
       HTMLAttributes: {
-        class: 'bible-quote',
+        class: 'bible-passage',
       },
     };
   },
@@ -285,7 +285,7 @@ export const QuoteBlockExtension = TipTapNode.create({
   /**
    * Parse HTML into this node type
    * Handles both blockquote and our custom quote-block markup
-   * Handles both blockquote and our custom bible-quote markup
+   * Handles both blockquote and our custom bible-passage markup
    */
   parseHTML() {
     return [
@@ -298,7 +298,7 @@ export const QuoteBlockExtension = TipTapNode.create({
         preserveAttributes: true,
       },
       {
-        tag: 'div.bible-quote',
+        tag: 'div.bible-passage',
         preserveAttributes: true,
       },
       {
@@ -310,7 +310,7 @@ export const QuoteBlockExtension = TipTapNode.create({
         preserveAttributes: true,
       },
       {
-        tag: 'blockquote.bible-quote',
+        tag: 'blockquote.bible-passage',
         preserveAttributes: true,
       },
       {
@@ -347,7 +347,7 @@ export const QuoteBlockExtension = TipTapNode.create({
     );
 
     // Use a neutral class
-    const classes = ['bible-quote'];
+    const classes = ['bible-passage'];
 
     return [
       'div',
@@ -365,7 +365,7 @@ export const QuoteBlockExtension = TipTapNode.create({
   addKeyboardShortcuts() {
     return {
       // Cmd+/ to toggle quote block
-      'Mod-/': () => this.editor.commands.toggleNode('quote_block', 'paragraph'),
+      'Mod-/': () => this.editor.commands.toggleNode('bible_passage', 'paragraph'),
     };
   },
 
@@ -377,8 +377,8 @@ export const QuoteBlockExtension = TipTapNode.create({
       /**
        * Create a quote block from selected text
        */
-      createQuoteBlock:
-        (attrs: Partial<QuoteBlockAttrs>) =>
+      createBiblePassage:
+        (attrs: Partial<BiblePassageAttrs>) =>
           ({ commands }: { commands: any }) => {
             return commands.wrapIn(this.name, {
               reference: attrs.reference || null,
@@ -396,7 +396,7 @@ export const QuoteBlockExtension = TipTapNode.create({
       /**
        * Toggle quote block on/off
        */
-      toggleQuoteBlock:
+      toggleBiblePassage:
         () =>
           ({ commands }: { commands: any }) => {
             return commands.toggleNode(this.name, 'paragraph');
@@ -406,7 +406,7 @@ export const QuoteBlockExtension = TipTapNode.create({
        * Update quote metadata
        */
       updateQuoteAttrs:
-        (attrs: Partial<QuoteBlockAttrs>) =>
+        (attrs: Partial<BiblePassageAttrs>) =>
           ({ commands }: { commands: any }) => {
             return commands.updateAttributes(this.name, attrs);
           },

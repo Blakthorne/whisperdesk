@@ -53,7 +53,7 @@
    QUOTE BLOCK STYLES
    ============================================================================ */
 
-.document-quote-block {
+.document-bible-passage {
   position: relative;
   margin: 1.5em 0;
   padding: 1em 1.25em;
@@ -67,7 +67,7 @@
   font-style: italic;
 }
 
-.document-quote-block--high-confidence {
+.document-bible-passage--high-confidence {
   border-left-color: #22c55e;
   background: linear-gradient(
     135deg,
@@ -76,7 +76,7 @@
   );
 }
 
-.document-quote-block--medium-confidence {
+.document-bible-passage--medium-confidence {
   border-left-color: #f59e0b;
   background: linear-gradient(
     135deg,
@@ -85,7 +85,7 @@
   );
 }
 
-.document-quote-block--low-confidence {
+.document-bible-passage--low-confidence {
   border-left-color: #ef4444;
   background: linear-gradient(
     135deg,
@@ -94,11 +94,11 @@
   );
 }
 
-.document-quote-block--verified {
+.document-bible-passage--verified {
   border-left-width: 5px;
 }
 
-.document-quote-block--verified::before {
+.document-bible-passage--verified::before {
   content: '✓';
   position: absolute;
   top: 8px;
@@ -283,8 +283,8 @@
   color: var(--text-primary, #f5f5f5);
 }
 
-[data-theme='dark'] .document-quote-block,
-.dark .document-quote-block {
+[data-theme='dark'] .document-bible-passage,
+.dark .document-bible-passage {
   background: linear-gradient(
     135deg,
     rgba(59, 130, 246, 0.15) 0%,
@@ -318,7 +318,7 @@
     color: #000;
   }
 
-  .document-quote-block {
+  .document-bible-passage {
     background: #f5f5f5;
     border-left-color: #333;
     page-break-inside: avoid;

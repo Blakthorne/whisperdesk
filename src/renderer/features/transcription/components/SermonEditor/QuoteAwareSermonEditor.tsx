@@ -68,7 +68,7 @@ export function QuoteAwareSermonEditor({
     }> = [];
 
     function traverse(node: any): void {
-      if (node.type === 'quote_block' && node.id) {
+      if (node.type === 'bible_passage' && node.id) {
         const text = node.children?.map((child: any) => child.content || '').join('') || '';
         extractedQuotes.push({
           id: node.id,
@@ -149,15 +149,15 @@ export function QuoteAwareSermonEditor({
 
     const handleQuoteClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      const quoteBlock = target.closest('blockquote[data-quote-id]') as HTMLElement;
+      const biblePassage = target.closest('blockquote[data-quote-id]') as HTMLElement;
 
-      if (quoteBlock && editorContainerRef.current) {
-        const quoteId = quoteBlock.getAttribute('data-quote-id');
+      if (biblePassage && editorContainerRef.current) {
+        const quoteId = biblePassage.getAttribute('data-quote-id');
         if (quoteId) {
           setFocusedQuoteId(quoteId);
 
           // Calculate position for FloatingEditBar (above the quote)
-          const rect = quoteBlock.getBoundingClientRect();
+          const rect = biblePassage.getBoundingClientRect();
           const containerRect = editorContainerRef.current.getBoundingClientRect();
 
           setFloatingBarPosition({
@@ -190,11 +190,11 @@ export function QuoteAwareSermonEditor({
 
     const handleContextMenu = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      const quoteBlock = target.closest('blockquote[data-quote-id]') as HTMLElement;
+      const biblePassage = target.closest('blockquote[data-quote-id]') as HTMLElement;
 
-      if (quoteBlock) {
+      if (biblePassage) {
         e.preventDefault();
-        const quoteId = quoteBlock.getAttribute('data-quote-id');
+        const quoteId = biblePassage.getAttribute('data-quote-id');
         if (quoteId) {
           setContextMenu({ x: e.clientX, y: e.clientY, quoteId });
         }

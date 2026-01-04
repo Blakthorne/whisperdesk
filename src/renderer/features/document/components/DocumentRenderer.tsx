@@ -16,7 +16,7 @@
 import React from 'react';
 import { useDocument } from '../hooks';
 import { NodeRenderer } from './NodeRenderer';
-import type { QuoteBlockRenderer } from './QuoteBlockRenderer';
+import type { BiblePassageRenderer } from './BiblePassageRenderer';
 import type { DocumentNode } from '../../../../shared/documentModel';
 import './DocumentRenderer.css';
 
@@ -28,7 +28,7 @@ export interface DocumentRendererProps {
   /** Whether to show the statistics bar */
   showStatistics?: boolean;
   /** Options for quote rendering */
-  quoteOptions?: Omit<React.ComponentProps<typeof QuoteBlockRenderer>, 'node' | 'className'>;
+  quoteOptions?: Omit<React.ComponentProps<typeof BiblePassageRenderer>, 'node' | 'className'>;
   /** Placeholder content when no document is loaded */
   emptyPlaceholder?: React.ReactNode;
 }

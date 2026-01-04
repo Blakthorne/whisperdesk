@@ -5,7 +5,7 @@
  * - Undo/Redo (AST-level, not TipTap-specific)
  * - Copy to clipboard
  * - Export/Save As
- * - Review Quotes toggle (disabled in AST mode)
+ * - Review Passages toggle
  *
  * This component replaces the per-editor action buttons with a unified
  * experience that works regardless of which editor mode is active.
@@ -31,7 +31,7 @@ export interface UnifiedEditorActionsProps {
   lastSaved: Date | null;
   /** Whether content exists for copy/save operations */
   hasContent: boolean;
-  /** Quote count for the review quotes button */
+  /** Passage count for the review passages button */
   quoteCount: number;
 }
 
@@ -67,8 +67,8 @@ export function UnifiedEditorActions({
   const quoteReview = useQuoteReviewOptional();
   const isQuotePanelOpen = quoteReview?.review.panelOpen ?? false;
 
-  // Review Quotes is disabled in AST mode
-  const isReviewQuotesEnabled = activeMode === 'editor' && quoteCount > 0;
+  // Review Passages is enabled in both editor and AST modes
+  const isReviewQuotesEnabled = (activeMode === 'editor' || activeMode === 'ast') && quoteCount > 0;
 
   return (
     <div className="unified-editor-actions">
@@ -148,7 +148,7 @@ export function UnifiedEditorActions({
       </div>
 
       <div className="unified-actions-right">
-        {/* Review Quotes button - disabled in AST mode */}
+        {/* Review Passages button */}
         {quoteReview && (
           <Button
             variant="secondary"
@@ -164,14 +164,10 @@ export function UnifiedEditorActions({
             disabled={!isReviewQuotesEnabled}
             active={isQuotePanelOpen && isReviewQuotesEnabled}
             icon={<Quote size={16} />}
-            title={
-              activeMode === 'ast'
-                ? 'Review Quotes is disabled in AST mode'
-                : `${isQuotePanelOpen ? 'Hide' : 'Show'} Quote Review Panel`
-            }
+            title={`${isQuotePanelOpen ? 'Hide' : 'Show'} Passage Review Panel`}
             className="review-quotes-toggle"
           >
-            Review Quotes{' '}
+            Review Passages{' '}
             {quoteCount > 0 && <span className="quote-count-badge">{quoteCount}</span>}
           </Button>
         )}

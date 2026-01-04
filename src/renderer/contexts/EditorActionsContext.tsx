@@ -77,7 +77,7 @@ function findQuotePosition(editor: Editor, quoteId: NodeId): { pos: number; node
   editor.state.doc.descendants((node, pos) => {
     if (result) return false; // Stop if found
 
-    if (node.type.name === 'quote_block') {
+    if (node.type.name === 'bible_passage') {
       const nodeQuoteId = node.attrs.quoteId;
       if (nodeQuoteId === quoteId) {
         result = { pos, node };

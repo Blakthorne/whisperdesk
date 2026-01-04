@@ -150,36 +150,41 @@ export function QuoteReviewPanel({
   );
 
   // Handle Update Text
-  const handleUpdateText = useCallback((text: string) => {
+  const handleUpdateText = useCallback(
+    (text: string) => {
       if (focusedQuoteId) {
-          updateQuote(focusedQuoteId, { text });
-          editorActions?.quoteActions.updateQuoteText(focusedQuoteId, text);
+        updateQuote(focusedQuoteId, { text });
+        editorActions?.quoteActions.updateQuoteText(focusedQuoteId, text);
       }
-  }, [focusedQuoteId, updateQuote, editorActions]);
+    },
+    [focusedQuoteId, updateQuote, editorActions]
+  );
 
   // Handle Update Interjections
-  const handleUpdateInterjections = useCallback((interjections: string[]) => {
+  const handleUpdateInterjections = useCallback(
+    (interjections: string[]) => {
       if (focusedQuoteId) {
-          updateQuote(focusedQuoteId, { interjections });
-          editorActions?.quoteActions.updateQuoteInterjections(focusedQuoteId, interjections);
+        updateQuote(focusedQuoteId, { interjections });
+        editorActions?.quoteActions.updateQuoteInterjections(focusedQuoteId, interjections);
       }
-  }, [focusedQuoteId, updateQuote, editorActions]);
+    },
+    [focusedQuoteId, updateQuote, editorActions]
+  );
 
   // Handle close detail view
   const handleCloseDetail = useCallback(() => {
     setFocusedQuote(null);
   }, [setFocusedQuote]);
 
-
   // Render empty state
   if (quotes.length === 0) {
     return (
       <div className="quote-review-panel quote-review-panel-empty">
         <div className="quote-review-empty-icon">📝</div>
-        <h3>No Quotes to Review</h3>
-        <p>No Bible quotes have been detected in this document.</p>
+        <h3>No Passages to Review</h3>
+        <p>No Bible passages have been detected in this document.</p>
         <p className="quote-review-empty-hint">
-          Select text in the editor and click "Create Quote" to add one manually.
+          Select text in the editor and click "Create Passage" to add one manually.
         </p>
       </div>
     );
@@ -191,13 +196,13 @@ export function QuoteReviewPanel({
       <div className="quote-review-panel-header">
         <div className="quote-review-title-row">
           <div className="quote-review-title">
-            <h3>Quote Review</h3>
+            <h3>Passage Review</h3>
           </div>
           <button
             className="quote-review-close-btn"
             onClick={handleClosePanel}
             title="Close Panel"
-            aria-label="Close quote review panel"
+            aria-label="Close passage review panel"
           >
             <X size={18} />
           </button>
@@ -234,7 +239,7 @@ export function QuoteReviewPanel({
         </div>
 
         {/* Detail view for focused quote - SLIDE OVER OVERLAY */}
-         {focusedQuote && !compact && (
+        {focusedQuote && !compact && (
           <div className="quote-review-detail-section">
             <QuoteDetailView
               quote={focusedQuote}

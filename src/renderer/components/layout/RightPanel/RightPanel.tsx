@@ -54,7 +54,7 @@ function extractQuotesFromDocument(doc: SermonDocument): QuoteReviewItem[] {
   if (doc.documentState?.root) {
     const root = doc.documentState.root;
 
-    // Traverse the AST to find quote_block nodes
+    // Traverse the AST to find passage nodes
     function traverse(children: unknown[]) {
       for (const child of children) {
         const node = child as {
@@ -63,7 +63,7 @@ function extractQuotesFromDocument(doc: SermonDocument): QuoteReviewItem[] {
           children?: unknown[];
           metadata?: Record<string, unknown>;
         };
-        if (node.type === 'quote_block') {
+        if (node.type === 'passage') {
           // Extract text from quote children
           const text = extractTextFromChildren(node.children || []);
           const metadata = node.metadata || {};
@@ -436,13 +436,13 @@ function RightPanel(): React.JSX.Element {
     return transcription.trim() ? transcription.trim().split(/\s+/).length : 0;
   }, [sermonDocument, transcription]);
 
-  // Calculate quote count from AST
+  // Calculate passage count from AST
   // NOTE: Must be called unconditionally before any returns (Rules of Hooks)
   const quoteCount = useMemo(() => {
     if (!sermonDocument?.documentState?.root) return 0;
     let count = 0;
     function countQuotes(node: any): void {
-      if (node.type === 'quote_block') {
+      if (node.type === 'passage') {
         count++;
       }
       if (node.children && Array.isArray(node.children)) {
@@ -451,7 +451,7 @@ function RightPanel(): React.JSX.Element {
     }
     countQuotes(sermonDocument.documentState.root);
     return count;
-  }, [sermonDocument]);
+  }, [sermonDocument?.documentState]);
 
   if (showHistory) {
     return (

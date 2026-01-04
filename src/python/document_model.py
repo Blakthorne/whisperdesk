@@ -303,7 +303,7 @@ class PassageNode(BaseNode):
 
 
 # Backwards compatibility aliases
-QuoteBlockNode = PassageNode
+BiblePassageNode = PassageNode
 QuoteNode = PassageNode
 QuoteMetadata = PassageMetadata
 
@@ -720,7 +720,7 @@ def create_passage_node(
 
 # Backwards compatibility aliases
 create_quote_node = create_passage_node
-create_quote_block_node = create_passage_node
+create_bible_passage_node = create_passage_node
 
 
 def create_document_root(
