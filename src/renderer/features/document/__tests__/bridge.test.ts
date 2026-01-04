@@ -20,6 +20,7 @@ import {
   htmlToAst,
   type TipTapDocument,
 } from '../bridge/astTipTapConverter';
+import { buildNodeIndex, buildExtracted } from '../serialization/stateSerializer';
 import type { DocumentRootNode, PassageNode, ParagraphNode, TextNode, NodeId } from '../../../../shared/documentModel';
 
 // ============================================================================
@@ -102,7 +103,7 @@ const createPassageBlockNode = createPassageNode;
 
 function createDocumentRootNode(
   children: (ParagraphNode | PassageNode)[],
-  options: { title?: string; biblePassage?: string } = {}
+  options: { title?: string; biblePassage?: string; speaker?: string; tags?: string[] } = {}
 ): DocumentRootNode {
   return {
     id: 'root-1' as NodeId,
@@ -111,6 +112,8 @@ function createDocumentRootNode(
     updatedAt: new Date().toISOString(),
     title: options.title,
     biblePassage: options.biblePassage,
+    speaker: options.speaker,
+    tags: options.tags,
     children,
   };
 }
@@ -829,6 +832,86 @@ describe('AST to HTML Conversion', () => {
     const html = astToHtml(root);
 
     expect(html).toContain('<hr');
+  });
+
+  it('should include speaker in HTML output', () => {
+    const textNode = createTextNode('text-1', 'Sermon content');
+    const paragraphNode = createParagraphNode('para-1', [textNode]);
+    const root = createDocumentRootNode([paragraphNode], {
+      title: 'Test Sermon',
+      speaker: 'Pastor John Doe',
+    });
+    const html = astToHtml(root);
+
+    expect(html).toContain('<strong>Speaker:</strong>');
+    expect(html).toContain('Pastor John Doe');
+  });
+
+  it('should include tags and references in HTML output', () => {
+    const textNode = createTextNode('text-1', 'Sermon content');
+    const paragraphNode = createParagraphNode('para-1', [textNode]);
+    const root = createDocumentRootNode([paragraphNode], {
+      title: 'Test Sermon',
+      biblePassage: 'John 3:16',
+    });
+    const extractedRefs = {
+      references: ['Matthew 5:14', 'Romans 8:28'],
+      tags: ['faith', 'hope', 'love'],
+    };
+    const html = astToHtml(root, extractedRefs);
+
+    expect(html).toContain('<strong>References from the Sermon:</strong>');
+    expect(html).toContain('Matthew 5:14; Romans 8:28');
+    expect(html).toContain('<strong>Tags:</strong>');
+    expect(html).toContain('faith, hope, love');
+  });
+
+  it('should output metadata in correct order', () => {
+    const textNode = createTextNode('text-1', 'Sermon content');
+    const paragraphNode = createParagraphNode('para-1', [textNode]);
+    const root = createDocumentRootNode([paragraphNode], {
+      title: 'Test Sermon',
+      biblePassage: 'John 3:16',
+      speaker: 'Pastor John',
+    });
+    const extractedRefs = {
+      references: ['Matthew 5:14'],
+      tags: ['faith'],
+    };
+    const html = astToHtml(root, extractedRefs);
+
+    // Verify order: Title, Primary Reference, References from Sermon, Tags, Speaker, HR
+    const titlePos = html.indexOf('Test Sermon');
+    const primaryRefPos = html.indexOf('Primary Reference');
+    const refsPos = html.indexOf('References from the Sermon');
+    const tagsPos = html.indexOf('Tags:');
+    const speakerPos = html.indexOf('Speaker:');
+    const hrPos = html.indexOf('<hr');
+
+    expect(titlePos).toBeLessThan(primaryRefPos);
+    expect(primaryRefPos).toBeLessThan(refsPos);
+    expect(refsPos).toBeLessThan(tagsPos);
+    expect(tagsPos).toBeLessThan(speakerPos);
+    expect(speakerPos).toBeLessThan(hrPos);
+  });
+
+  it('should include tags from root.tags via buildExtracted', () => {
+    // This simulates the complete flow: root.tags → buildExtracted → astToHtml
+    const textNode = createTextNode('text-1', 'Sermon content');
+    const paragraphNode = createParagraphNode('para-1', [textNode]);
+    const root = createDocumentRootNode([paragraphNode], {
+      title: 'Test Sermon',
+      tags: ['grace', 'redemption', 'salvation'],
+    });
+    
+    // Simulate what happens in the real app
+    const nodeIndex = buildNodeIndex(root);
+    const extracted = buildExtracted(root, nodeIndex);
+    const html = astToHtml(root, extracted);
+
+    expect(extracted.tags).toEqual(['grace', 'redemption', 'salvation']);
+    expect(html).toContain('<strong>Tags:</strong>');
+    expect(html).toContain('grace, redemption, salvation');
   });
 });
 

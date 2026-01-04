@@ -274,7 +274,8 @@ if (astResult.success) {
 }
 
 // HTML conversion (for export/import)
-const htmlResult = astToHtml(state.root);
+// Pass extracted references to include tags and references from the sermon
+const htmlResult = astToHtml(state.root, state.extracted);
 const fromHtmlResult = htmlToAst(htmlString);
 ```
 

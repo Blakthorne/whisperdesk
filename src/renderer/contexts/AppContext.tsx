@@ -327,6 +327,43 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
   );
 
   /**
+   * Handle immediate metadata updates (title, speaker, biblePassage, tags).
+   * These changes are applied immediately without debouncing to avoid UI flashing.
+   * Metadata changes don't affect the content tree, so they're safe to apply instantly.
+   */
+  const handleMetadataChange = useCallback(
+    (updates: Partial<Pick<DocumentRootNode, 'title' | 'speaker' | 'biblePassage' | 'tags'>>) => {
+      if (!sermonDocument?.documentState?.root) return;
+
+      const updatedRoot: DocumentRootNode = {
+        ...sermonDocument.documentState.root,
+        ...updates,
+      };
+
+      // Update the node index (needed for serialization)
+      const nodeIndex = buildNodeIndex(updatedRoot);
+      const newDocumentState: DocumentState = {
+        ...sermonDocument.documentState,
+        root: updatedRoot,
+        nodeIndex,
+        passageIndex: buildPassageIndex(updatedRoot, nodeIndex),
+        extracted: buildExtracted(updatedRoot, nodeIndex),
+        lastModified: new Date().toISOString(),
+      };
+
+      const updatedSermonDocument = {
+        ...sermonDocument,
+        documentState: newDocumentState,
+      };
+
+      setSermonDocument(updatedSermonDocument);
+      setDocumentStateVersion((v) => v + 1);
+      setEditVersion((v) => v + 1);
+    },
+    [sermonDocument]
+  );
+
+  /**
    * Update document state (AST) directly from the root node.
    * Used by DevASTPanel when JSON changes are made.
    * This triggers sync back to TipTap via externalAstVersion.
@@ -461,7 +498,10 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
         const fileName = selectedFile?.name?.replace(/\.[^/.]+$/, '') || 'sermon';
 
         // Generate HTML from AST (single source of truth)
-        const html = astToHtml(sermonDocument.documentState.root);
+        const html = astToHtml(
+          sermonDocument.documentState.root,
+          sermonDocument.documentState.extracted
+        );
 
         const result = await saveFile({
           defaultName: `${fileName}.${format || 'txt'}`,
@@ -660,6 +700,7 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
       setDraftAstJson,
       updateDocumentState,
       handleAstChange,
+      handleMetadataChange,
       setVisibleNodeId,
       documentStateVersion,
       externalAstVersion,
@@ -680,6 +721,7 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
       selectQueueItem,
       updateDocumentState,
       handleAstChange,
+      handleMetadataChange,
       setVisibleNodeId,
       documentStateVersion,
       externalAstVersion,

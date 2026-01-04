@@ -89,6 +89,7 @@ export interface TranscriptionActionsContextValue {
    * This is called by the TipTap editor when content changes
    */
   handleAstChange: (newRoot: DocumentRootNode) => void;
+  handleMetadataChange: (updates: Partial<Pick<DocumentRootNode, 'title' | 'speaker' | 'biblePassage' | 'tags'>>) => void;
   /** Set the ID of the currently visible node (for scroll sync) */
   setVisibleNodeId: (nodeId: string | null) => void;
   /** Version counter for document state changes (for detecting external AST updates) */

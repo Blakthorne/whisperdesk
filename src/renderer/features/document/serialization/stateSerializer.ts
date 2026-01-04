@@ -336,12 +336,11 @@ export function buildPassageIndex(_root: DocumentRootNode, nodeIndex: NodeIndex)
  * Build ExtractedReferences from root node.
  */
 export function buildExtracted(
-  _root: DocumentRootNode,
+  root: DocumentRootNode,
   nodeIndex: NodeIndex
 ): ExtractedReferences {
   const references: string[] = [];
-  const tags: string[] = [];
-
+  
   for (const entry of Object.values(nodeIndex)) {
     if (isPassageNode(entry.node)) {
       const passage = entry.node as PassageNode;
@@ -352,8 +351,8 @@ export function buildExtracted(
     }
   }
 
-  // Note: Tags are typically stored at document level, not extracted from quotes
-  // This maintains backward compatibility with the legacy format
+  // Tags are stored at document level (root.tags)
+  const tags = root.tags || [];
 
   return { references, tags };
 }

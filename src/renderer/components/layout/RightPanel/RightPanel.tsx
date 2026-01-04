@@ -192,6 +192,7 @@ function SermonEditorLayout({
   documentSaveState,
   lastSavedAt,
   handleAstChange,
+  handleMetadataChange,
   activeMode,
   setActiveMode,
   isDev,
@@ -202,6 +203,9 @@ function SermonEditorLayout({
   documentSaveState: any;
   lastSavedAt: Date | null;
   handleAstChange: (root: DocumentRootNode) => void;
+  handleMetadataChange: (
+    updates: Partial<Pick<DocumentRootNode, 'title' | 'speaker' | 'biblePassage' | 'tags'>>
+  ) => void;
   activeMode: EditorMode;
   setActiveMode: (mode: EditorMode) => void;
   isDev: boolean;
@@ -215,56 +219,36 @@ function SermonEditorLayout({
 
   const hasContent = wordCount > 0;
 
-  // Get the current AST root from the sermon document
+  // Get the current AST root from the sermon document (needed for metadata display)
   const currentRoot = sermonDocument.documentState?.root;
 
-  // Metadata change handlers - update root node and propagate changes
+  // Metadata change handlers - update root node immediately without debouncing
   const handleTitleChange = useCallback(
     (newTitle: string) => {
-      if (!currentRoot) return;
-      const updatedRoot: DocumentRootNode = {
-        ...currentRoot,
-        title: newTitle,
-      };
-      handleAstChange(updatedRoot);
+      handleMetadataChange({ title: newTitle });
     },
-    [currentRoot, handleAstChange]
+    [handleMetadataChange]
   );
 
   const handleSpeakerChange = useCallback(
     (newSpeaker: string) => {
-      if (!currentRoot) return;
-      const updatedRoot: DocumentRootNode = {
-        ...currentRoot,
-        speaker: newSpeaker,
-      };
-      handleAstChange(updatedRoot);
+      handleMetadataChange({ speaker: newSpeaker });
     },
-    [currentRoot, handleAstChange]
+    [handleMetadataChange]
   );
 
   const handleBiblePassageChange = useCallback(
     (newBiblePassage: string) => {
-      if (!currentRoot) return;
-      const updatedRoot: DocumentRootNode = {
-        ...currentRoot,
-        biblePassage: newBiblePassage,
-      };
-      handleAstChange(updatedRoot);
+      handleMetadataChange({ biblePassage: newBiblePassage });
     },
-    [currentRoot, handleAstChange]
+    [handleMetadataChange]
   );
 
   const handleTagsChange = useCallback(
     (newTags: string[]) => {
-      if (!currentRoot) return;
-      const updatedRoot: DocumentRootNode = {
-        ...currentRoot,
-        tags: newTags,
-      };
-      handleAstChange(updatedRoot);
+      handleMetadataChange({ tags: newTags });
     },
-    [currentRoot, handleAstChange]
+    [handleMetadataChange]
   );
 
   return (
@@ -373,6 +357,7 @@ function RightPanel(): React.JSX.Element {
     handleCopy,
     sermonDocument,
     handleAstChange,
+    handleMetadataChange,
     documentSaveState,
     lastSavedAt,
     selectedFile,
@@ -547,6 +532,7 @@ function RightPanel(): React.JSX.Element {
               documentSaveState={documentSaveState}
               lastSavedAt={lastSavedAt}
               handleAstChange={handleAstChange}
+              handleMetadataChange={handleMetadataChange}
               activeMode={activeMode}
               setActiveMode={setActiveMode}
               isDev={isDev}

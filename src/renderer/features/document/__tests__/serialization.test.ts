@@ -477,6 +477,24 @@ describe('Index Building', () => {
       expect(extracted.references).toEqual([]);
       expect(extracted.tags).toEqual([]);
     });
+
+    it('should extract tags from root.tags', () => {
+      const textNode = createTextNode('text-1', 'Sermon content');
+      const paragraphNode = createParagraphNode('para-1', [textNode]);
+      const rootNode: DocumentRootNode = {
+        id: 'root-1' as NodeId,
+        type: 'document',
+        version: 1,
+        updatedAt: new Date().toISOString(),
+        title: 'Test Sermon',
+        tags: ['faith', 'hope', 'love'],
+        children: [paragraphNode],
+      };
+      const nodeIndex = buildNodeIndex(rootNode);
+      const extracted = buildExtracted(rootNode, nodeIndex);
+
+      expect(extracted.tags).toEqual(['faith', 'hope', 'love']);
+    });
   });
 });
 

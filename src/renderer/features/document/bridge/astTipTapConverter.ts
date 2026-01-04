@@ -987,7 +987,7 @@ function convertTipTapInterjection(node: TipTapNode): InterjectionNode {
 /**
  * Convert AST to HTML string.
  */
-export function astToHtml(root: DocumentRootNode): string {
+export function astToHtml(root: DocumentRootNode, extractedReferences?: { references: string[]; tags: string[] }): string {
   let html = '';
 
   // Title
@@ -995,15 +995,32 @@ export function astToHtml(root: DocumentRootNode): string {
     html += `<h1 style="text-align: center">${escapeHtml(root.title)}</h1>`;
   }
 
-  // Bible passage
+  // Bible passage (Primary Reference)
   if (root.biblePassage) {
     const hasMultiple = root.biblePassage.includes(';');
     const label = hasMultiple ? 'Primary References' : 'Primary Reference';
     html += `<p><strong>${label}:</strong> ${escapeHtml(root.biblePassage)}</p>`;
   }
 
+  // References from the Sermon
+  if (extractedReferences && extractedReferences.references.length > 0) {
+    const refsHtml = extractedReferences.references.map((ref) => escapeHtml(ref)).join('; ');
+    html += `<p><strong>References from the Sermon:</strong> ${refsHtml}</p>`;
+  }
+
+  // Tags
+  if (extractedReferences && extractedReferences.tags.length > 0) {
+    const tagsHtml = extractedReferences.tags.map((tag) => escapeHtml(tag)).join(', ');
+    html += `<p><strong>Tags:</strong> ${tagsHtml}</p>`;
+  }
+
+  // Speaker
+  if (root.speaker) {
+    html += `<p><strong>Speaker:</strong> ${escapeHtml(root.speaker)}</p>`;
+  }
+
   // Add separator if we have metadata
-  if (root.title || root.biblePassage) {
+  if (root.title || root.biblePassage || root.speaker || (extractedReferences && (extractedReferences.references.length > 0 || extractedReferences.tags.length > 0))) {
     html += '<hr />';
   }
 
