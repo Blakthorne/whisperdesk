@@ -1,37 +1,29 @@
-<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 896 896">
   <defs>
-    <linearGradient id="bg-gradient" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#3b82f6" />
-      <stop offset="1" stop-color="#1d4ed8" />
+    <style>
+      .cls-1 {
+        fill: url(#linear-gradient);
+      }
+
+      .cls-2 {
+        fill: #fff;
+      }
+
+      .cls-3 {
+        fill: rgba(255, 255, 255, .9);
+      }
+    </style>
+    <linearGradient id="linear-gradient" x1="-64" y1="962" x2="960" y2="-62" gradientTransform="translate(0 898) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6366f1"/>
+      <stop offset="1" stop-color="#4f46e5"/>
     </linearGradient>
-    <filter id="shadow" x="150" y="200" width="724" height="624" filterUnits="userSpaceOnUse"
-      color-interpolation-filters="sRGB">
-      <feFlood flood-opacity="0" result="BackgroundImageFix" />
-      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
-        result="hardAlpha" />
-      <feOffset dy="12" />
-      <feGaussianBlur stdDeviation="12" />
-      <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.2 0" />
-      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow" />
-      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape" />
-    </filter>
   </defs>
-
-  <!-- Background Container -->
-  <rect x="64" y="64" width="896" height="896" rx="224" fill="url(#bg-gradient)" />
-
-  <!-- Icon Graphics -->
-  <g filter="url(#shadow)">
-    <!-- Audio Wave (Left) -->
-    <rect x="260" y="412" width="70" height="200" rx="35" fill="white" fill-opacity="0.9" />
-    <rect x="370" y="282" width="70" height="460" rx="35" fill="white" />
-    <rect x="480" y="362" width="70" height="300" rx="35" fill="white" fill-opacity="0.9" />
-
-    <!-- Transformation Arrows (Hidden/Implied by space) -->
-
-    <!-- Text Lines (Right) -->
-    <rect x="630" y="360" width="220" height="70" rx="35" fill="white" />
-    <rect x="630" y="495" width="160" height="70" rx="35" fill="white" fill-opacity="0.8" />
-    <rect x="630" y="630" width="190" height="70" rx="35" fill="white" fill-opacity="0.6" />
-  </g>
+  <rect class="cls-1" width="896" height="896" rx="224" ry="224"/>
+  <path class="cls-3" d="M231,348h0c19.33,0,35,15.67,35,35v130c0,19.33-15.67,35-35,35h0c-19.33,0-35-15.67-35-35v-130c0-19.33,15.67-35,35-35Z"/>
+  <path class="cls-2" d="M341,218h0c19.33,0,35,15.67,35,35v390c0,19.33-15.67,35-35,35h0c-19.33,0-35-15.67-35-35V253c0-19.33,15.67-35,35-35Z"/>
+  <path class="cls-2" d="M807,448h0c0,19.33-9.57,35-21.38,35h-238.24c-11.81,0-21.38-15.67-21.38-35h0c0-19.33,9.57-35,21.38-35h238.24c11.81,0,21.38,15.67,21.38,35Z"/>
+  <path class="cls-3" d="M451,298h0c19.33,0,35,15.67,35,35v230c0,19.33-15.67,35-35,35h0c-19.33,0-35-15.67-35-35v-230c0-19.33,15.67-35,35-35Z"/>
+  <path class="cls-3" d="M737.53,276.5h0c7.4,17.86,2.53,36.84-10.88,42.39l-159.52,66.08c-13.41,5.55-30.27-4.42-37.67-22.28h0c-7.4-17.86-2.53-36.84,10.88-42.39l159.52-66.08c13.41-5.55,30.27,4.42,37.67,22.28Z"/>
+  <path class="cls-3" d="M743.68,621.87h0c-7.4,17.86-24.59,27.7-38.4,21.98l-164.3-68.06c-13.81-5.72-19.01-24.83-11.61-42.69h0c7.4-17.86,24.59-27.7,38.4-21.98l164.3,68.06c13.81,5.72,19.01,24.83,11.61,42.69Z"/>
 </svg>
