@@ -425,7 +425,7 @@ describe('SettingsPanel', () => {
     fireEvent.change(modelSelect, { target: { value: 'small' } });
 
     await waitFor(() => {
-      expect(localStorage.getItem('whisperdesk_lastModel')).toBe('small');
+      expect(localStorage.getItem('whispersermons_lastModel')).toBe('small');
     });
   });
 
@@ -453,7 +453,7 @@ describe('SettingsPanel', () => {
 
   it('restores model from localStorage when different from current settings', async () => {
     const onChange = vi.fn();
-    localStorage.setItem('whisperdesk_lastModel', 'small');
+    localStorage.setItem('whispersermons_lastModel', 'small');
 
     overrideElectronAPI({
       listModels: vi.fn().mockResolvedValue({ models: mockModels }),
@@ -466,12 +466,12 @@ describe('SettingsPanel', () => {
       expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ model: 'small' }));
     });
 
-    localStorage.removeItem('whisperdesk_lastModel');
+    localStorage.removeItem('whispersermons_lastModel');
   });
 
   it('does not restore model from localStorage if it is invalid', async () => {
     const onChange = vi.fn();
-    localStorage.setItem('whisperdesk_lastModel', 'nonexistent');
+    localStorage.setItem('whispersermons_lastModel', 'nonexistent');
 
     overrideElectronAPI({
       listModels: vi.fn().mockResolvedValue({ models: mockModels }),
@@ -486,7 +486,7 @@ describe('SettingsPanel', () => {
 
     expect(onChange).not.toHaveBeenCalledWith(expect.objectContaining({ model: 'nonexistent' }));
 
-    localStorage.removeItem('whisperdesk_lastModel');
+    localStorage.removeItem('whispersermons_lastModel');
   });
 
   it('calls onModelStatusChange with false when model is not downloaded', async () => {

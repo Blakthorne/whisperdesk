@@ -24,9 +24,9 @@ function AppHeader(): React.JSX.Element {
       <header className="app-header">
         <div className="header-content">
           <div className="header-left">
-            <img src={appIcon} alt="WhisperDesk" className="app-logo" />
+            <img src={appIcon} alt="WhisperSermons" className="app-logo" />
             <div className="header-title">
-              <h1>WhisperDesk</h1>
+              <h1>WhisperSermons</h1>
               <p>Transcribe audio &amp; video with AI</p>
             </div>
           </div>

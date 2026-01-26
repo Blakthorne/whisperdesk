@@ -89,6 +89,7 @@ export function usePythonSetup(): UsePythonSetupReturn {
         python: 'installing-python',
         packages: 'installing-packages',
         models: 'downloading-models',
+        complete: 'complete',
       };
 
       setSetupProgress({

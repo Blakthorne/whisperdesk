@@ -1,4 +1,4 @@
-# Python dependencies for WhisperDesk sermon processing
+# Python dependencies for WhisperSermons sermon processing
 # These are installed on first run via the setup wizard
 
 # Core transcription

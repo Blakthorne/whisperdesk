@@ -14,7 +14,7 @@ describe('useTheme', () => {
   });
 
   it('should load saved theme from localStorage', () => {
-    localStorage.setItem('whisperdesk_theme', 'dark');
+    localStorage.setItem('whispersermons_theme', 'dark');
 
     const { result } = renderHook(() => useTheme());
 
@@ -83,17 +83,17 @@ describe('useTheme', () => {
       result.current.setTheme('dark');
     });
 
-    expect(localStorage.getItem('whisperdesk_theme')).toBe('dark');
+    expect(localStorage.getItem('whispersermons_theme')).toBe('dark');
 
     act(() => {
       result.current.toggleTheme();
     });
 
-    expect(localStorage.getItem('whisperdesk_theme')).toBe('light');
+    expect(localStorage.getItem('whispersermons_theme')).toBe('light');
   });
 
   it('should handle invalid stored theme gracefully', () => {
-    localStorage.setItem('whisperdesk_theme', 'invalid-theme');
+    localStorage.setItem('whispersermons_theme', 'invalid-theme');
 
     const { result } = renderHook(() => useTheme());
 

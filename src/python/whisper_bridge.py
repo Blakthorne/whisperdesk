@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-WhisperDesk Python Bridge
+WhisperSermons Python Bridge
 
 This module provides a JSON-based subprocess interface for the Electron app to:
 1. Transcribe audio using OpenAI Whisper

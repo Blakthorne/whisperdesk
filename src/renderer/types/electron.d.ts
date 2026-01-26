@@ -42,7 +42,7 @@ export interface PythonStatus {
 }
 
 export interface PythonInstallProgress {
-  stage: 'python' | 'packages' | 'models';
+  stage: 'python' | 'packages' | 'models' | 'complete';
   progress: number;
   message: string;
 }

@@ -2,7 +2,7 @@
  * Python Environment Installer Service
  *
  * Manages downloading and installing an embedded Python environment
- * with all required dependencies for WhisperDesk sermon processing.
+ * with all required dependencies for WhisperSermons sermon processing.
  *
  * Uses python-build-standalone for a self-contained Python distribution.
  */
@@ -437,7 +437,7 @@ export async function installAll(onProgress: ProgressCallback): Promise<void> {
     stage: 'complete',
     stageName: 'Setup complete',
     percent: 100,
-    message: 'WhisperDesk is ready to use!',
+    message: 'WhisperSermons is ready to use!',
   });
 }
 

@@ -26,7 +26,7 @@ const STAGE_INFO: Record<
   'needs-setup': {
     title: 'Setup Required',
     description:
-      'WhisperDesk needs to download Python and AI models to transcribe audio. This is a one-time setup that takes about 3-4 GB of disk space.',
+      'WhisperSermons needs to download Python and AI models to transcribe audio. This is a one-time setup that takes about 3-4 GB of disk space.',
     icon: '📦',
     showProgress: false,
   },
@@ -82,7 +82,13 @@ export function SetupWizard({ onComplete, onSkip }: SetupWizardProps): React.JSX
     retrySetup,
   } = usePythonSetup();
 
-  const stageInfo = STAGE_INFO[setupProgress.stage];
+  // Get stage info with fallback for unknown stages
+  const stageInfo = STAGE_INFO[setupProgress.stage] ?? {
+    title: 'Processing',
+    description: setupProgress.message || 'Please wait...',
+    icon: '⏳',
+    showProgress: true,
+  };
 
   // Call onComplete when setup finishes
   React.useEffect(() => {

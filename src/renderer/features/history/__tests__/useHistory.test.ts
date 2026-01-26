@@ -18,7 +18,7 @@ describe('useHistory', () => {
 
   it('should load history from localStorage on mount', () => {
     const savedHistory: HistoryItem[] = [createMockHistoryItem()];
-    localStorage.setItem('whisperdesk_history', JSON.stringify(savedHistory));
+    localStorage.setItem('whispersermons_history', JSON.stringify(savedHistory));
 
     const { result } = renderHook(() => useHistory());
 
@@ -46,7 +46,7 @@ describe('useHistory', () => {
       }
     });
 
-    const saved = JSON.parse(localStorage.getItem('whisperdesk_history') || '[]');
+    const saved = JSON.parse(localStorage.getItem('whispersermons_history') || '[]');
     expect(saved).toHaveLength(20);
   });
 
@@ -58,7 +58,7 @@ describe('useHistory', () => {
       result.current.addHistoryItem(mockItem);
     });
 
-    const saved = JSON.parse(localStorage.getItem('whisperdesk_history') || '[]');
+    const saved = JSON.parse(localStorage.getItem('whispersermons_history') || '[]');
     expect(saved).toHaveLength(1);
     expect(saved[0].id).toBe(mockItem.id);
   });
@@ -111,7 +111,7 @@ describe('useHistory', () => {
     });
 
     expect(result.current.history).toHaveLength(0);
-    expect(localStorage.getItem('whisperdesk_history')).toBeNull();
+    expect(localStorage.getItem('whispersermons_history')).toBeNull();
   });
 
   it('should remove a history item and persist the change', () => {
@@ -133,13 +133,13 @@ describe('useHistory', () => {
     expect(result.current.history).toHaveLength(1);
     expect(result.current.history[0]!.id).toBe(firstItem.id);
 
-    const saved = JSON.parse(localStorage.getItem('whisperdesk_history') || '[]');
+    const saved = JSON.parse(localStorage.getItem('whispersermons_history') || '[]');
     expect(saved).toHaveLength(1);
     expect(saved[0].id).toBe(firstItem.id);
   });
 
   it('should handle corrupted localStorage data gracefully', () => {
-    localStorage.setItem('whisperdesk_history', 'invalid json');
+    localStorage.setItem('whispersermons_history', 'invalid json');
 
     const { result } = renderHook(() => useHistory());
 
@@ -155,7 +155,7 @@ describe('useHistory', () => {
       items.forEach((item) => result.current.addHistoryItem(item));
     });
 
-    let saved = JSON.parse(localStorage.getItem('whisperdesk_history') || '[]');
+    let saved = JSON.parse(localStorage.getItem('whispersermons_history') || '[]');
     expect(saved).toHaveLength(20);
 
     const newItem = createMockHistoryItem({ id: 'item-20', fileName: 'file20.mp3' });
@@ -164,7 +164,7 @@ describe('useHistory', () => {
       result.current.addHistoryItem(newItem);
     });
 
-    saved = JSON.parse(localStorage.getItem('whisperdesk_history') || '[]');
+    saved = JSON.parse(localStorage.getItem('whispersermons_history') || '[]');
     expect(saved).toHaveLength(20);
     expect(saved[0].id).toBe('item-20');
     expect(saved.some((item: HistoryItem) => item.id === items[0]?.id)).toBe(false);

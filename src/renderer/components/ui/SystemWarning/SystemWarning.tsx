@@ -98,7 +98,7 @@ function SystemWarning({ onRefresh }: SystemWarningProps): React.JSX.Element {
         <div className="system-warning-content">
           <h3 className="system-warning-title">FFmpeg Installation Required</h3>
           <p className="system-warning-description">
-            WhisperDesk relies on FFmpeg to process your media files. Without it, transcription will
+            WhisperSermons relies on FFmpeg to process your media files. Without it, transcription will
             not work.
           </p>
         </div>

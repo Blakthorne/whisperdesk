@@ -11,7 +11,7 @@ import { EditableTextField } from './EditableTextField';
 import { TagsInput } from './TagsInput';
 import './DocumentMetadataPanel.css';
 
-const STORAGE_KEY = 'whisperdesk.metadataPanel.collapsed';
+const STORAGE_KEY = 'whispersermons.metadataPanel.collapsed';
 
 export interface DocumentMetadataPanelProps {
   /** Document title */

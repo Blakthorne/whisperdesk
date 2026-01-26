@@ -91,7 +91,7 @@ function SettingsPanel({
   }, [models, settings.model, onModelStatusChange]);
 
   useEffect(() => {
-    const lastModel = localStorage.getItem('whisperdesk_lastModel');
+    const lastModel = localStorage.getItem('whispersermons_lastModel');
     if (lastModel && lastModel !== settings.model) {
       const validModels = models.map((m) => m.name);
       if (validModels.includes(lastModel)) {
@@ -102,7 +102,7 @@ function SettingsPanel({
 
   const handleModelChange = (model: WhisperModelName): void => {
     onChange({ ...settings, model });
-    localStorage.setItem('whisperdesk_lastModel', model);
+    localStorage.setItem('whispersermons_lastModel', model);
   };
 
   const handleLanguageChange = (language: LanguageCode): void => {

@@ -12,7 +12,7 @@ import * as storage from '@/utils/storage';
 import { APP_CONFIG } from '@/config';
 
 vi.mock('@/utils/storage', () => ({
-  STORAGE_KEYS: { HISTORY: 'whisperdesk_history' },
+  STORAGE_KEYS: { HISTORY: 'whispersermons_history' },
   getStorageItem: vi.fn().mockReturnValue([]),
   setStorageItem: vi.fn().mockReturnValue(true),
   removeStorageItem: vi.fn(),
@@ -36,7 +36,7 @@ describe('history storageService', () => {
 
   it('loadHistory uses storage with default empty array', () => {
     const result = loadHistory();
-    expect(storage.getStorageItem).toHaveBeenCalledWith('whisperdesk_history', []);
+    expect(storage.getStorageItem).toHaveBeenCalledWith('whispersermons_history', []);
     expect(result).toEqual([]);
   });
 
@@ -53,7 +53,7 @@ describe('history storageService', () => {
     const ok = saveHistory(longHistory);
     expect(ok).toBe(true);
     const trimmed = longHistory.slice(0, APP_CONFIG.MAX_HISTORY_ITEMS);
-    expect(storage.setStorageItem).toHaveBeenCalledWith('whisperdesk_history', trimmed);
+    expect(storage.setStorageItem).toHaveBeenCalledWith('whispersermons_history', trimmed);
   });
 
   it('addHistoryItem adds a new item with generated id and saves', () => {
@@ -87,7 +87,7 @@ describe('history storageService', () => {
 
   it('clearHistory removes storage key', () => {
     clearHistory();
-    expect(storage.removeStorageItem).toHaveBeenCalledWith('whisperdesk_history');
+    expect(storage.removeStorageItem).toHaveBeenCalledWith('whispersermons_history');
   });
 
   it('createHistoryItem builds preview and preserves full text', () => {

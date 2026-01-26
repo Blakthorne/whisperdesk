@@ -124,7 +124,7 @@ function createMenu() {
       role: 'help',
       submenu: [
         {
-          label: 'About WhisperDesk',
+          label: 'About WhisperSermons',
           click: async () => {
             const author = 'Pedro Siqueira';
             const githubUrl = 'https://github.com/pedrovsiqueira';
@@ -132,8 +132,8 @@ function createMenu() {
 
             const result = await dialog.showMessageBox({
               type: 'info',
-              title: 'About WhisperDesk',
-              message: `WhisperDesk ${appVersion}`,
+              title: 'About WhisperSermons',
+              message: `WhisperSermons ${appVersion}`,
               detail: `Author: ${author}`,
               buttons: ['Open GitHub', 'Open LinkedIn', 'Close'],
               cancelId: 2,
@@ -160,7 +160,7 @@ function createMenu() {
         {
           label: 'Learn More',
           click: async () => {
-            await shell.openExternal('https://github.com/pedrovsiqueira/whisperdesk');
+            await shell.openExternal('https://github.com/pedrovsiqueira/whispersermons');
           },
         },
       ],

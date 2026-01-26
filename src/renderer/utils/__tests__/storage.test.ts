@@ -16,34 +16,34 @@ describe('storage', () => {
   describe('getStorageItem', () => {
     it('should return default value when item not in storage', () => {
       const defaultValue = { theme: 'light' };
-      const result = getStorageItem('whisperdesk_theme' as StorageKey, defaultValue);
+      const result = getStorageItem('whispersermons_theme' as StorageKey, defaultValue);
 
       expect(result).toEqual(defaultValue);
     });
 
     it('should retrieve and parse stored JSON item', () => {
       const value = { theme: 'dark', fontSize: 14 };
-      localStorage.setItem('whisperdesk_theme', JSON.stringify(value));
+      localStorage.setItem('whispersermons_theme', JSON.stringify(value));
 
-      const result = getStorageItem('whisperdesk_theme' as StorageKey, {});
+      const result = getStorageItem('whispersermons_theme' as StorageKey, {});
 
       expect(result).toEqual(value);
     });
 
     it('should return default value if JSON is invalid', () => {
       const defaultValue = { theme: 'light' };
-      localStorage.setItem('whisperdesk_theme', 'invalid json');
+      localStorage.setItem('whispersermons_theme', 'invalid json');
 
-      const result = getStorageItem('whisperdesk_theme' as StorageKey, defaultValue);
+      const result = getStorageItem('whispersermons_theme' as StorageKey, defaultValue);
 
       expect(result).toEqual(defaultValue);
     });
 
     it('should handle different data types', () => {
       const stringValue = 'test string';
-      localStorage.setItem('whisperdesk_theme', JSON.stringify(stringValue));
+      localStorage.setItem('whispersermons_theme', JSON.stringify(stringValue));
 
-      const result = getStorageItem('whisperdesk_theme' as StorageKey, 'default');
+      const result = getStorageItem('whispersermons_theme' as StorageKey, 'default');
 
       expect(result).toBe(stringValue);
     });
@@ -52,14 +52,14 @@ describe('storage', () => {
   describe('setStorageItem', () => {
     it('should store JSON serializable values', () => {
       const value = { model: 'base', language: 'en' };
-      const success = setStorageItem('whisperdesk_lastModel' as StorageKey, value);
+      const success = setStorageItem('whispersermons_lastModel' as StorageKey, value);
 
       expect(success).toBe(true);
-      expect(localStorage.getItem('whisperdesk_lastModel')).toBe(JSON.stringify(value));
+      expect(localStorage.getItem('whispersermons_lastModel')).toBe(JSON.stringify(value));
     });
 
     it('should return true on successful storage', () => {
-      const result = setStorageItem('whisperdesk_history' as StorageKey, []);
+      const result = setStorageItem('whispersermons_history' as StorageKey, []);
 
       expect(result).toBe(true);
     });
@@ -69,20 +69,20 @@ describe('storage', () => {
         { id: 1, name: 'item1' },
         { id: 2, name: 'item2' },
       ];
-      const success = setStorageItem('whisperdesk_history' as StorageKey, items);
+      const success = setStorageItem('whispersermons_history' as StorageKey, items);
 
       expect(success).toBe(true);
-      expect(JSON.parse(localStorage.getItem('whisperdesk_history') || '')).toEqual(items);
+      expect(JSON.parse(localStorage.getItem('whispersermons_history') || '')).toEqual(items);
     });
 
     it('should overwrite existing items', () => {
       const value1 = { data: 'first' };
       const value2 = { data: 'second' };
 
-      setStorageItem('whisperdesk_theme' as StorageKey, value1);
-      setStorageItem('whisperdesk_theme' as StorageKey, value2);
+      setStorageItem('whispersermons_theme' as StorageKey, value1);
+      setStorageItem('whispersermons_theme' as StorageKey, value2);
 
-      const result = getStorageItem('whisperdesk_theme' as StorageKey, {});
+      const result = getStorageItem('whispersermons_theme' as StorageKey, {});
 
       expect(result).toEqual(value2);
     });
@@ -90,22 +90,22 @@ describe('storage', () => {
 
   describe('getStorageString', () => {
     it('should return default value when item not in storage', () => {
-      const result = getStorageString('whisperdesk_theme' as StorageKey, 'light');
+      const result = getStorageString('whispersermons_theme' as StorageKey, 'light');
 
       expect(result).toBe('light');
     });
 
     it('should retrieve stored string value', () => {
-      localStorage.setItem('whisperdesk_theme', 'dark');
+      localStorage.setItem('whispersermons_theme', 'dark');
 
-      const result = getStorageString('whisperdesk_theme' as StorageKey, 'light');
+      const result = getStorageString('whispersermons_theme' as StorageKey, 'light');
 
       expect(result).toBe('dark');
     });
 
     it('should return default value if localStorage fails', () => {
       const defaultValue = 'light';
-      const result = getStorageString('whisperdesk_theme' as StorageKey, defaultValue);
+      const result = getStorageString('whispersermons_theme' as StorageKey, defaultValue);
 
       expect(result).toBe(defaultValue);
     });
@@ -114,38 +114,38 @@ describe('storage', () => {
   describe('setStorageString', () => {
     it('should store string values', () => {
       const value = 'dark';
-      const success = setStorageString('whisperdesk_theme' as StorageKey, value);
+      const success = setStorageString('whispersermons_theme' as StorageKey, value);
 
       expect(success).toBe(true);
-      expect(localStorage.getItem('whisperdesk_theme')).toBe(value);
+      expect(localStorage.getItem('whispersermons_theme')).toBe(value);
     });
 
     it('should return true on successful storage', () => {
-      const result = setStorageString('whisperdesk_theme' as StorageKey, 'light');
+      const result = setStorageString('whispersermons_theme' as StorageKey, 'light');
 
       expect(result).toBe(true);
     });
 
     it('should overwrite existing strings', () => {
-      setStorageString('whisperdesk_theme' as StorageKey, 'light');
-      setStorageString('whisperdesk_theme' as StorageKey, 'dark');
+      setStorageString('whispersermons_theme' as StorageKey, 'light');
+      setStorageString('whispersermons_theme' as StorageKey, 'dark');
 
-      expect(localStorage.getItem('whisperdesk_theme')).toBe('dark');
+      expect(localStorage.getItem('whispersermons_theme')).toBe('dark');
     });
   });
 
   describe('removeStorageItem', () => {
     it('should remove stored item', () => {
-      localStorage.setItem('whisperdesk_theme', 'dark');
+      localStorage.setItem('whispersermons_theme', 'dark');
 
-      removeStorageItem('whisperdesk_theme' as StorageKey);
+      removeStorageItem('whispersermons_theme' as StorageKey);
 
-      expect(localStorage.getItem('whisperdesk_theme')).toBeNull();
+      expect(localStorage.getItem('whispersermons_theme')).toBeNull();
     });
 
     it('should handle removing non-existent items', () => {
       expect(() => {
-        removeStorageItem('whisperdesk_theme' as StorageKey);
+        removeStorageItem('whispersermons_theme' as StorageKey);
       }).not.toThrow();
     });
   });
@@ -158,7 +158,7 @@ describe('storage', () => {
         throw new Error('Storage quota exceeded');
       });
 
-      const result = setStorageItem('whisperdesk_theme' as StorageKey, { data: 'test' });
+      const result = setStorageItem('whispersermons_theme' as StorageKey, { data: 'test' });
 
       expect(result).toBe(false);
       expect(logger.error).toHaveBeenCalled();
@@ -173,7 +173,7 @@ describe('storage', () => {
         throw new Error('Storage quota exceeded');
       });
 
-      const result = setStorageString('whisperdesk_theme' as StorageKey, 'test');
+      const result = setStorageString('whispersermons_theme' as StorageKey, 'test');
 
       expect(result).toBe(false);
       expect(logger.error).toHaveBeenCalled();
@@ -188,7 +188,7 @@ describe('storage', () => {
         throw new Error('Storage access denied');
       });
 
-      const result = getStorageItem('whisperdesk_theme' as StorageKey, 'default');
+      const result = getStorageItem('whispersermons_theme' as StorageKey, 'default');
 
       expect(result).toBe('default');
 
@@ -202,7 +202,7 @@ describe('storage', () => {
         throw new Error('Storage access denied');
       });
 
-      const result = getStorageString('whisperdesk_theme' as StorageKey, 'light');
+      const result = getStorageString('whispersermons_theme' as StorageKey, 'light');
 
       expect(result).toBe('light');
 
@@ -217,7 +217,7 @@ describe('storage', () => {
       });
 
       expect(() => {
-        removeStorageItem('whisperdesk_theme' as StorageKey);
+        removeStorageItem('whispersermons_theme' as StorageKey);
       }).not.toThrow();
 
       localStorage.removeItem = originalRemoveItem;

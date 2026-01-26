@@ -1,17 +1,17 @@
 {
-  "name": "whisperdesk",
+  "name": "whispersermons",
   "version": "1.8.0",
   "type": "module",
-  "description": "Desktop transcription app powered by whisper.cpp",
+  "description": "Desktop sermon transcription app powered by openai-whisper",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/PVAS-Development/whisperdesk.git"
+    "url": "https://github.com/Blakthorne/whispersermons.git"
   },
   "bugs": {
-    "url": "https://github.com/PVAS-Development/whisperdesk/issues"
+    "url": "https://github.com/Blakthorne/whispersermons/issues"
   },
-  "homepage": "https://github.com/PVAS-Development/whisperdesk#readme",
+  "homepage": "https://github.com/Blakthorne/whispersermons#readme",
   "engines": {
     "node": ">=22.12.0"
   },
@@ -58,6 +58,10 @@
       "prettier --write"
     ]
   },
+  "overrides": {
+    "tar": "^7.5.6",
+    "undici": "^7.19.1"
+  },
   "keywords": [
     "whisper",
     "whisper.cpp",
@@ -80,7 +84,7 @@
     "dompurify": "^3.3.0",
     "electron-log": "^5.4.3",
     "electron-updater": "^6.6.2",
-    "jspdf": "^2.5.2",
+    "jspdf": "^4.0.0",
     "lucide-react": "^0.556.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
@@ -104,7 +108,7 @@
     "concurrently": "^9.2.1",
     "conventional-changelog-conventionalcommits": "^9.1.0",
     "electron": "^39.2.4",
-    "electron-builder": "^26.0.12",
+    "electron-builder": "^26.4.0",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
@@ -113,7 +117,7 @@
     "jsdom": "^25.0.1",
     "lint-staged": "^16.2.7",
     "prettier": "^3.7.3",
-    "semantic-release": "^24.2.9",
+    "semantic-release": "^25.0.2",
     "sharp": "^0.34.5",
     "tsup": "^8.5.1",
     "tsx": "^4.21.0",
@@ -124,9 +128,9 @@
     "wait-on": "^9.0.3"
   },
   "build": {
-    "appId": "com.whisperdesk.app",
-    "productName": "WhisperDesk",
-    "copyright": "Copyright © 2025 WhisperDesk",
+    "appId": "com.whispersermons.app",
+    "productName": "WhisperSermons",
+    "copyright": "Copyright © 2026 WhisperSermons",
     "directories": {
       "output": "release",
       "buildResources": "build"
@@ -184,7 +188,7 @@
       "notarize": true
     },
     "dmg": {
-      "title": "WhisperDesk",
+      "title": "WhisperSermons",
       "backgroundColor": "#f5f5f7",
       "window": {
         "width": 540,
@@ -205,8 +209,8 @@
     },
     "publish": {
       "provider": "github",
-      "owner": "PVAS-Development",
-      "repo": "whisperdesk"
+      "owner": "Blakthorne",
+      "repo": "whispersermons"
     }
   }
 }
