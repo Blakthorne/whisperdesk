@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { FloatingActionToolbar } from '../FloatingActionToolbar';
@@ -6,7 +5,6 @@ import { FloatingActionToolbar } from '../FloatingActionToolbar';
 describe('FloatingActionToolbar', () => {
   const onConfirm = vi.fn();
   const onCancel = vi.fn();
-  const onReset = vi.fn();
 
   it('should not render when not visible', () => {
     render(<FloatingActionToolbar isVisible={false} onConfirm={onConfirm} onCancel={onCancel} />);

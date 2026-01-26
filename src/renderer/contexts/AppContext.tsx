@@ -3,7 +3,7 @@ import { useTranscription, useBatchQueue, useQueueSelection } from '../features/
 import { useHistory } from '../features/history';
 import { useTheme, useCopyToClipboard, useElectronMenu } from '../hooks';
 import { selectAndProcessFiles } from '../utils';
-import type { HistoryItem, SelectedFile, SermonDocument, OutputFormat } from '../types';
+import type { HistoryItem, SelectedFile, SermonDocument, OutputFormat, TranscriptionSettings } from '../types';
 import type { DocumentState, DocumentRootNode } from '../../shared/documentModel';
 import { astToHtml } from '../features/document/bridge/astTipTapConverter';
 import {
@@ -59,7 +59,7 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
     error,
     modelDownloaded,
     setSelectedFile,
-    setSettings,
+    setSettings: setTranscriptionSettings,
     setModelDownloaded,
     setTranscription,
     handleSave,
@@ -79,7 +79,26 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
   const [documentSaveState, setDocumentSaveState] = useState<DocumentSaveState>('saved');
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [isDev, setIsDev] = useState<boolean>(false);
+  const [isDevToolsOpen, setIsDevToolsOpen] = useState<boolean>(false);
   const [visibleNodeId, setVisibleNodeId] = useState<string | null>(null);
+
+  // Guarded setter to ensure Test Mode is only enabled in dev builds
+  const setSettings = useCallback(
+    (newSettings: TranscriptionSettings) => {
+      const sanitizedSettings = (!isDev || !isDevToolsOpen) && newSettings.testMode
+        ? { ...newSettings, testMode: false }
+        : newSettings;
+      setTranscriptionSettings(sanitizedSettings);
+    },
+    [isDev, isDevToolsOpen, setTranscriptionSettings]
+  );
+
+  // If we transition to non-dev or DevTools closed while testMode is on, force-disable it
+  useEffect(() => {
+    if ((!isDev || !isDevToolsOpen) && settings.testMode) {
+      setTranscriptionSettings({ ...settings, testMode: false });
+    }
+  }, [isDev, isDevToolsOpen, settings, setTranscriptionSettings]);
 
   // Version-based dirty tracking (AST-only architecture)
   const [editVersion, setEditVersion] = useState<number>(0);
@@ -97,8 +116,22 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
     if (window.electronAPI?.getAppInfo) {
       window.electronAPI.getAppInfo().then((info) => {
         setIsDev(info.isDev);
+        setIsDevToolsOpen(info.isDevToolsOpen);
       });
     }
+  }, []);
+
+  // Track DevTools open/close state to conditionally show Dev AST editor mode
+  useEffect(() => {
+    if (!window.electronAPI?.onDevToolsStateChanged) return;
+
+    const cleanup = window.electronAPI.onDevToolsStateChanged((isOpen) => {
+      setIsDevToolsOpen(isOpen);
+    });
+
+    return () => {
+      if (cleanup) cleanup();
+    };
   }, []);
 
   // Auto-save with debounce when there are unsaved changes
@@ -515,7 +548,7 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
           console.error('Failed to save:', result.error);
         }
       } else {
-        // Standard save for non-sermon content
+        // Fallback save path when no sermon document is available
         await handleSave(format);
       }
     },
@@ -657,6 +690,7 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
       editVersion,
       savedVersion,
       isDev,
+      isDevToolsOpen,
       visibleNodeId,
       canUndo: (sermonDocument?.documentState?.undoStack?.length ?? 0) > 0,
       canRedo: (sermonDocument?.documentState?.redoStack?.length ?? 0) > 0,
@@ -679,6 +713,7 @@ export function AppProvider({ children }: AppProviderProps): React.JSX.Element {
       editVersion,
       savedVersion,
       isDev,
+      isDevToolsOpen,
       visibleNodeId,
     ]
   );

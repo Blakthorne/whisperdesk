@@ -41,7 +41,7 @@ function DefaultPlaceholder(): React.JSX.Element {
     <div className="document-renderer-placeholder">
       <p>No document loaded.</p>
       <p className="document-renderer-placeholder-hint">
-        Process an audio file with "Process as sermon" enabled to see the structured document view.
+        Process an audio file to see the structured document view.
       </p>
     </div>
   );

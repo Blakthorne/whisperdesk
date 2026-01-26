@@ -10,7 +10,6 @@ import {
   checkFFmpeg,
 } from '../services/whisper';
 import {
-  transcribe as pythonTranscribe,
   processSermon,
   cancelTranscription as cancelPythonTranscription,
   checkDependencies as checkPythonDependencies,
@@ -31,7 +30,7 @@ import {
   htmlToSermonPlainText,
 } from '../utils/export-helper';
 import { trackEvent, AnalyticsEvents } from '../services/analytics';
-import type { TranscriptionOptions, SaveFileOptions } from '../../shared/types';
+import type { TranscriptionOptions, SaveFileOptions, TranscriptionResult } from '../../shared/types';
 
 export function registerIpcHandlers(getMainWindow: () => BrowserWindow | null) {
   ipcMain.handle('dialog:openFile', async () => {
@@ -165,25 +164,88 @@ export function registerIpcHandlers(getMainWindow: () => BrowserWindow | null) {
 
   let currentTranscription: { cancel?: () => void } | null = null;
 
-  // Standard transcription handler - now uses Python Whisper
+  // Stage names for progress mapping (shared across handlers)
+  const STAGE_NAMES: Record<number, string> = {
+    1: 'Transcribe',
+    2: 'Metadata',
+    3: 'Bible Quotes',
+    4: 'Paragraphs',
+    5: 'Tags',
+  };
+
+  // Calculate overall progress based on stage and stage progress
+  function calculateOverallProgress(stage: number, stagePercent: number): number {
+    const stageWeights: Record<number, { start: number; end: number }> = {
+      1: { start: 0, end: 60 },
+      2: { start: 60, end: 65 },
+      3: { start: 65, end: 80 },
+      4: { start: 80, end: 90 },
+      5: { start: 90, end: 100 },
+    };
+
+    const weight = stageWeights[stage] || { start: 0, end: 100 };
+    const stageContribution = (stagePercent / 100) * (weight.end - weight.start);
+    return Math.round(weight.start + stageContribution);
+  }
+
+  // Standard transcription handler - now uses Python sermon pipeline
   ipcMain.handle('transcribe:start', async (_event, options: TranscriptionOptions) => {
     try {
       trackEvent(AnalyticsEvents.TRANSCRIPTION_STARTED, {
         model: options.model,
         language: options.language,
+        sermonMode: 'true',
       });
 
-      // Use Python transcription (whisper.cpp has been removed)
-      const result = await pythonTranscribe(options, (progress) => {
-        getMainWindow()?.webContents.send('transcribe:progress', progress);
-      });
+      const result = await processSermon(
+        options,
+        (progress) => {
+          // Stage 1 transcription progress
+          getMainWindow()?.webContents.send('transcribe:progress', progress);
+        },
+        (pipelineProgress) => {
+          const transformedProgress = {
+            currentStage: {
+              id: pipelineProgress.stage,
+              name: STAGE_NAMES[pipelineProgress.stage] || pipelineProgress.stageName,
+            },
+            stageProgress: pipelineProgress.percent,
+            overallProgress: calculateOverallProgress(
+              pipelineProgress.stage,
+              pipelineProgress.percent
+            ),
+            message: pipelineProgress.message,
+          };
+          getMainWindow()?.webContents.send('transcribe:pipelineProgress', transformedProgress);
+        }
+      );
 
       currentTranscription = null;
+
+      if (result.success && result.sermon) {
+        return {
+          success: true,
+          text: result.text,
+          sermonDocument: {
+            title: result.sermon.title,
+            biblePassage: result.sermon.biblePassage,
+            speaker: result.sermon.speaker,
+            references: result.sermon.references || [],
+            tags: result.sermon.tags || [],
+            body: result.sermon.body || '',
+            rawTranscript: result.sermon.rawTranscript || result.text || '',
+            documentState: result.sermon.documentState,
+            processingMetadata: result.sermon.processingMetadata,
+            astError: result.sermon.astError,
+          },
+        } as TranscriptionResult & { sermonDocument: import('../../shared/types').SermonDocument };
+      }
 
       if (result.success && !result.cancelled) {
         trackEvent(AnalyticsEvents.TRANSCRIPTION_COMPLETED, {
           model: options.model,
           language: options.language,
+          sermonMode: 'true',
         });
       } else if (result.cancelled) {
         trackEvent(AnalyticsEvents.TRANSCRIPTION_CANCELLED);
@@ -211,8 +273,10 @@ export function registerIpcHandlers(getMainWindow: () => BrowserWindow | null) {
   });
 
   ipcMain.handle('app:getInfo', () => {
+    const mainWindow = getMainWindow();
     return {
       isDev: !app.isPackaged,
+      isDevToolsOpen: mainWindow?.webContents.isDevToolsOpened() ?? false,
       version: app.getVersion(),
       platform: process.platform,
       osVersion: process.getSystemVersion(),
@@ -308,115 +372,74 @@ export function registerIpcHandlers(getMainWindow: () => BrowserWindow | null) {
   // ============================================================================
 
   interface ExtendedTranscriptionOptions extends TranscriptionOptions {
-    processAsSermon?: boolean;
-    skipTranscription?: boolean;
-  }
-
-  // Stage names for progress mapping
-  const STAGE_NAMES: Record<number, string> = {
-    1: 'Transcribe',
-    2: 'Metadata',
-    3: 'Bible Quotes',
-    4: 'Paragraphs',
-    5: 'Tags',
-  };
-
-  // Calculate overall progress based on stage and stage progress
-  function calculateOverallProgress(stage: number, stagePercent: number): number {
-    // Each stage contributes to overall progress
-    // Stage 1: 0-60% (transcription is the longest)
-    // Stage 2: 60-65%
-    // Stage 3: 65-80%
-    // Stage 4: 80-90%
-    // Stage 5: 90-100%
-    const stageWeights: Record<number, { start: number; end: number }> = {
-      1: { start: 0, end: 60 },
-      2: { start: 60, end: 65 },
-      3: { start: 65, end: 80 },
-      4: { start: 80, end: 90 },
-      5: { start: 90, end: 100 },
-    };
-
-    const weight = stageWeights[stage] || { start: 0, end: 100 };
-    const stageContribution = (stagePercent / 100) * (weight.end - weight.start);
-    return Math.round(weight.start + stageContribution);
+    testMode?: boolean;
   }
 
   ipcMain.handle(
     'transcribe:startPython',
     async (_event, options: ExtendedTranscriptionOptions & { testMode?: boolean }) => {
       try {
-        const { processAsSermon, testMode, ...transcriptionOptions } = options;
+        const { testMode, ...transcriptionOptions } = options;
 
         trackEvent(AnalyticsEvents.TRANSCRIPTION_STARTED, {
           model: options.model,
           language: options.language,
-          sermonMode: processAsSermon ? 'true' : 'false',
+          sermonMode: 'true',
           testMode: testMode ? 'true' : 'false',
         });
 
-        let result;
-
-        if (processAsSermon) {
-          // Full sermon processing pipeline
-          result = await processSermon(
-            transcriptionOptions,
-            (progress) => {
-              // Transcription progress (stage 1)
-              getMainWindow()?.webContents.send('transcribe:progress', progress);
-            },
-            (pipelineProgress) => {
-              // Transform pipeline progress to match UI format
-              const transformedProgress = {
-                currentStage: {
-                  id: pipelineProgress.stage,
-                  name: STAGE_NAMES[pipelineProgress.stage] || pipelineProgress.stageName,
-                },
-                stageProgress: pipelineProgress.percent,
-                overallProgress: calculateOverallProgress(
-                  pipelineProgress.stage,
-                  pipelineProgress.percent
-                ),
-                message: pipelineProgress.message,
-              };
-              getMainWindow()?.webContents.send('transcribe:pipelineProgress', transformedProgress);
-            },
-            testMode // Pass skipTranscription flag
-          );
-
-          // Transform result to match SermonTranscriptionResult interface
-          // The Python bridge returns sermon data directly in result.sermon
-          if (result.success && result.sermon) {
-            return {
-              success: true,
-              text: result.text,
-              sermonDocument: {
-                title: result.sermon.title,
-                biblePassage: result.sermon.biblePassage,
-                speaker: result.sermon.speaker,
-                references: result.sermon.references || [],
-                tags: result.sermon.tags || [],
-                body: result.sermon.body || '',
-                rawTranscript: result.sermon.rawTranscript || result.text || '',
-                // Include AST document state (quote boundaries, interjections, etc.)
-                documentState: result.sermon.documentState,
-                processingMetadata: result.sermon.processingMetadata,
-                astError: result.sermon.astError,
-              },
-            };
-          }
-        } else {
-          // Simple transcription only
-          result = await pythonTranscribe(transcriptionOptions, (progress) => {
+        const result = await processSermon(
+          transcriptionOptions,
+          (progress) => {
+            // Transcription progress (stage 1)
             getMainWindow()?.webContents.send('transcribe:progress', progress);
-          });
+          },
+          (pipelineProgress) => {
+            // Transform pipeline progress to match UI format
+            const transformedProgress = {
+              currentStage: {
+                id: pipelineProgress.stage,
+                name: STAGE_NAMES[pipelineProgress.stage] || pipelineProgress.stageName,
+              },
+              stageProgress: pipelineProgress.percent,
+              overallProgress: calculateOverallProgress(
+                pipelineProgress.stage,
+                pipelineProgress.percent
+              ),
+              message: pipelineProgress.message,
+            };
+            getMainWindow()?.webContents.send('transcribe:pipelineProgress', transformedProgress);
+          },
+          testMode
+        );
+
+        // Transform result to match SermonTranscriptionResult interface
+        // The Python bridge returns sermon data directly in result.sermon
+        if (result.success && result.sermon) {
+          return {
+            success: true,
+            text: result.text,
+            sermonDocument: {
+              title: result.sermon.title,
+              biblePassage: result.sermon.biblePassage,
+              speaker: result.sermon.speaker,
+              references: result.sermon.references || [],
+              tags: result.sermon.tags || [],
+              body: result.sermon.body || '',
+              rawTranscript: result.sermon.rawTranscript || result.text || '',
+              // Include AST document state (quote boundaries, interjections, etc.)
+              documentState: result.sermon.documentState,
+              processingMetadata: result.sermon.processingMetadata,
+              astError: result.sermon.astError,
+            },
+          };
         }
 
         if (result.success && !result.cancelled) {
           trackEvent(AnalyticsEvents.TRANSCRIPTION_COMPLETED, {
             model: options.model,
             language: options.language,
-            sermonMode: processAsSermon ? 'true' : 'false',
+            sermonMode: 'true',
           });
         } else if (result.cancelled) {
           trackEvent(AnalyticsEvents.TRANSCRIPTION_CANCELLED);

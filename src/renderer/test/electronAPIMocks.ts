@@ -45,9 +45,12 @@ export const createDefaultElectronAPIMock = (): ElectronAPI => ({
   onPythonInstallProgress: vi.fn().mockReturnValue(() => {}),
   onPythonModelProgress: vi.fn().mockReturnValue(() => {}),
   getAppInfo: vi.fn().mockResolvedValue({
+    isDev: true,
+    isDevToolsOpen: false,
     version: '1.0.0',
-    name: 'WhisperSermons',
+    platform: 'darwin',
   }),
+  onDevToolsStateChanged: vi.fn().mockReturnValue(() => {}),
   getMemoryUsage: vi.fn().mockResolvedValue({
     heapUsed: 100 * 1024 * 1024,
     heapTotal: 200 * 1024 * 1024,
@@ -99,7 +102,10 @@ export const createFullElectronAPIMock = (): ElectronAPI => ({
   checkPythonDependencies: vi.fn().mockResolvedValue({ available: true, missing: [] }),
   onPythonInstallProgress: vi.fn().mockReturnValue(() => {}),
   onPythonModelProgress: vi.fn().mockReturnValue(() => {}),
-  getAppInfo: vi.fn().mockResolvedValue({ isDev: false, version: '1.0.0', platform: 'darwin' }),
+  getAppInfo: vi
+    .fn()
+    .mockResolvedValue({ isDev: false, isDevToolsOpen: false, version: '1.0.0', platform: 'darwin' }),
+  onDevToolsStateChanged: vi.fn().mockReturnValue(() => {}),
   getMemoryUsage: vi
     .fn()
     .mockResolvedValue({ heapUsed: 1, heapTotal: 2, rss: 3, external: 4, isTranscribing: false }),

@@ -187,7 +187,7 @@ function SermonEditor({
     // Priority 2: Fallback to document.body if no AST or AST conversion failed
     // This handles legacy data or fresh transcriptions without AST yet
     if (!document) {
-      return '<p>No sermon content available. Start by processing an audio file with "Process as sermon" enabled.</p>';
+      return '<p>No sermon content available. Start by processing an audio file to generate sermon content.</p>';
     }
 
     // Build HTML from sermon document (legacy path for initial transcription)

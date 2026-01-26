@@ -8,9 +8,9 @@ import type {
   PipelineStage,
 } from '../shared/types';
 
-// Extended options for Python transcription with sermon processing
+// Extended options for Python transcription (sermon-only)
 interface ExtendedTranscriptionOptions extends TranscriptionOptions {
-  processAsSermon?: boolean;
+  testMode?: boolean;
 }
 
 // Python environment status
@@ -89,6 +89,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getMemoryUsage: () => ipcRenderer.invoke('app:getMemoryUsage'),
   trackEvent: (eventName: string, properties?: Record<string, string | number | boolean>) =>
     ipcRenderer.invoke('analytics:track', eventName, properties),
+
+  onDevToolsStateChanged: (callback: (isOpen: boolean) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, data: { isOpen: boolean }) =>
+      callback(data.isOpen);
+    ipcRenderer.on('devtools:stateChanged', listener);
+    return () => ipcRenderer.removeListener('devtools:stateChanged', listener);
+  },
 
   openExternal: (url: string) => ipcRenderer.invoke('shell:openExternal', url),
 

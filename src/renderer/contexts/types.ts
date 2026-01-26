@@ -58,6 +58,8 @@ export interface TranscriptionStateContextValue {
   savedVersion: number;
   /** Whether the app is running in development mode */
   isDev: boolean;
+  /** Whether Developer Tools are currently open */
+  isDevToolsOpen: boolean;
   /** The ID of the node currently visible at the top of the viewport (for scroll sync) */
   visibleNodeId: string | null;
   /** Whether undo is available (has snapshots in undo stack) */

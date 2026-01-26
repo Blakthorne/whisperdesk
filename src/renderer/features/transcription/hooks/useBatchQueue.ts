@@ -8,9 +8,6 @@ import type {
   SermonDocument,
 } from '../../../types';
 import {
-  startTranscription,
-  cancelTranscription,
-  onTranscriptionProgress,
   startPythonTranscription,
   cancelPythonTranscription,
   onPipelineProgress,
@@ -56,15 +53,10 @@ export function useBatchQueue(options: UseBatchQueueOptions): UseBatchQueueRetur
 
   const isCancelledRef = useRef(false);
   const hasCalledFirstCompleteRef = useRef(false);
-  const progressUnsubscribeRef = useRef<(() => void) | null>(null);
   const pipelineProgressUnsubscribeRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     return () => {
-      if (progressUnsubscribeRef.current) {
-        progressUnsubscribeRef.current();
-        progressUnsubscribeRef.current = null;
-      }
       if (pipelineProgressUnsubscribeRef.current) {
         pipelineProgressUnsubscribeRef.current();
         pipelineProgressUnsubscribeRef.current = null;
@@ -112,7 +104,6 @@ export function useBatchQueue(options: UseBatchQueueOptions): UseBatchQueueRetur
   const processItem = useCallback(
     async (item: QueueItem): Promise<QueueItem> => {
       const startTime = Date.now();
-      const usePythonTranscription = settings.processAsSermon === true;
 
       setQueue((prev) =>
         prev.map((q) =>
@@ -121,97 +112,68 @@ export function useBatchQueue(options: UseBatchQueueOptions): UseBatchQueueRetur
       );
       setCurrentItemId(item.id);
 
-      if (progressUnsubscribeRef.current) {
-        progressUnsubscribeRef.current();
-        progressUnsubscribeRef.current = null;
-      }
-
       if (pipelineProgressUnsubscribeRef.current) {
         pipelineProgressUnsubscribeRef.current();
         pipelineProgressUnsubscribeRef.current = null;
       }
 
-      progressUnsubscribeRef.current = onTranscriptionProgress((progress) => {
-        // Only update queue progress from transcription events when NOT in sermon mode
-        // In sermon mode, we use the pipeline's overall progress instead
-        if (!usePythonTranscription && item.id !== 'test-mode-dummy-id') {
-          setQueue((prev) => prev.map((q) => (q.id === item.id ? { ...q, progress } : q)));
+      // Subscribe to pipeline progress for sermon processing
+      pipelineProgressUnsubscribeRef.current = onPipelineProgress((progress) => {
+        setPipelineProgress(progress);
+
+        // Calculate overall progress using weighted stages (matching PipelineProgress component)
+        // Stage weights: Transcribe=60%, Metadata=5%, Bible Quotes=25%, Paragraphs=5%, Tags=5%
+        const stageWeights: Record<number, { start: number; end: number }> = {
+          1: { start: 0, end: 60 },
+          2: { start: 60, end: 65 },
+          3: { start: 65, end: 90 },
+          4: { start: 90, end: 95 },
+          5: { start: 95, end: 100 },
+        };
+
+        const stageId = progress.currentStage?.id;
+        let calculatedOverallProgress = 0;
+        if (stageId && stageWeights[stageId]) {
+          const weight = stageWeights[stageId];
+          const stageContribution = (progress.stageProgress / 100) * (weight.end - weight.start);
+          calculatedOverallProgress = Math.min(100, Math.round(weight.start + stageContribution));
+        }
+
+        // Update the queue item's progress to reflect overall pipeline progress
+        // This ensures the FileQueue progress bar matches the PipelineProgress display
+        if (item.id !== 'test-mode-dummy-id') {
+          setQueue((prev) =>
+            prev.map((q) =>
+              q.id === item.id
+                ? {
+                  ...q,
+                  progress: {
+                    percent: calculatedOverallProgress,
+                    status: progress.message,
+                  },
+                }
+                : q
+            )
+          );
         }
       });
-
-      // Subscribe to pipeline progress for sermon processing
-      if (usePythonTranscription) {
-        pipelineProgressUnsubscribeRef.current = onPipelineProgress((progress) => {
-          setPipelineProgress(progress);
-
-          // Calculate overall progress using weighted stages (matching PipelineProgress component)
-          // Stage weights: Transcribe=60%, Metadata=5%, Bible Quotes=25%, Paragraphs=5%, Tags=5%
-          const stageWeights: Record<number, { start: number; end: number }> = {
-            1: { start: 0, end: 60 },
-            2: { start: 60, end: 65 },
-            3: { start: 65, end: 90 },
-            4: { start: 90, end: 95 },
-            5: { start: 95, end: 100 },
-          };
-
-          const stageId = progress.currentStage?.id;
-          let calculatedOverallProgress = 0;
-          if (stageId && stageWeights[stageId]) {
-            const weight = stageWeights[stageId];
-            const stageContribution = (progress.stageProgress / 100) * (weight.end - weight.start);
-            calculatedOverallProgress = Math.min(100, Math.round(weight.start + stageContribution));
-          }
-
-          // Update the queue item's progress to reflect overall pipeline progress
-          // This ensures the FileQueue progress bar matches the PipelineProgress display
-          if (item.id !== 'test-mode-dummy-id') {
-            setQueue((prev) =>
-              prev.map((q) =>
-                q.id === item.id
-                  ? {
-                    ...q,
-                    progress: {
-                      percent: calculatedOverallProgress,
-                      status: progress.message,
-                    },
-                  }
-                  : q
-              )
-            );
-          }
-        });
-      }
 
       logger.info('Processing batch item', {
         id: item.id,
         file: sanitizePath(item.file.path),
         model: settings.model,
         language: settings.language,
-        sermonMode: usePythonTranscription,
+        sermonMode: true,
       });
 
       try {
-        let result: SermonTranscriptionResult;
-
-        if (usePythonTranscription) {
-          // Use Python transcription with optional sermon processing
-          result = await startPythonTranscription({
-            filePath: item.file.path,
-            model: settings.model,
-            language: settings.language,
-            outputFormat: 'vtt',
-            processAsSermon: true,
-            testMode: settings.testMode,
-          });
-        } else {
-          // Use original whisper.cpp transcription
-          result = await startTranscription({
-            filePath: item.file.path,
-            model: settings.model,
-            language: settings.language,
-            outputFormat: 'vtt',
-          });
-        }
+        const result: SermonTranscriptionResult = await startPythonTranscription({
+          filePath: item.file.path,
+          model: settings.model,
+          language: settings.language,
+          outputFormat: 'vtt',
+          testMode: settings.testMode,
+        });
 
         const endTime = Date.now();
 
@@ -268,7 +230,7 @@ export function useBatchQueue(options: UseBatchQueueOptions): UseBatchQueueRetur
             preview: result.text.substring(0, 100) + (result.text.length > 100 ? '...' : ''),
             fullText: result.text,
             // Sermon-specific fields - AST in sermonDocument.documentState is source of truth
-            isSermon: settings.processAsSermon === true,
+            isSermon: true,
             sermonDocument: result.sermonDocument,
           };
           onHistoryAdd(historyItem);
@@ -296,10 +258,6 @@ export function useBatchQueue(options: UseBatchQueueOptions): UseBatchQueueRetur
           endTime: Date.now(),
         };
       } finally {
-        if (progressUnsubscribeRef.current) {
-          progressUnsubscribeRef.current();
-          progressUnsubscribeRef.current = null;
-        }
         if (pipelineProgressUnsubscribeRef.current) {
           pipelineProgressUnsubscribeRef.current();
           pipelineProgressUnsubscribeRef.current = null;
@@ -387,8 +345,7 @@ export function useBatchQueue(options: UseBatchQueueOptions): UseBatchQueueRetur
 
     isCancelledRef.current = true;
 
-    // Cancel both types of transcription (one will be a no-op)
-    await Promise.all([cancelTranscription(), cancelPythonTranscription()]);
+    await cancelPythonTranscription();
 
     setIsProcessing(false);
     setCurrentItemId(null);
@@ -401,11 +358,6 @@ export function useBatchQueue(options: UseBatchQueueOptions): UseBatchQueueRetur
           : q
       )
     );
-
-    if (progressUnsubscribeRef.current) {
-      progressUnsubscribeRef.current();
-      progressUnsubscribeRef.current = null;
-    }
 
     if (pipelineProgressUnsubscribeRef.current) {
       pipelineProgressUnsubscribeRef.current();

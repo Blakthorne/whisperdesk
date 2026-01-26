@@ -23,7 +23,6 @@ import { GpuStatus } from '../GpuStatus';
 import { ModelSelector } from '../ModelSelector';
 import { ModelDetails } from '../ModelDetails';
 import { LanguageSelector } from '../LanguageSelector';
-import { SermonToggle } from '../SermonToggle';
 
 export interface SettingsPanelProps {
   settings: TranscriptionSettings;
@@ -109,10 +108,6 @@ function SettingsPanel({
     onChange({ ...settings, language });
   };
 
-  const handleSermonModeChange = (processAsSermon: boolean): void => {
-    onChange({ ...settings, processAsSermon });
-  };
-
   const handleDownloadModel = async (modelName: string): Promise<void> => {
     try {
       setDownloading(modelName);
@@ -177,12 +172,6 @@ function SettingsPanel({
         selectedLanguage={settings.language}
         disabled={disabled}
         onChange={handleLanguageChange}
-      />
-
-      <SermonToggle
-        checked={settings.processAsSermon ?? false}
-        onChange={handleSermonModeChange}
-        disabled={disabled}
       />
     </div>
   );

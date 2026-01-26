@@ -6,14 +6,12 @@ import type {
   TranscriptionSettings,
   SelectedFile,
   TranscriptionResult,
-  TranscriptionProgress,
 } from '@/types';
 
 describe('useBatchQueue', () => {
   const mockSettings: TranscriptionSettings = {
     model: 'base',
     language: 'en',
-    processAsSermon: false,
   };
 
   const mockOnHistoryAdd = vi.fn();
@@ -28,14 +26,12 @@ describe('useBatchQueue', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     overrideElectronAPI({
-      startTranscription: vi.fn().mockResolvedValue({
+      startPythonTranscription: vi.fn().mockResolvedValue({
         success: true,
         text: 'Transcribed text',
-        duration: 10,
-        language: 'en',
       }),
-      cancelTranscription: vi.fn().mockResolvedValue({ success: true }),
-      onTranscriptionProgress: vi.fn().mockReturnValue(() => {}),
+      cancelPythonTranscription: vi.fn().mockResolvedValue({ success: true }),
+      onPipelineProgress: vi.fn().mockReturnValue(() => {}),
     });
   });
 
@@ -221,7 +217,7 @@ describe('useBatchQueue', () => {
     });
 
     it('should not start if already processing', async () => {
-      const startTranscriptionMock = vi.fn().mockImplementation(
+      const startPythonTranscriptionMock = vi.fn().mockImplementation(
         () =>
           new Promise((resolve) =>
             setTimeout(
@@ -236,8 +232,8 @@ describe('useBatchQueue', () => {
       );
 
       overrideElectronAPI({
-        startTranscription: startTranscriptionMock,
-        onTranscriptionProgress: vi.fn().mockReturnValue(() => {}),
+        startPythonTranscription: startPythonTranscriptionMock,
+        onPipelineProgress: vi.fn().mockReturnValue(() => {}),
       });
 
       const { result } = renderHook(() => useBatchQueue({ settings: mockSettings }));
@@ -259,16 +255,16 @@ describe('useBatchQueue', () => {
         result.current.startProcessing();
       });
 
-      expect(startTranscriptionMock).toHaveBeenCalledTimes(1);
+      expect(startPythonTranscriptionMock).toHaveBeenCalledTimes(1);
     });
 
     it('should handle transcription errors', async () => {
       overrideElectronAPI({
-        startTranscription: vi.fn().mockResolvedValue({
+        startPythonTranscription: vi.fn().mockResolvedValue({
           success: false,
           error: 'Transcription failed',
         }),
-        onTranscriptionProgress: vi.fn().mockReturnValue(() => {}),
+        onPipelineProgress: vi.fn().mockReturnValue(() => {}),
       });
 
       const { result } = renderHook(() => useBatchQueue({ settings: mockSettings }));
@@ -287,11 +283,11 @@ describe('useBatchQueue', () => {
 
     it('should handle cancelled result from transcription', async () => {
       overrideElectronAPI({
-        startTranscription: vi.fn().mockResolvedValue({
+        startPythonTranscription: vi.fn().mockResolvedValue({
           success: true,
           cancelled: true,
         }),
-        onTranscriptionProgress: vi.fn().mockReturnValue(() => {}),
+        onPipelineProgress: vi.fn().mockReturnValue(() => {}),
       });
 
       const { result } = renderHook(() => useBatchQueue({ settings: mockSettings }));
@@ -309,11 +305,11 @@ describe('useBatchQueue', () => {
 
     it('should handle empty text result from transcription', async () => {
       overrideElectronAPI({
-        startTranscription: vi.fn().mockResolvedValue({
+        startPythonTranscription: vi.fn().mockResolvedValue({
           success: true,
           text: '',
         }),
-        onTranscriptionProgress: vi.fn().mockReturnValue(() => {}),
+        onPipelineProgress: vi.fn().mockReturnValue(() => {}),
       });
 
       const { result } = renderHook(() => useBatchQueue({ settings: mockSettings }));
@@ -332,8 +328,8 @@ describe('useBatchQueue', () => {
 
     it('should handle thrown non-Error object', async () => {
       overrideElectronAPI({
-        startTranscription: vi.fn().mockRejectedValue('string error'),
-        onTranscriptionProgress: vi.fn().mockReturnValue(() => {}),
+        startPythonTranscription: vi.fn().mockRejectedValue('string error'),
+        onPipelineProgress: vi.fn().mockReturnValue(() => {}),
       });
 
       const { result } = renderHook(() => useBatchQueue({ settings: mockSettings }));
@@ -366,9 +362,9 @@ describe('useBatchQueue', () => {
       const pendingPromise = new Promise(() => {});
 
       overrideElectronAPI({
-        startTranscription: vi.fn().mockReturnValue(pendingPromise),
-        cancelTranscription: vi.fn().mockResolvedValue({ success: true }),
-        onTranscriptionProgress: vi.fn().mockReturnValue(() => {}),
+        startPythonTranscription: vi.fn().mockReturnValue(pendingPromise),
+        cancelPythonTranscription: vi.fn().mockResolvedValue({ success: true }),
+        onPipelineProgress: vi.fn().mockReturnValue(() => {}),
       });
 
       const { result } = renderHook(() => useBatchQueue({ settings: mockSettings }));
@@ -395,7 +391,7 @@ describe('useBatchQueue', () => {
     it('should do nothing if not processing', async () => {
       const cancelMock = vi.fn().mockResolvedValue({ success: true });
       overrideElectronAPI({
-        cancelTranscription: cancelMock,
+        cancelPythonTranscription: cancelMock,
       });
 
       const { result } = renderHook(() => useBatchQueue({ settings: mockSettings }));
@@ -453,12 +449,12 @@ describe('useBatchQueue', () => {
       const firstPromise = new Promise(() => {});
 
       overrideElectronAPI({
-        startTranscription: vi
+        startPythonTranscription: vi
           .fn()
           .mockReturnValueOnce(firstPromise)
           .mockResolvedValue({ success: true, text: 'text' }),
-        cancelTranscription: vi.fn().mockResolvedValue({ success: true }),
-        onTranscriptionProgress: vi.fn().mockReturnValue(() => {}),
+        cancelPythonTranscription: vi.fn().mockResolvedValue({ success: true }),
+        onPipelineProgress: vi.fn().mockReturnValue(() => {}),
       });
 
       const { result } = renderHook(() => useBatchQueue({ settings: mockSettings }));
@@ -487,19 +483,19 @@ describe('useBatchQueue', () => {
 
   describe('progress and cancellation flow', () => {
     it('should update item progress during processing', async () => {
-      let progressCb: ((progress: TranscriptionProgress) => void) | undefined;
+      let progressCb: ((progress: import('@/services/electronAPI').PipelineProgress) => void) | undefined;
       let resolveTranscription: (val: TranscriptionResult) => void = () => {};
       const startPromise = new Promise<TranscriptionResult>((resolve) => {
         resolveTranscription = resolve;
       });
 
       overrideElectronAPI({
-        startTranscription: vi.fn().mockReturnValue(startPromise),
-        onTranscriptionProgress: (cb) => {
+        startPythonTranscription: vi.fn().mockReturnValue(startPromise),
+        onPipelineProgress: (cb) => {
           progressCb = cb;
           return () => {};
         },
-        cancelTranscription: vi.fn(),
+        cancelPythonTranscription: vi.fn(),
       });
 
       const { result } = renderHook(() => useBatchQueue({ settings: mockSettings }));
@@ -515,11 +511,16 @@ describe('useBatchQueue', () => {
 
       act(() => {
         if (progressCb) {
-          progressCb({ percent: 50, status: 'Halfway' });
+          progressCb({
+            currentStage: { id: 1, name: 'Transcribing', status: 'active', percent: 50 },
+            stageProgress: 50,
+            overallProgress: 30,
+            message: 'Halfway',
+          });
         }
       });
 
-      expect(result.current.queue[0]!.progress.percent).toBe(50);
+      expect(result.current.queue[0]!.progress.percent).toBe(30);
       expect(result.current.queue[0]!.progress.status).toBe('Halfway');
 
       await act(async () => {
@@ -537,9 +538,9 @@ describe('useBatchQueue', () => {
       });
 
       overrideElectronAPI({
-        startTranscription: vi.fn().mockReturnValue(startPromise),
-        onTranscriptionProgress: vi.fn().mockReturnValue(() => {}),
-        cancelTranscription: vi.fn().mockResolvedValue({ success: true }),
+        startPythonTranscription: vi.fn().mockReturnValue(startPromise),
+        onPipelineProgress: vi.fn().mockReturnValue(() => {}),
+        cancelPythonTranscription: vi.fn().mockResolvedValue({ success: true }),
       });
 
       const { result } = renderHook(() => useBatchQueue({ settings: mockSettings }));

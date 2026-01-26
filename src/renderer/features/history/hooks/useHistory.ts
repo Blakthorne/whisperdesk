@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import type { HistoryItem } from '../../../types';
 import { STORAGE_KEYS } from '../../../utils/storage';
 import { APP_CONFIG } from '../../../config';
@@ -7,22 +7,39 @@ import { logger } from '../../../services';
 const STORAGE_KEY = STORAGE_KEYS.HISTORY;
 const MAX_HISTORY_ITEMS = APP_CONFIG.MAX_HISTORY_ITEMS;
 
-const loadHistoryFromStorage = (): HistoryItem[] => {
+const loadHistoryFromStorage = (): { history: HistoryItem[]; legacyNonSermon: HistoryItem[] } => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      return JSON.parse(saved) as HistoryItem[];
+    if (!saved) {
+      return { history: [], legacyNonSermon: [] };
     }
-    return [];
+
+    const parsed = JSON.parse(saved) as HistoryItem[];
+    const legacyNonSermon: HistoryItem[] = [];
+    const history: HistoryItem[] = [];
+
+    parsed.forEach((item) => {
+      if (item.isSermon === false) {
+        legacyNonSermon.push({ ...item, isLegacyNonSermon: true });
+      } else {
+        history.push(item);
+      }
+    });
+
+    return { history, legacyNonSermon };
   } catch {
-    return [];
+    return { history: [], legacyNonSermon: [] };
   }
 };
 
-const saveHistoryToStorage = (history: HistoryItem[]): void => {
+const saveHistoryToStorage = (
+  history: HistoryItem[],
+  legacyNonSermon: HistoryItem[]
+): void => {
   try {
     const trimmed = history.slice(0, MAX_HISTORY_ITEMS);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
+    const combined = [...legacyNonSermon, ...trimmed];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(combined));
   } catch (e) {
     logger.error('Failed to save history:', e);
   }
@@ -41,8 +58,25 @@ interface UseHistoryReturn {
 }
 
 export function useHistory(): UseHistoryReturn {
-  const [history, setHistory] = useState<HistoryItem[]>(loadHistoryFromStorage);
+  const { history: initialHistory, legacyNonSermon } = loadHistoryFromStorage();
+  const legacyNonSermonRef = useRef<HistoryItem[]>(legacyNonSermon);
+  const legacyLogRef = useRef(false);
+  const [history, setHistory] = useState<HistoryItem[]>(initialHistory);
   const [showHistory, setShowHistory] = useState<boolean>(false);
+
+  if (!legacyLogRef.current && legacyNonSermonRef.current.length > 0) {
+    logger.info('Hiding legacy non-sermon history items', {
+      hiddenCount: legacyNonSermonRef.current.length,
+    });
+    legacyLogRef.current = true;
+  }
+
+  const persistHistory = useCallback(
+    (items: HistoryItem[]): void => {
+      saveHistoryToStorage(items, legacyNonSermonRef.current);
+    },
+    []
+  );
 
   const toggleHistory = useCallback((): void => {
     setShowHistory((prev) => !prev);
@@ -51,33 +85,34 @@ export function useHistory(): UseHistoryReturn {
   const addHistoryItem = useCallback((item: HistoryItem): void => {
     setHistory((prev) => {
       const newHistory = [item, ...prev];
-      saveHistoryToStorage(newHistory);
+      persistHistory(newHistory);
       return newHistory;
     });
-  }, []);
+  }, [persistHistory]);
 
   const updateHistoryItem = useCallback((itemId: string, updates: Partial<HistoryItem>): void => {
     setHistory((prev) => {
       const updated = prev.map((item) =>
         item.id === itemId ? { ...item, ...updates } : item
       );
-      saveHistoryToStorage(updated);
+      persistHistory(updated);
       return updated;
     });
-  }, []);
+  }, [persistHistory]);
 
   const clearHistory = useCallback((): void => {
     setHistory([]);
+    legacyNonSermonRef.current = [];
     localStorage.removeItem(STORAGE_KEY);
   }, []);
 
   const removeHistoryItem = useCallback((itemId: string): void => {
     setHistory((prev) => {
       const updated = prev.filter((item) => item.id !== itemId);
-      saveHistoryToStorage(updated);
+      persistHistory(updated);
       return updated;
     });
-  }, []);
+  }, [persistHistory]);
 
   const selectHistoryItem = useCallback(
     (item: HistoryItem, onSelect: (item: HistoryItem) => void): void => {

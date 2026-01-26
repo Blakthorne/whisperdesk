@@ -58,7 +58,6 @@ export const createMockModels = (
 export const MOCK_SETTINGS: TranscriptionSettings = {
   model: 'base',
   language: 'en',
-  processAsSermon: false,
 };
 
 export const MOCK_GPU_INFO: GpuInfo = {

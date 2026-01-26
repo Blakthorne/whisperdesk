@@ -1,7 +1,6 @@
 import React, { useCallback, useRef, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { FloatingActionToolbar } from '../../../components/ui/FloatingActionToolbar';
-import { BOUNDARY_CHANGE_DEBOUNCE_MS } from '../../../types/quoteReview';
 import './QuoteBoundaryEditor.css';
 
 /**
@@ -611,23 +610,6 @@ export function QuoteBoundaryEditor({
         setActiveHandle(null);
 
         // Commit the change
-        if (selection && editorContainerRef.current) {
-          const newText = getTextBetweenPositions(
-            selection.start,
-            selection.end,
-            editorContainerRef.current
-          );
-
-          const affectedParagraphs = getAffectedParagraphs(selection.start, selection.end);
-          // Check for cross-paragraph
-          if (affectedParagraphs.length > 1) {
-            // console.log('[QuoteBoundaryEditor] Cross-paragraph selection:', paragraphIds);
-          }
-
-          // Don't auto-commit. User must confirm via FloatingActionToolbar.
-          // We leave the selection as-is on screen.
-        }
-
         // Reset drag state
         dragStateRef.current = {
           handle: null,

@@ -221,6 +221,23 @@ const createWindow = () => {
     mainWindow.webContents.openDevTools();
   }
 
+  // Track DevTools open/close state and notify renderer
+  mainWindow.webContents.on('devtools-opened', () => {
+    mainWindow?.webContents.send('devtools:stateChanged', { isOpen: true });
+  });
+
+  mainWindow.webContents.on('devtools-closed', () => {
+    mainWindow?.webContents.send('devtools:stateChanged', { isOpen: false });
+  });
+
+  // Send initial DevTools state after renderer is ready
+  mainWindow.webContents.on('did-finish-load', () => {
+    const isDevToolsOpen = mainWindow?.webContents.isDevToolsOpened() ?? false;
+    setTimeout(() => {
+      mainWindow?.webContents.send('devtools:stateChanged', { isOpen: isDevToolsOpen });
+    }, 100);
+  });
+
   if (!isDev) {
     mainWindow.once('ready-to-show', () => {
       setTimeout(() => {

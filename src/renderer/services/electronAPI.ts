@@ -58,7 +58,7 @@ export async function saveFile(options: SaveFileOptions): Promise<SaveFileResult
 
 export async function startTranscription(
   options: TranscriptionOptions
-): Promise<TranscriptionResult> {
+): Promise<SermonTranscriptionResult> {
   const result = await window.electronAPI?.startTranscription(options);
   return result ?? { success: false, error: 'Electron API not available' };
 }
@@ -110,7 +110,18 @@ export async function checkFFmpeg(): Promise<boolean> {
 
 export async function getAppInfo(): Promise<AppInfo> {
   const result = await window.electronAPI?.getAppInfo();
-  return result ?? { isDev: true, version: '0.0.0', platform: process.platform as NodeJS.Platform };
+  return (
+    result ?? {
+      isDev: true,
+      isDevToolsOpen: false,
+      version: '0.0.0',
+      platform: process.platform as NodeJS.Platform,
+    }
+  );
+}
+
+export function onDevToolsStateChanged(callback: (isOpen: boolean) => void): (() => void) | void {
+  return window.electronAPI?.onDevToolsStateChanged?.(callback);
 }
 
 export async function getMemoryUsage(): Promise<MemoryUsage> {

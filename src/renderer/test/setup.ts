@@ -47,9 +47,12 @@ const mockElectronAPI: ElectronAPI = {
   onPythonInstallProgress: vi.fn().mockReturnValue(() => {}),
   onPythonModelProgress: vi.fn().mockReturnValue(() => {}),
   getAppInfo: vi.fn().mockResolvedValue({
+    isDev: true,
+    isDevToolsOpen: false,
     version: '1.0.0',
-    name: 'WhisperSermons',
+    platform: 'darwin',
   }),
+  onDevToolsStateChanged: vi.fn().mockReturnValue(() => {}),
   getMemoryUsage: vi.fn().mockResolvedValue({
     heapUsed: 100 * 1024 * 1024,
     heapTotal: 200 * 1024 * 1024,

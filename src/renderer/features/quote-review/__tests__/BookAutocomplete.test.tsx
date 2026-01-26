@@ -27,16 +27,17 @@ describe('BookAutocomplete', () => {
     mockOnChange.mockClear();
   });
 
-  it('should render with placeholder', () => {
+  it('should render with placeholder', async () => {
     render(<BookAutocomplete value="" onChange={mockOnChange} onSelect={mockOnSelect} />);
 
-    expect(screen.getByPlaceholderText('Book name...')).toBeInTheDocument();
+    const input = await screen.findByPlaceholderText('Book name...');
+    expect(input).toBeInTheDocument();
   });
 
   it('should call onChange when typing', async () => {
     render(<BookAutocomplete value="" onChange={mockOnChange} onSelect={mockOnSelect} />);
 
-    const input = screen.getByPlaceholderText('Book name...');
+    const input = await screen.findByPlaceholderText('Book name...');
     fireEvent.change(input, { target: { value: 'Jo' } });
 
     expect(mockOnChange).toHaveBeenCalledWith('Jo');
@@ -82,10 +83,10 @@ describe('BookAutocomplete', () => {
     expect(mockOnSelect).toHaveBeenCalled();
   });
 
-  it('should be disabled when disabled prop is true', () => {
+  it('should be disabled when disabled prop is true', async () => {
     render(<BookAutocomplete value="" onChange={mockOnChange} onSelect={mockOnSelect} disabled />);
 
-    const input = screen.getByPlaceholderText('Book name...');
+    const input = await screen.findByPlaceholderText('Book name...');
     expect(input).toBeDisabled();
   });
 });

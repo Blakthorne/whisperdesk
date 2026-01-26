@@ -15,7 +15,6 @@ import { spawn } from 'child_process';
 import { createWriteStream, existsSync, mkdirSync } from 'fs';
 import { pipeline } from 'stream/promises';
 import { createGunzip } from 'zlib';
-// @ts-expect-error - tar package doesn't have type declarations
 import { extract } from 'tar';
 
 // ============================================================================

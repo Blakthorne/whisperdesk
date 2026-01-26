@@ -55,7 +55,6 @@ export interface PipelineProgress {
 }
 
 export interface ExtendedTranscriptionOptions extends TranscriptionOptions {
-  processAsSermon?: boolean;
   testMode?: boolean;
 }
 
@@ -81,7 +80,7 @@ export interface ElectronAPI {
   checkFFmpeg: () => Promise<boolean>;
   downloadModel: (modelName: string) => Promise<{ success: boolean; model: string; path: string }>;
   onModelDownloadProgress: (callback: (data: ModelDownloadProgress) => void) => Unsubscribe;
-  startTranscription: (options: TranscriptionOptions) => Promise<TranscriptionResult>;
+  startTranscription: (options: TranscriptionOptions) => Promise<SermonTranscriptionResult>;
   cancelTranscription: () => Promise<CancelResult>;
   onTranscriptionProgress: (callback: (data: TranscriptionProgress) => void) => Unsubscribe;
 
@@ -110,6 +109,7 @@ export interface ElectronAPI {
     eventName: string,
     properties?: Record<string, string | number | boolean>
   ) => Promise<void>;
+  onDevToolsStateChanged: (callback: (isOpen: boolean) => void) => Unsubscribe;
   openExternal: (url: string) => Promise<void>;
   onMenuOpenFile: (callback: () => void) => Unsubscribe;
   onMenuSaveFile: (callback: () => void) => Unsubscribe;

@@ -39,7 +39,6 @@ export type OutputFormat = 'vtt' | 'srt' | 'txt' | 'json' | 'docx' | 'pdf' | 'md
 export interface TranscriptionSettings {
   model: WhisperModelName;
   language: LanguageCode;
-  processAsSermon: boolean;
   testMode?: boolean;
 }
 
@@ -184,6 +183,8 @@ export interface HistoryItem {
   fullText: string;
   /** Whether this was processed as a sermon */
   isSermon?: boolean;
+  /** Flag legacy entries created in non-sermon mode */
+  isLegacyNonSermon?: boolean;
   /** Sermon document data (if isSermon) - contains DocumentState as source of truth */
   sermonDocument?: SermonDocument;
 }
@@ -207,6 +208,7 @@ export interface SaveFileResult {
 
 export interface AppInfo {
   isDev: boolean;
+  isDevToolsOpen: boolean;
   version: string;
   platform: NodeJS.Platform;
   osVersion?: string;

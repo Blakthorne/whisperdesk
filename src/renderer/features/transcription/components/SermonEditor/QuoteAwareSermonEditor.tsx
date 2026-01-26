@@ -318,7 +318,7 @@ export function QuoteAwareSermonEditor({
                 quoteReview.commitBoundaryChange();
                 quoteReview.exitBoundaryEditMode();
               }}
-              onCrossParagraphDrag={(direction, targetParagraph) => {
+              onCrossParagraphDrag={() => {
                 // Update drag preview state if needed (optional)
               }}
             />

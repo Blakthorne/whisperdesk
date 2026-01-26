@@ -118,6 +118,15 @@ Models are downloaded automatically on first use and cached in:
 
 ## Development
 
+### Dev AST Editor
+
+The Dev AST (Abstract Syntax Tree) editor is a developer tool for debugging and inspecting the document structure. It is only accessible when Developer Tools are open:
+
+1. Open Developer Tools via **View → Toggle Developer Tools** (or press **Cmd+Option+I**)
+2. The editor mode switcher will appear above the editor
+3. Use **Cmd+1** to switch to Editor view, **Cmd+2** to switch to Dev AST view
+4. When Developer Tools are closed, the app automatically returns to Editor mode
+
 ### Prerequisites
 
 - Node.js 22.12+ (use `nvm use` to auto-switch via `.nvmrc`)

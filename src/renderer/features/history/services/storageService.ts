@@ -8,12 +8,17 @@ import {
 import { APP_CONFIG } from '../../../config/constants';
 
 export function loadHistory(): HistoryItem[] {
-  return getStorageItem<HistoryItem[]>(STORAGE_KEYS.HISTORY, []);
+  const items = getStorageItem<HistoryItem[]>(STORAGE_KEYS.HISTORY, []);
+  return items.map((item) =>
+    item.isSermon === false ? { ...item, isLegacyNonSermon: true } : item
+  );
 }
 
 export function saveHistory(history: HistoryItem[]): boolean {
-  const trimmed = history.slice(0, APP_CONFIG.MAX_HISTORY_ITEMS);
-  return setStorageItem(STORAGE_KEYS.HISTORY, trimmed);
+  const legacy = history.filter((item) => item.isSermon === false);
+  const sermonHistory = history.filter((item) => item.isSermon !== false);
+  const trimmed = sermonHistory.slice(0, APP_CONFIG.MAX_HISTORY_ITEMS);
+  return setStorageItem(STORAGE_KEYS.HISTORY, [...legacy, ...trimmed]);
 }
 
 export function addHistoryItem(
@@ -60,7 +65,7 @@ export function createHistoryItem(
     duration,
     preview: fullText.substring(0, 100) + (fullText.length > 100 ? '...' : ''),
     fullText,
-    isSermon: options?.isSermon,
+    isSermon: options?.isSermon ?? true,
     sermonDocument: options?.sermonDocument,
   };
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { FileDropZone, FileQueue, PipelineProgress } from '../../../features/transcription';
 import { SettingsPanel } from '../../../features/settings';
 import { useAppTranscription } from '../../../contexts';
@@ -6,9 +6,7 @@ import { useFFmpegStatus } from '../../../hooks';
 import { TranscriptionActions } from './TranscriptionActions';
 import { ErrorMessage } from './ErrorMessage';
 import { SystemWarning } from '../../ui';
-import { getAppInfo } from '../../../services/electronAPI';
-// Reuse SermonToggle styles for consistency
-import '../../../features/settings/components/SermonToggle/SermonToggle.css';
+import './LeftPanel.css';
 
 function LeftPanel(): React.JSX.Element {
   const {
@@ -23,16 +21,11 @@ function LeftPanel(): React.JSX.Element {
     clearCompletedFromQueue,
     selectQueueItem,
     pipelineProgress,
+    isDev,
+    isDevToolsOpen,
   } = useAppTranscription();
 
   const { isFFmpegAvailable, isChecking, recheckStatus } = useFFmpegStatus();
-  const [isDev, setIsDev] = useState(false);
-
-  useEffect(() => {
-    getAppInfo().then((info) => {
-      setIsDev(info.isDev);
-    });
-  }, []);
 
   const handleTestModeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const isEnabled = e.target.checked;
@@ -40,7 +33,7 @@ function LeftPanel(): React.JSX.Element {
       ...settings,
       testMode: isEnabled,
       // Enforce settings when enabling test mode
-      ...(isEnabled ? { language: 'en', processAsSermon: true } : {}),
+      ...(isEnabled ? { language: 'en' } : {}),
     });
   };
 
@@ -53,7 +46,7 @@ function LeftPanel(): React.JSX.Element {
       )}
       {isFFmpegAvailable === false && <SystemWarning onRefresh={recheckStatus} />}
 
-      {isDev && (
+      {isDev && isDevToolsOpen && (
         <div className="sermon-toggle" style={{ marginTop: 0, marginBottom: '20px' }}>
           <label className="sermon-toggle-label">
             <input
@@ -67,7 +60,7 @@ function LeftPanel(): React.JSX.Element {
             <span className="sermon-toggle-text">Test Mode (Skip Whisper)</span>
           </label>
           <p className="sermon-toggle-description">
-            Injects test transcript. Disables file input. FORCE ENABLES: English, Sermon Mode.
+            Injects test transcript. Disables file input.
           </p>
         </div>
       )}
@@ -90,7 +83,7 @@ function LeftPanel(): React.JSX.Element {
       )}
 
       {/* Show pipeline progress when sermon processing is active */}
-      {settings.processAsSermon && (isTranscribing || pipelineProgress) && (
+      {(isTranscribing || pipelineProgress) && (
         <PipelineProgress
           progress={pipelineProgress}
           isActive={isTranscribing}

@@ -5,4 +5,3 @@ export * from './GpuStatus';
 export * from './ModelSelector';
 export * from './ModelDetails';
 export * from './LanguageSelector';
-export * from './SermonToggle';

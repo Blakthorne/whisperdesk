@@ -186,7 +186,8 @@ function RightPanelWithQuoteReview({
 }
 
 /**
- * Inner component that has access to QuoteReviewProvider context
+ * Inner component that has access to QuoteReviewProvider context.
+ * Dev AST editor mode is only available when Developer Tools are open.
  */
 function SermonEditorLayout({
   sermonDocument,
@@ -197,6 +198,7 @@ function SermonEditorLayout({
   activeMode,
   setActiveMode,
   isDev,
+  isDevToolsOpen,
   wordCount,
   quoteCount,
 }: {
@@ -210,6 +212,7 @@ function SermonEditorLayout({
   activeMode: EditorMode;
   setActiveMode: (mode: EditorMode) => void;
   isDev: boolean;
+  isDevToolsOpen: boolean;
   wordCount: number;
   quoteCount: number;
 }): React.JSX.Element {
@@ -281,7 +284,7 @@ function SermonEditorLayout({
       <div className="right-panel-content-wrapper">
         <div className="right-panel-main-content">
           <div className="right-panel">
-            {isDev && (
+            {isDev && isDevToolsOpen && (
               <div className="right-panel-view-switcher">
                 <SegmentedControl
                   options={[
@@ -363,6 +366,7 @@ function RightPanel(): React.JSX.Element {
     lastSavedAt,
     selectedFile,
     isDev,
+    isDevToolsOpen,
     handleUndo,
     handleRedo,
     canUndo,
@@ -372,9 +376,16 @@ function RightPanel(): React.JSX.Element {
   // Track active editor mode (used for unified actions)
   const [activeMode, setActiveMode] = useState<EditorMode>('editor');
 
-  // Keyboard shortcuts for tab switching (Cmd+1, Cmd+2)
+  // Reset to editor mode when DevTools are closed
   useEffect(() => {
-    if (typeof window === 'undefined' || !window.document || !isDev) return;
+    if (!isDevToolsOpen && activeMode === 'ast') {
+      setActiveMode('editor');
+    }
+  }, [isDevToolsOpen, activeMode]);
+
+  // Keyboard shortcuts for tab switching (Cmd+1, Cmd+2) - only in dev mode AND when DevTools are open
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.document || !isDev || !isDevToolsOpen) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       // Only handle Cmd/Ctrl + number shortcuts
@@ -386,7 +397,7 @@ function RightPanel(): React.JSX.Element {
         setActiveMode('editor');
       }
 
-      // Cmd+2 - Switch to Dev AST view (only in dev mode)
+      // Cmd+2 - Switch to Dev AST view (only in dev mode AND when DevTools are open)
       if (e.key === '2') {
         e.preventDefault();
         setActiveMode('ast');
@@ -395,7 +406,7 @@ function RightPanel(): React.JSX.Element {
 
     window.document.addEventListener('keydown', handleKeyDown);
     return () => window.document.removeEventListener('keydown', handleKeyDown);
-  }, [isDev]);
+  }, [isDev, isDevToolsOpen]);
 
   // Global keyboard shortcuts for undo/redo (AST-level)
   useEffect(() => {
@@ -507,57 +518,55 @@ function RightPanel(): React.JSX.Element {
     return count;
   }, [sermonDocument?.documentState]);
 
-  if (showHistory) {
-    return (
-      <div className="right-panel">
-        <TranscriptionHistory
-          history={history}
-          onClear={clearHistory}
-          onClose={() => setShowHistory(false)}
-          onSelect={selectHistoryItem}
-          onDelete={removeHistoryItem}
-        />
-      </div>
-    );
-  }
+  // Wrap all paths with providers for consistent context availability
+  // This ensures useQuoteReview() is always available, even during history viewing
+  const providerKey = sermonDocument && documentId ? documentId : 'no-document';
+  const documentIdForProviders = documentId || 'default';
 
-  // Show SermonEditor if we have a sermon document
-  // Wrap with QuoteReviewProvider and EditorActionsProvider for quote review functionality
-  if (sermonDocument && documentId) {
-    return (
-      <EditorActionsProvider>
-        <DocumentProvider sermonDocument={sermonDocument}>
-          <QuoteReviewProvider documentId={documentId}>
-            <RightPanelWithQuoteReview document={sermonDocument} key={documentId}>
-              <SermonEditorLayout
-                sermonDocument={sermonDocument}
-                documentSaveState={documentSaveState}
-                lastSavedAt={lastSavedAt}
-                handleAstChange={handleAstChange}
-                handleMetadataChange={handleMetadataChange}
-                activeMode={activeMode}
-                setActiveMode={setActiveMode}
-                isDev={isDev}
-                wordCount={wordCount}
-                quoteCount={quoteCount}
-              />
-            </RightPanelWithQuoteReview>
-          </QuoteReviewProvider>
-        </DocumentProvider>
-      </EditorActionsProvider>
-    );
-  }
-
-  // Default: show plain text OutputDisplay
   return (
-    <div className="right-panel">
-      <OutputDisplay
-        text={transcription}
-        onSave={handleSave}
-        onCopy={handleCopy}
-        copySuccess={copySuccess}
-      />
-    </div>
+    <EditorActionsProvider>
+      <DocumentProvider sermonDocument={sermonDocument || null}>
+        <QuoteReviewProvider documentId={documentIdForProviders} key={providerKey}>
+          <div className="right-panel">
+            {showHistory ? (
+              // History view: don't show editor, just the history panel
+              <TranscriptionHistory
+                history={history}
+                onClear={clearHistory}
+                onClose={() => setShowHistory(false)}
+                onSelect={selectHistoryItem}
+                onDelete={removeHistoryItem}
+              />
+            ) : sermonDocument ? (
+              // Sermon editor: full featured editing with quote review
+              <RightPanelWithQuoteReview document={sermonDocument}>
+                <SermonEditorLayout
+                  sermonDocument={sermonDocument}
+                  documentSaveState={documentSaveState}
+                  lastSavedAt={lastSavedAt}
+                  handleAstChange={handleAstChange}
+                  handleMetadataChange={handleMetadataChange}
+                  activeMode={activeMode}
+                  setActiveMode={setActiveMode}
+                  isDev={isDev}
+                  isDevToolsOpen={isDevToolsOpen}
+                  wordCount={wordCount}
+                  quoteCount={quoteCount}
+                />
+              </RightPanelWithQuoteReview>
+            ) : (
+              // Default: plain text output
+              <OutputDisplay
+                text={transcription}
+                onSave={handleSave}
+                onCopy={handleCopy}
+                copySuccess={copySuccess}
+              />
+            )}
+          </div>
+        </QuoteReviewProvider>
+      </DocumentProvider>
+    </EditorActionsProvider>
   );
 }
 

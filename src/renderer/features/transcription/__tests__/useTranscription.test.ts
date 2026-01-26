@@ -44,7 +44,6 @@ describe('useTranscription', () => {
       result.current.setSettings({
         model: 'small',
         language: 'pt',
-        processAsSermon: false,
       });
     });
 
